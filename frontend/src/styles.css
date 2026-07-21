@@ -1,0 +1,508 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0d1117;
+  color: #eef2ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.24), transparent 30rem),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.16), transparent 28rem),
+    #0d1117;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 4vw, 4rem);
+  background: rgba(13, 17, 23, 0.82);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+}
+
+.nav-links,
+.nav-actions,
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.nav-links a {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.nav-links a.active {
+  color: #ffffff;
+}
+
+.hello {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0;
+}
+
+.page-shell.narrow {
+  width: min(920px, calc(100% - 2rem));
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  align-items: center;
+  gap: 3rem;
+  min-height: calc(100vh - 5rem);
+}
+
+.hero h1,
+.page-heading h1,
+.auth-card h1,
+.success-card h1 {
+  margin: 0;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 6.5rem);
+}
+
+.page-heading h1,
+.auth-card h1,
+.success-card h1 {
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.hero-text {
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  line-height: 1.7;
+  max-width: 62ch;
+}
+
+.hero-panel,
+.admin-panel,
+.summary-card,
+.auth-card,
+.success-card,
+.table-card,
+.empty-state {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+  border-radius: 2rem;
+}
+
+.table-card{
+  margin-bottom: 2%;
+}
+.admin-panel,
+.hero-panel {
+  padding: 1rem;
+}
+
+.metric-card {
+  padding: 1.2rem;
+  border-radius: 1.3rem;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 1rem;
+}
+
+.metric-card:last-child {
+  margin-bottom: 0;
+}
+
+.metric-card span,
+.eyebrow {
+  display: block;
+  color: #5eead4;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 1.45rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease;
+  transform: translateY(8px);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  
+}
+
+.icon-button img {
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button.ghost {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.button.danger {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+}
+
+.button.large {
+  padding: 1rem 1.4rem;
+}
+
+.button.full {
+  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tab {
+  border: 1px solid #d1d5db;
+  background: rgb(52, 87, 119);
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #111827;
+  color: white;
+  border-color: #111827;
+}
+
+
+.page-heading {
+  margin-bottom: 2rem;
+}
+
+.muted {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.center {
+  text-align: center;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
+  gap: 1.2rem;
+}
+
+.product-card {
+  /*width: 20%;*/
+  overflow: hidden;
+  border-radius: 1.6rem;
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.product-card img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+}
+
+.product-body {
+  padding: 1.1rem;
+}
+
+.product-body h3,
+.cart-item h3 {
+  margin: 0.3rem 0;
+}
+
+.product-footer,
+.summary-row,
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.cart-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.cart-item {
+  padding: 1rem;
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.round-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.summary-card,
+.empty-state,
+.success-card {
+  padding: 1.4rem;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 5rem);
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  width: min(430px, 100%);
+  padding: 1.4rem;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.auth-card input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.auth-card button {
+  margin-top: 1.2rem;
+}
+
+.error {
+  color: #fecaca;
+}
+
+.page-message {
+  padding: 4rem 1rem;
+  text-align: center;
+  color: #cbd5e1;
+}
+
+.tiny {
+  color: #64748b;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  
+}
+
+th,
+td{
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  /*border-right: 1px solid rgba(255, 255, 255, 0.08);*/
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-add input, .admin-edit input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+}
+
+.admin-add input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-add td {
+  border-bottom: none;
+}
+
+tbody tr:last-child td{
+  border-bottom: none;
+  
+}
+
+thead tr:last-child td{
+  border-bottom: none;
+}
+thead th {
+  border-bottom: none;
+}
+
+
+table:has(tbody tr) thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.floating-message {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.floating-message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.floating-message.hide {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+
+@media (max-width: 800px) {
+  .navbar,
+  .nav-links,
+  .nav-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero,
+  .cart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 320px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}
