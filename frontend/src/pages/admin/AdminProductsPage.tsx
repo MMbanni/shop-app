@@ -3,98 +3,56 @@ import { api } from "../../lib/api";
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import { useState } from "react";
-import type { AdminProductTab, Product, ProductStatus} from "../../types";
+import type { AdminProductTab, Product, ProductStatus } from "../../types";
+import { useAdminProducts } from "../../hooks/useAdminProductActions";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
 
+type ProductForm = {
+  name: string;
+  price: string;
+  stock: string;
+};
+
+const emptyProductForm: ProductForm = {
+  name: "",
+  price: "",
+  stock: "0",
+};
+
 export function AdminProductsPage() {
   const [selectedTab, setSelectedTab] = useState<AdminProductTab>("ACTIVE");
+  const {
+    adminProductsQuery,
+    addProduct,
+    updateProduct,
+    changeProductStatus,
+    removeProduct } = useAdminProducts(selectedTab);
 
-  const queryClient = useQueryClient();
 
   const {
     data: products,
     isLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["admin-products", selectedTab],
-    queryFn: () => api.adminGetProducts(selectedTab),
-  });
+  } = adminProductsQuery;
 
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    price: "",
-    stock: 0,
-  });
+  const [newProduct, setNewProduct] = useState<ProductForm>(emptyProductForm);
 
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
-  const [editProduct, setEditProduct] = useState({
-    name: "",
-    price: "",
-    stock: 0,
-  });
+  const [editProduct, setEditProduct] = useState<ProductForm>(emptyProductForm);
 
-  const addMutation = useMutation({
-    mutationFn: api.adminAddProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-
-      setNewProduct({
-        name: "",
-        price: "",
-        stock: 0,
-      });
+  function handleAddProduct() {
+    addProduct.mutate({
+      name: newProduct.name,
+      price: Number(newProduct.price),
+      stock: Number(newProduct.stock),
     },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      product,
-    }: {
-      product: {
-        id: number;
-        name: string;
-        price: number;
-        stock: number;
-      };
-    }) => api.adminUpdateProduct(product),
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      await queryClient.invalidateQueries({ queryKey: ["products"] });
-
-      setEditingProductId(null);
-    },
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: ({
-      productId,
-      status,
-    }: {
-      productId: number;
-      status: ProductStatus;
-    }) => api.changeProductStatus(productId, status),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: (productId: number) => api.adminRemoveProduct(productId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      await queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-  });
-
-  function changeStatus(productId: number, status: ProductStatus) {
-    statusMutation.mutate({ productId, status });
+      {
+        onSuccess: () => setNewProduct(emptyProductForm)
+      }
+    );
   }
 
   function startEdit(product: Product) {
@@ -103,21 +61,21 @@ export function AdminProductsPage() {
     setEditProduct({
       name: product.name,
       price: String(product.price),
-      stock: product.stock ?? 0,
+      stock: String(product.stock) ?? 0,
     });
   }
-
+  
   function cancelEdit() {
     setEditingProductId(null);
-
-    setEditProduct({
-      name: "",
-      price: "",
-      stock: 0,
-    });
+    setEditProduct(emptyProductForm);
   }
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+
+  function changeStatus(productId: number, status: ProductStatus) {
+    changeProductStatus.mutate({ productId, status });
+  }
+
+  function handleAddProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
     setNewProduct((current) => ({
@@ -126,15 +84,9 @@ export function AdminProductsPage() {
     }));
   }
 
-  function handleAddProduct() {
-    addMutation.mutate({
-      name: newProduct.name,
-      price: Number(newProduct.price),
-      stock: Number(newProduct.stock),
-    });
-  }
+  
 
-  function handleEditChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleEditProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
     setEditProduct((current) => ({
@@ -144,14 +96,15 @@ export function AdminProductsPage() {
   }
 
   function handleSaveEdit(productId: number) {
-    updateMutation.mutate({
-      product: {
+    updateProduct.mutate({      
         id: productId,
         name: editProduct.name,
         price: Number(editProduct.price),
         stock: Number(editProduct.stock),
       },
-    });
+      {
+        onSuccess: ()=> setEditingProductId(null)
+      });
   }
 
   if (isLoading) {
@@ -167,8 +120,8 @@ export function AdminProductsPage() {
   }
 
   const sortedProducts = [...(products ?? [])].sort(
-  (a, b) => a.id - b.id
-);
+    (a, b) => a.id - b.id
+  );
 
   return (
     <main className="page-shell narrow">
@@ -216,7 +169,7 @@ export function AdminProductsPage() {
                       <input
                         name="name"
                         value={editProduct.name}
-                        onChange={handleEditChange}
+                        onChange={handleEditProductChange}
                       />
                     ) : (
                       product.name
@@ -229,7 +182,7 @@ export function AdminProductsPage() {
                         name="price"
                         type="number"
                         value={editProduct.price}
-                        onChange={handleEditChange}
+                        onChange={handleEditProductChange}
                       />
                     ) : (
                       money(product.price)
@@ -242,7 +195,7 @@ export function AdminProductsPage() {
                         name="stock"
                         type="number"
                         value={editProduct.stock}
-                        onChange={handleEditChange}
+                        onChange={handleEditProductChange}
                       />
                     ) : (
                       product.stock ?? 0
@@ -252,7 +205,7 @@ export function AdminProductsPage() {
                   <td className="admin-edit">
                     <select
                       value={product.status}
-                      disabled={statusMutation.isPending}
+                      disabled={changeProductStatus.isPending}
                       onChange={(event) =>
                         changeStatus(
                           product.id,
@@ -272,9 +225,9 @@ export function AdminProductsPage() {
                         <button
                           className="button"
                           onClick={() => handleSaveEdit(product.id)}
-                          disabled={updateMutation.isPending}
+                          disabled={updateProduct.isPending}
                         >
-                          {updateMutation.isPending ? "Saving..." : "Save"}
+                          {updateProduct.isPending ? "Saving..." : "Save"}
                         </button>
 
                         <button className="button ghost" onClick={cancelEdit}>
@@ -292,8 +245,8 @@ export function AdminProductsPage() {
 
                         <button
                           className="button danger"
-                          onClick={() => removeMutation.mutate(product.id)}
-                          disabled={removeMutation.isPending}
+                          onClick={() => removeProduct.mutate(product.id)}
+                          disabled={removeProduct.isPending}
                         >
                           X
                         </button>
@@ -311,7 +264,7 @@ export function AdminProductsPage() {
                 <input
                   name="name"
                   value={newProduct.name}
-                  onChange={handleChange}
+                  onChange={handleAddProductChange}
                   placeholder="Product name"
                 />
               </td>
@@ -321,7 +274,7 @@ export function AdminProductsPage() {
                   name="price"
                   type="number"
                   value={newProduct.price}
-                  onChange={handleChange}
+                  onChange={handleAddProductChange}
                   placeholder="Price"
                 />
               </td>
@@ -331,7 +284,7 @@ export function AdminProductsPage() {
                   name="stock"
                   type="number"
                   value={newProduct.stock}
-                  onChange={handleChange}
+                  onChange={handleAddProductChange}
                   placeholder="Stock"
                 />
               </td>
@@ -342,9 +295,9 @@ export function AdminProductsPage() {
                 <button
                   className="button"
                   onClick={handleAddProduct}
-                  disabled={addMutation.isPending}
+                  disabled={addProduct.isPending}
                 >
-                  {addMutation.isPending ? "Adding..." : "Add"}
+                  {addProduct.isPending ? "Adding..." : "Add"}
                 </button>
               </td>
             </tr>
