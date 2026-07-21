@@ -67,19 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      isLoading,
-      isLoggedIn: Boolean(user),
-      login,
-      register,
-      logout
-    }),
-    [user, isLoading] // Only rebuild object when either user or isLoading changes
-  );
+  const value: AuthContextValue = {
+  user,
+  isLoading,
+  isLoggedIn: Boolean(user),
+  login,
+  register,
+  logout
+};
 
-  // x.Provider means give the info in x to whatever is inside the component
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
