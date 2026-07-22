@@ -3,7 +3,7 @@ export type ApiErrorResponse = {
   detail: string;
   status: number;
 
-  errors?: unknown;
+  errors?: [Record<string,string>];
   cartItemId?: number;
   productId?: number;
   stock?: number;
@@ -11,11 +11,6 @@ export type ApiErrorResponse = {
   
 };
 
-type ProblemDetails = {
-  title?: string;
-  detail?: string;
-  status?: number;
-};
 
 export type ValidationProblem =
   Omit<ApiErrorResponse, "errors"> & {

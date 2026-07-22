@@ -9,3 +9,9 @@ export type Product = {
 };
 
 export type ProductStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
+
+export type ProductForm = {
+  name: string;
+  price: string;
+  stock: string;
+};

@@ -1,18 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import { useState } from "react";
-import type { AdminProductTab, Product, ProductStatus } from "../../types";
+import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
+import { ProductForm } from "../../types/product";
+import { ApiError, getApiError } from "../../lib/ApiError";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
-
-type ProductForm = {
-  name: string;
-  price: string;
-  stock: string;
-};
 
 const emptyProductForm: ProductForm = {
   name: "",
@@ -22,6 +16,8 @@ const emptyProductForm: ProductForm = {
 
 export function AdminProductsPage() {
   const [selectedTab, setSelectedTab] = useState<AdminProductTab>("ACTIVE");
+  const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
+
   const {
     adminProductsQuery,
     addProduct,
@@ -50,21 +46,28 @@ export function AdminProductsPage() {
       stock: Number(newProduct.stock),
     },
       {
-        onSuccess: () => setNewProduct(emptyProductForm)
+        onSuccess: () => setNewProduct(emptyProductForm),
+        onError: (error) => {
+          const newError = getApiError(error);
+          if (newError) setErrorResponse(newError)
+        }
       }
+
     );
   }
 
   function startEdit(product: Product) {
     setEditingProductId(product.id);
+    setErrorResponse(null);
 
     setEditProduct({
       name: product.name,
       price: String(product.price),
       stock: String(product.stock) ?? 0,
     });
+    
   }
-  
+
   function cancelEdit() {
     setEditingProductId(null);
     setEditProduct(emptyProductForm);
@@ -84,7 +87,6 @@ export function AdminProductsPage() {
     }));
   }
 
-  
 
   function handleEditProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -96,15 +98,59 @@ export function AdminProductsPage() {
   }
 
   function handleSaveEdit(productId: number) {
-    updateProduct.mutate({      
-        id: productId,
-        name: editProduct.name,
-        price: Number(editProduct.price),
-        stock: Number(editProduct.stock),
-      },
+    updateProduct.mutate({
+      id: productId,
+      name: editProduct.name,
+      price: Number(editProduct.price),
+      stock: Number(editProduct.stock),
+    },
       {
-        onSuccess: ()=> setEditingProductId(null)
+        onSuccess: () => setEditingProductId(null),
+        onError: (error) => {
+          const newError = getApiError(error);
+          if (newError) setErrorResponse(newError)
+        }
+
+
       });
+  }
+
+  function handleAddProductErrors(name: string) {
+    let fieldErrors = errorResponse?.errors
+
+    if (fieldErrors) {
+      for (const error of fieldErrors) {
+        if (!editingProductId && error[name]) {
+          return <p className="error" role="alert">
+            {error[name]}
+
+          </p>
+        }
+
+      }
+    }
+
+  }
+
+  function handleUpdateProductErrors(name: string, productId: number) {
+    let fieldErrors = errorResponse?.errors
+
+    if (fieldErrors) {
+      for (const error of fieldErrors) {
+        console.log(error);
+
+        for (const key of Object.keys(error)) {
+
+          if (error[key] == name && editingProductId == productId) {
+            return <p className="error" role="alert">
+
+              {error["message"]}
+
+            </p>
+          }
+        }
+      }
+    }
   }
 
   if (isLoading) {
@@ -170,10 +216,13 @@ export function AdminProductsPage() {
                         name="name"
                         value={editProduct.name}
                         onChange={handleEditProductChange}
+
                       />
                     ) : (
                       product.name
                     )}
+                    {handleUpdateProductErrors("name", product.id)}
+
                   </td>
 
                   <td className="admin-edit">
@@ -187,6 +236,8 @@ export function AdminProductsPage() {
                     ) : (
                       money(product.price)
                     )}
+                    {handleUpdateProductErrors("price", product.id)}
+
                   </td>
 
                   <td className="admin-edit">
@@ -200,6 +251,8 @@ export function AdminProductsPage() {
                     ) : (
                       product.stock ?? 0
                     )}
+                    {handleUpdateProductErrors("stock", product.id)}
+
                   </td>
 
                   <td className="admin-edit">
@@ -267,6 +320,8 @@ export function AdminProductsPage() {
                   onChange={handleAddProductChange}
                   placeholder="Product name"
                 />
+                {handleAddProductErrors("name")}
+
               </td>
 
               <td>
@@ -277,6 +332,9 @@ export function AdminProductsPage() {
                   onChange={handleAddProductChange}
                   placeholder="Price"
                 />
+                {handleAddProductErrors("price")}
+
+
               </td>
 
               <td>
@@ -287,6 +345,8 @@ export function AdminProductsPage() {
                   onChange={handleAddProductChange}
                   placeholder="Stock"
                 />
+                {handleAddProductErrors("stock")}
+
               </td>
 
               <td>Active</td>
@@ -295,7 +355,7 @@ export function AdminProductsPage() {
                 <button
                   className="button"
                   onClick={handleAddProduct}
-                  disabled={addProduct.isPending}
+                  disabled={addProduct.isPending || editingProductId != null}
                 >
                   {addProduct.isPending ? "Adding..." : "Add"}
                 </button>
