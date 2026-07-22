@@ -1,59 +1,64 @@
 import type { ChangeEvent } from "react";
-import type { ProductForm } from "../types/product";
-import "./ProductEditPanel.css";
+import type { ProductForm } from "../../types/product";
+import "./ProductFormModal.css";
 
 type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
 
-type ProductEditPanelProps = {
-  productId: number;
+type ProductFormModalProps = {
+  title: string;
   form: ProductForm;
   errors: ProductFormErrors;
-  isSaving: boolean;
+  isSubmitting: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  onSubmit: () => void;
+  onClose: () => void;
 };
 
-export function ProductEditPanel({
-  productId,
+export function ProductFormModal({
+  title,
   form,
   errors,
-  isSaving,
+  isSubmitting,
   onChange,
-  onSave,
-  onCancel,
-}: ProductEditPanelProps) {
+  onSubmit,
+  onClose,
+}: ProductFormModalProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSave();
+    onSubmit();
   }
 
   return (
-    <div className="product-panel-backdrop" onClick={onCancel}>
+    <div className="modal-backdrop"
+    onPointerDown={(event) => {
+      if(event.target === event.currentTarget) {
+        onClose();
+      }
+    }}
+    >
+      
       <aside
-        className="product-panel"
+        className="product-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="product-panel-title"
-        onClick={(event) => event.stopPropagation()}
+        aria-labelledby="product-modal-title"
       >
-        <header className="product-panel-header">
-          <div>
-            <p className="eyebrow">Product #{productId}</p>
-            <h2 id="product-panel-title">Edit product</h2>
-          </div>
+        <header className="product-modal-header">
+          <h2 id="product-modal-title">{title}</h2>
 
           <button
             type="button"
-            className="product-panel-close"
-            onClick={onCancel}
-            aria-label="Close edit panel"
+            className="modal-close"
+            onClick={onClose}
+            aria-label="Close modal"
           >
             ×
           </button>
         </header>
 
-        <form className="product-panel-form" onSubmit={handleSubmit}>
+        <form className="product-modal-form" 
+        onSubmit={handleSubmit}
+        noValidate>
           <label>
             Product name
 
@@ -61,7 +66,7 @@ export function ProductEditPanel({
               name="name"
               value={form.name}
               onChange={onChange}
-              disabled={isSaving}
+              disabled={isSubmitting}
             />
 
             {errors.name && (
@@ -81,7 +86,8 @@ export function ProductEditPanel({
               step="0.01"
               value={form.price}
               onChange={onChange}
-              disabled={isSaving}
+              disabled={isSubmitting}
+              
             />
 
             {errors.price && (
@@ -101,7 +107,7 @@ export function ProductEditPanel({
               step="1"
               value={form.stock}
               onChange={onChange}
-              disabled={isSaving}
+              disabled={isSubmitting}
             />
 
             {errors.stock && (
@@ -111,18 +117,18 @@ export function ProductEditPanel({
             )}
           </label>
 
-          <footer className="product-panel-actions">
+          <footer className="product-modal-actions">
             <button
               type="button"
               className="button ghost"
-              onClick={onCancel}
-              disabled={isSaving}
+              onClick={onClose}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
 
-            <button type="submit" className="button" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save changes"}
+            <button type="submit" className="button" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save changes"}
             </button>
           </footer>
         </form>

@@ -5,6 +5,7 @@ import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
 import { ApiError, getApiError } from "../../lib/ApiError";
+import { ProductFormModal } from "../../components/admin/ProductFormModal";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
 
@@ -63,14 +64,15 @@ export function AdminProductsPage() {
     setEditProduct({
       name: product.name,
       price: String(product.price),
-      stock: String(product.stock) ?? 0,
+      stock: String(product.stock ?? 0),
     });
-    
+
   }
 
   function cancelEdit() {
     setEditingProductId(null);
     setEditProduct(emptyProductForm);
+    setErrorResponse(null);
   }
 
 
@@ -105,13 +107,15 @@ export function AdminProductsPage() {
       stock: Number(editProduct.stock),
     },
       {
-        onSuccess: () => setEditingProductId(null),
+        onSuccess: () => {
+          setEditingProductId(null);
+          setEditProduct(emptyProductForm);
+          setErrorResponse(null);
+        },
         onError: (error) => {
           const newError = getApiError(error);
           if (newError) setErrorResponse(newError)
         }
-
-
       });
   }
 
@@ -132,25 +136,26 @@ export function AdminProductsPage() {
 
   }
 
-  function handleUpdateProductErrors(name: string, productId: number) {
-    let fieldErrors = errorResponse?.errors
+  function getUpdateProductError(fieldName: keyof ProductForm): string | undefined {
+    const fieldErrors = errorResponse?.errors
 
-    if (fieldErrors) {
-      for (const error of fieldErrors) {
-        console.log(error);
+    if (!fieldErrors) return undefined;
 
-        for (const key of Object.keys(error)) {
 
-          if (error[key] == name && editingProductId == productId) {
-            return <p className="error" role="alert">
+    for (const fieldError of fieldErrors) {
+      const belongsToField = Object.values(fieldError).includes(fieldName);
+      const message = fieldError["message"];
 
-              {error["message"]}
 
-            </p>
-          }
-        }
+      if (belongsToField && message) {
+        return String(message)
+
+
       }
+
     }
+    return undefined;
+
   }
 
   if (isLoading) {
@@ -204,58 +209,21 @@ export function AdminProductsPage() {
 
           <tbody>
             {sortedProducts?.map((product) => {
-              const isEditing = editingProductId === product.id;
+              const isSelected = editingProductId === product.id;
 
               return (
-                <tr key={product.id}>
+                <tr key={product.id}
+                  className={isSelected ? "selected-product-row" : ""}
+                >
+
                   <td>{product.id}</td>
+                  <td>{product.name}</td>
+                  <td>{money(product.price)}</td>
+                  <td>{product.stock ?? 0}</td>
 
-                  <td className="admin-edit">
-                    {isEditing ? (
-                      <input
-                        name="name"
-                        value={editProduct.name}
-                        onChange={handleEditProductChange}
 
-                      />
-                    ) : (
-                      product.name
-                    )}
-                    {handleUpdateProductErrors("name", product.id)}
 
-                  </td>
-
-                  <td className="admin-edit">
-                    {isEditing ? (
-                      <input
-                        name="price"
-                        type="number"
-                        value={editProduct.price}
-                        onChange={handleEditProductChange}
-                      />
-                    ) : (
-                      money(product.price)
-                    )}
-                    {handleUpdateProductErrors("price", product.id)}
-
-                  </td>
-
-                  <td className="admin-edit">
-                    {isEditing ? (
-                      <input
-                        name="stock"
-                        type="number"
-                        value={editProduct.stock}
-                        onChange={handleEditProductChange}
-                      />
-                    ) : (
-                      product.stock ?? 0
-                    )}
-                    {handleUpdateProductErrors("stock", product.id)}
-
-                  </td>
-
-                  <td className="admin-edit">
+                  <td>
                     <select
                       value={product.status}
                       disabled={changeProductStatus.isPending}
@@ -273,38 +241,25 @@ export function AdminProductsPage() {
                   </td>
 
                   <td>
-                    {isEditing ? (
-                      <div className="table-actions">
-                        <button
-                          className="button"
-                          onClick={() => handleSaveEdit(product.id)}
-                          disabled={updateProduct.isPending}
-                        >
-                          {updateProduct.isPending ? "Saving..." : "Save"}
-                        </button>
 
-                        <button className="button ghost" onClick={cancelEdit}>
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="table-actions">
-                        <button
-                          className="button icon-button"
-                          onClick={() => startEdit(product)}
-                        >
-                          <img src="/icons/edit.png" />
-                        </button>
+                    <div className="table-actions">
+                      <button
+                        className="button icon-button"
+                        onClick={() => startEdit(product)}
+                        aria-label={`Edit ${product.name}`}
+                      >
+                        <img src="/icons/edit.png" />
+                      </button>
 
-                        <button
-                          className="button danger"
-                          onClick={() => removeProduct.mutate(product.id)}
-                          disabled={removeProduct.isPending}
-                        >
-                          X
-                        </button>
-                      </div>
-                    )}
+                      <button
+                        className="button danger"
+                        onClick={() => removeProduct.mutate(product.id)}
+                        disabled={removeProduct.isPending}
+                      >
+                        ×
+                      </button>
+                    </div>
+
                   </td>
                 </tr>
               );
@@ -364,6 +319,22 @@ export function AdminProductsPage() {
           </tbody>
         </table>
       </div>
+
+      {editingProductId !== null && (
+        <ProductFormModal
+          title="Edit Product"
+          form={editProduct}
+          errors={{
+            name: getUpdateProductError("name"),
+            price: getUpdateProductError("price"),
+            stock: getUpdateProductError("stock"),
+          }}
+          isSubmitting={updateProduct.isPending}
+          onChange={handleEditProductChange}
+          onSubmit={() => handleSaveEdit(editingProductId)}
+          onClose={cancelEdit}
+        />
+      )}
 
       <BackToAdminButton />
     </main>

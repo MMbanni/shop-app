@@ -46,12 +46,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // fallback if backend did not return JSON.
     }
-        
+    
+    console.log(errorResponse);
+    
     throw new ApiError(errorResponse);
   }
 
   return response.json() as Promise<T>;
 }
+
 
 
 export const api = {
