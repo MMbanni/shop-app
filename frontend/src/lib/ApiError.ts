@@ -1,5 +1,6 @@
-import { ApiErrorResponse } from "../types";
-import { CartItemProblem } from "../types/error";
+import type {
+  ApiErrorResponse, 
+  CartItemProblem } from "../types";
 
 export class ApiError extends Error {
   readonly response: ApiErrorResponse;
@@ -7,9 +8,8 @@ export class ApiError extends Error {
   constructor(response: ApiErrorResponse) {
     const message =
       response.detail ??
-      response.status ??
       response.title ??
-      "Request failed";
+      `Request failed with status ${response.status}` ;
 
     super(message);
 
