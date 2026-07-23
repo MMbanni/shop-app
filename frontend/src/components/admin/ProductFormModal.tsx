@@ -8,6 +8,7 @@ type ProductFormModalProps = {
   title: string;
   form: ProductForm;
   errors: ProductFormErrors;
+  submitError?: string | null
   isSubmitting: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: () => void;
@@ -18,6 +19,7 @@ export function ProductFormModal({
   title,
   form,
   errors,
+  submitError,
   isSubmitting,
   onChange,
   onSubmit,
@@ -29,19 +31,23 @@ export function ProductFormModal({
   }
 
   return (
-    <div className="modal-backdrop"
-    onPointerDown={(event) => {
-      if(event.target === event.currentTarget) {
-        onClose();
-      }
-    }}
+    <div
+      className="modal-backdrop"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
-      
+
       <aside
         className="product-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-modal-title"
+        aria-describedby={
+          submitError ? "product-modal-submit-error" : undefined
+        }
       >
         <header className="product-modal-header">
           <h2 id="product-modal-title">{title}</h2>
@@ -56,9 +62,22 @@ export function ProductFormModal({
           </button>
         </header>
 
-        <form className="product-modal-form" 
-        onSubmit={handleSubmit}
-        noValidate>
+        <form
+          className="product-modal-form"
+          onSubmit={handleSubmit}
+          noValidate>
+          
+          {submitError && (
+            <div
+              id="product-modal-submit-error"
+              className="product-modal-error"
+              role="alert"
+            >
+              {submitError}
+            </div>
+          )}
+
+
           <label>
             Product name
 
@@ -67,10 +86,18 @@ export function ProductFormModal({
               value={form.name}
               onChange={onChange}
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={
+                errors.name ? "product-name-error" : undefined
+              }
             />
 
             {errors.name && (
-              <span className="field-error" role="alert">
+              <span 
+              id="product-name-error"
+              className="field-error"
+              role="alert"
+              >
                 {errors.name}
               </span>
             )}
@@ -87,11 +114,18 @@ export function ProductFormModal({
               value={form.price}
               onChange={onChange}
               disabled={isSubmitting}
-              
+              aria-invalid={Boolean(errors.price)}
+              aria-describedby={
+                errors.price ? "product-price-error" : undefined
+              }
             />
 
             {errors.price && (
-              <span className="field-error" role="alert">
+              <span
+                id="product-price-error"
+                className="field-error"
+                role="alert"
+              >
                 {errors.price}
               </span>
             )}
@@ -108,10 +142,18 @@ export function ProductFormModal({
               value={form.stock}
               onChange={onChange}
               disabled={isSubmitting}
+              aria-invalid={Boolean(errors.stock)}
+              aria-describedby={
+                errors.stock ? "product-stock-error" : undefined
+              }
             />
 
             {errors.stock && (
-              <span className="field-error" role="alert">
+              <span
+                id="product-stock-error"
+                className="field-error"
+                role="alert"
+              >
                 {errors.stock}
               </span>
             )}
@@ -127,7 +169,11 @@ export function ProductFormModal({
               Cancel
             </button>
 
-            <button type="submit" className="button" disabled={isSubmitting}>
+            <button 
+            type="submit" 
+            className="button" 
+            disabled={isSubmitting}
+            >
               {isSubmitting ? "Saving..." : "Save changes"}
             </button>
           </footer>
