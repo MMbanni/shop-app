@@ -4,6 +4,7 @@ import com.mbanni.shop.product.dto.AdminProductResponseDto;
 import com.mbanni.shop.product.dto.ProductStatusRequestDto;
 import com.mbanni.shop.product.dto.ProductRequestDto;
 import com.mbanni.shop.product.dto.ProductResponseDto;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class ProductController {
     }
 
     @PostMapping("/admin/products")
-    public ProductResponseDto addProduct(@RequestBody ProductRequestDto request) {
+    public ProductResponseDto addProduct(@Valid @RequestBody ProductRequestDto request) {
         Product product = productService.create(productMapper.toCreateCommand(request));
         return productMapper.toResponse(product);
     }
@@ -54,6 +55,7 @@ public class ProductController {
     @PatchMapping("/admin/products/{id}")
     public AdminProductResponseDto updateProduct(
             @PathVariable Long id,
+            @Valid
             @RequestBody ProductRequestDto request
     ) {
 

@@ -1,4 +1,8 @@
 package com.mbanni.shop.common.exception;
 
-public class ValidationFieldErrors {
+public record ValidationFieldError(
+        String field,
+        String code,
+        String message
+) {
 }

@@ -1,6 +1,6 @@
 package com.mbanni.shop.common.exception;
 
-
+import java.util.List;
 import java.util.Map;
 
 public class BusinessException extends RuntimeException{
@@ -25,6 +25,31 @@ public class BusinessException extends RuntimeException{
 
     public BusinessException( ErrorCode errorCode) {
         this(errorCode, errorCode.getDefaultMessage(), Map.of());
+    }
+
+    public static BusinessException forField(
+            ErrorCode errorCode,
+            String field,
+            String message
+    ) {
+        ValidationFieldError fieldError = new ValidationFieldError(
+                field,
+                errorCode.name(),
+                message
+        );
+
+        return new BusinessException(
+                errorCode,
+                message,
+                Map.of("errors", List.of(fieldError))
+        );
+    }
+
+    public static BusinessException forField(
+            ErrorCode errorCode,
+            String field
+    ) {
+        return forField(errorCode, field, errorCode.getDefaultMessage());
     }
 
     public ErrorCode getErrorCode() {

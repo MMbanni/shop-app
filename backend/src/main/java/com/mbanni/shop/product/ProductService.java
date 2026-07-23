@@ -31,7 +31,7 @@ public class ProductService {
         Optional<Product> existingProduct = productRepository.findByNameIgnoreCase(name);
         if(existingProduct.isPresent()){
             if(existingProduct.get().getProductStatus()==ProductStatus.ACTIVE){
-                throw new BusinessException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+                throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS, "name");
             } else {
                 Product product = existingProduct.get();
                 product.activate();
@@ -85,7 +85,7 @@ public class ProductService {
 
             if(!product.getName().equalsIgnoreCase(name)
                     && productRepository.existsByNameIgnoreCase(name)) {
-                throw new BusinessException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+                throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name");
             }
 
             product.setName(name);

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -22,8 +23,6 @@ public class GlobalExceptionHandler {
 
         // Constructor is protected so we use static factory method
         ProblemDetail problem = ProblemDetail.forStatus(status);
-
-
         problem.setTitle(errorCode.name());
         problem.setDetail(ex.getMessage());
 
@@ -44,16 +43,15 @@ public class GlobalExceptionHandler {
         problem.setTitle("VALIDATION_ERROR");
         problem.setDetail("Invalid request body");
 
-        Map<String, String> errors = new HashMap<>();
-
-        for (FieldError fieldError :
-                ex.getBindingResult().getFieldErrors()) {
-
-            errors.put(
-                    fieldError.getField(),
-                    fieldError.getDefaultMessage()
-            );
-        }
+        List<ValidationFieldError> errors = ex.getBindingResult()
+                        .getFieldErrors()
+                        .stream()
+                        .map(fieldError -> new ValidationFieldError(
+                                fieldError.getField(),
+                                fieldError.getCode(),
+                                fieldError.getDefaultMessage()
+                        ))
+                        .toList();
 
         problem.setProperty("errors", errors);
 
