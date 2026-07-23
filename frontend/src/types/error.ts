@@ -1,33 +1,37 @@
+export type ValidationFieldError = {
+  field: string;
+  code: string | null;
+  message: string;
+};
+
+export type CartItemProblem = {
+  cartItemId: number;
+  productId?: number;
+  stock?: number;
+  title?: string;
+  detail?: string;
+};
+
 export type ApiErrorResponse = {
   title: string;
   detail: string;
   status: number;
 
-  errors?: [Record<string,string>];
+  errors?: ValidationFieldError[];
+  itemErrors?: CartItemProblem[]
+
   cartItemId?: number;
   productId?: number;
   stock?: number;
-  itemErrors?: CartItemProblem[]
-  
 };
-
 
 export type ValidationProblem =
   Omit<ApiErrorResponse, "errors"> & {
-    errors?: Record<string, string>;
+    errors: ValidationFieldError[];
   };
 
-export type CartItemProblem =
-  Omit<
-    ApiErrorResponse,
-    "errors" | "cartItemId"
-  > & {
-    cartItemId: number;
-    productId?: number;
-    stock?: number;
-  };
 
 export type CheckoutProblem =
-  Omit<ApiErrorResponse, "errors"> & {
+  Omit<ApiErrorResponse, "itemErrors"> & {
     errors?: CartItemProblem[];
   };
