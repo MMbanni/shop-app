@@ -9,8 +9,8 @@ export class ApiError extends Error {
 
   constructor(response: ApiErrorResponse) {
     const message =
-      response.detail ||
-      response.title ||
+      response.detail ??
+      response.title ??
       `Request failed with status ${response.status}`;
 
     super(message);
@@ -28,8 +28,8 @@ function isValidationFieldError(
   value: unknown
 ): value is ValidationFieldError {
   return (
-    typeof value === "object" &&
     value !== null &&
+    typeof value === "object" &&    
     "field" in value &&
     typeof value.field === "string" &&
     "message" in value &&
