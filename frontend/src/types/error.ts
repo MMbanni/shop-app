@@ -1,6 +1,6 @@
 export type ValidationFieldError = {
   field: string;
-  code: string | null;
+  code: string;
   message: string;
 };
 
