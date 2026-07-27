@@ -285,6 +285,7 @@ input {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
   gap: 1.2rem;
+  
 }
 
 .product-card {

@@ -124,9 +124,9 @@ export function AdminProductsPage() {
 
     if (fieldErrors) {
       for (const error of fieldErrors) {
-        if (!editingProductId && error[name]) {
+        if (!editingProductId && error.field==name) {
           return <p className="error" role="alert">
-            {error[name]}
+            {error.message}
 
           </p>
         }
