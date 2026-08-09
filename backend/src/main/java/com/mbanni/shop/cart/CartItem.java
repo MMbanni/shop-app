@@ -26,10 +26,14 @@ public class CartItem {
     private BigDecimal discount = BigDecimal.ZERO;
 
     @Column(nullable = false)
+    private BigDecimal priceWhenAdded;
+
+    @Column(nullable = false)
     private int quantity;
 
 
-    public CartItem(){}
+    public CartItem(){
+    }
 
     CartItem(Cart cart, Product product, int quantity) {
 
@@ -45,6 +49,11 @@ public class CartItem {
     public BigDecimal getDiscount() {
         return this.discount;
     }
+    public BigDecimal getPriceWhenAdded() {
+        return this.priceWhenAdded;
+    }
+
+    public boolean priceChanged = false;
 
     public Product getProduct() {
         return this.product;
@@ -66,6 +75,10 @@ public class CartItem {
         }
 
         this.discount = discount;
+    }
+
+    public void setPriceWhenAdded(BigDecimal price ) {
+        this.priceWhenAdded = price;
     }
 
     void setQuantity(int value) {

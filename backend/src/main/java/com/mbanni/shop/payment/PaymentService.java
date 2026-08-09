@@ -38,7 +38,6 @@ public class PaymentService {
     private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(30);
     private static final int MAX_EXPIRED_CHECKOUTS_PER_DAY = 4;
 
-
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -155,7 +154,7 @@ public class PaymentService {
 
         order.markPaid(session.getId());
 
-        order.getUser().getCart().getItems().clear();
+        order.getUser().getCart().clearItems();
     }
 
     @Transactional

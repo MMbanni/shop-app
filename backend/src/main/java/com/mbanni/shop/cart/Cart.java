@@ -69,6 +69,7 @@ public class Cart {
         }
 
         CartItem item = new CartItem(this, product, quantity);
+        item.setPriceWhenAdded(item.getProduct().getPrice());
         items.add(item);
     }
 
@@ -102,6 +103,10 @@ public class Cart {
 
         items.remove(foundItem);
 
+    }
+
+    public void clearItems() {
+        items.clear();
     }
 
     public BigDecimal calculateTotal() {

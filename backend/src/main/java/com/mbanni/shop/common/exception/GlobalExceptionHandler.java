@@ -43,6 +43,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("VALIDATION_ERROR");
         problem.setDetail("Invalid request body");
 
+        // Jackson will convert Java list into JSON array
         List<ValidationFieldError> errors = ex.getBindingResult()
                         .getFieldErrors()
                         .stream()
