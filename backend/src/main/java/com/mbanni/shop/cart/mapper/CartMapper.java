@@ -19,7 +19,9 @@ public class CartMapper {
                     item.getProduct().getId(),
                     item.getProduct().getName(),
                     item.getQuantity(),
+                    item.getPriceWhenAdded(),
                     item.getProduct().getPrice(),
+                    item.hasPriceChanged(),
                     item.calculateLineTotal()
                 ))
                 .toList();

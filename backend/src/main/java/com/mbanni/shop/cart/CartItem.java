@@ -37,9 +37,11 @@ public class CartItem {
 
     CartItem(Cart cart, Product product, int quantity) {
 
-        this.product = product;
         this.cart = cart;
+        this.product = product;
+        setPriceWhenAdded(product.getPrice());
         setQuantity(quantity);
+
     }
 
     public Long getId() {
@@ -79,6 +81,14 @@ public class CartItem {
 
     public void setPriceWhenAdded(BigDecimal price ) {
         this.priceWhenAdded = price;
+    }
+
+    public boolean hasPriceChanged() {
+        return priceWhenAdded.compareTo(product.getPrice()) != 0;
+    }
+
+    public void acceptCurrentPrice() {
+        this.priceWhenAdded = product.getPrice();
     }
 
     void setQuantity(int value) {
