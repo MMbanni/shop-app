@@ -1,13 +1,14 @@
 type BannerProps = {
+  className: string
   message: string;
   visible: boolean;
 };
 
-export function FloatingMessage({ message, visible }: BannerProps) {
+export function FloatingMessage({ className, message, visible }: BannerProps) {
 
   return (
     <div className="background">
-      <p className={`floating-message ${visible ? "show" : "hide"}`}>
+      <p className={`${className} floating-message ${visible ? "show" : "hide"}`}>
         {message}
       </p>
     </div>

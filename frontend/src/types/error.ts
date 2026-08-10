@@ -1,6 +1,6 @@
 export type ValidationFieldError = {
   field: string;
-  code: string | null;
+  code: string;
   message: string;
 };
 
@@ -19,19 +19,4 @@ export type ApiErrorResponse = {
 
   errors?: ValidationFieldError[];
   itemErrors?: CartItemProblem[]
-
-  cartItemId?: number;
-  productId?: number;
-  stock?: number;
-};
-
-export type ValidationProblem =
-  Omit<ApiErrorResponse, "errors"> & {
-    errors: ValidationFieldError[];
-  };
-
-
-export type CheckoutProblem =
-  Omit<ApiErrorResponse, "itemErrors"> & {
-    errors?: CartItemProblem[];
   };

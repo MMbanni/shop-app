@@ -285,6 +285,7 @@ input {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
   gap: 1.2rem;
+  align-items: start;  
 }
 
 .product-card {
@@ -293,6 +294,7 @@ input {
   border-radius: 1.6rem;
   background: rgba(15, 23, 42, 0.76);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 26rem;
 }
 
 .product-card img {
@@ -300,6 +302,8 @@ input {
   height: 210px;
   object-fit: cover;
   display: block;
+    align-self: start;
+  height: fit-content;
 }
 
 .product-body {
@@ -318,6 +322,14 @@ input {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.product-error {
+  margin: 2rem;
+}
+
+.product-error .error {
+  text-align:center;
 }
 
 .cart-layout {
@@ -399,6 +411,10 @@ input {
   color: #fecaca;
 }
 
+.add-product-error {
+  color: #fecaca;
+}
+
 .page-message {
   padding: 4rem 1rem;
   text-align: center;
@@ -446,11 +462,35 @@ td{
 
 .admin-add td {
   border-bottom: none;
+  vertical-align: top;
+}
+
+.admin-add-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-add input,
+.admin-add-control {
+  min-height: 2.5rem;
+}
+
+.admin-add-control {
+  display: flex;
+  align-items: center;
+}
+
+.admin-add-error-slot {
+  min-height: 1.25rem;
+}
+
+.admin-add-error-slot .add-product-error {
+  margin: 0;
+  line-height: 1.25rem;
 }
 
 tbody tr:last-child td{
-  border-bottom: none;
-  
+  border-bottom: none;  
 }
 
 thead tr:last-child td{
@@ -465,7 +505,8 @@ table:has(tbody tr) thead th {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.floating-message {
+.floating-message{
+  background-color: rgba(255, 255, 255, 0.315);  
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.5s ease, transform 0.5s ease;

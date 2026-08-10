@@ -49,10 +49,10 @@ export function ProductsPage() {
          key={product.id} 
          product={product} 
          onAddSuccess={()=> showCartMessage(`${product.name} added to cart`)} 
+         
          />)}
       </section>
 
-      {cartMessage && <FloatingMessage message={cartMessage} visible={cartMessageVisible}></FloatingMessage>}
     </main>
   );
 }

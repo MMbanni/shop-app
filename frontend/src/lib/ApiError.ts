@@ -4,13 +4,17 @@ import type {
   ValidationFieldError
 } from "../types";
 
+/**
+ * Error thrown when the API returns a structured error response.
+ * Extends Error class to contain full API response.
+ */
 export class ApiError extends Error {
   readonly response: ApiErrorResponse;
 
   constructor(response: ApiErrorResponse) {
     const message =
-      response.detail ||
-      response.title ||
+      response.detail ??
+      response.title ??
       `Request failed with status ${response.status}`;
 
     super(message);
@@ -20,23 +24,45 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Extracts structured API response from an unknown caught value.
+ * Returns null if the value was not created as an ApiError.
+ */
+
 export function getApiError(error: unknown): ApiErrorResponse | null {
   return error instanceof ApiError ? error.response : null
 }
+
+/**
+ * Runtime type guard for validation errors returned by the API.
+ *
+ * This is required because TypeScript types do not validate JSON received
+ * from external systems at runtime.
+ */
 
 function isValidationFieldError(
   value: unknown
 ): value is ValidationFieldError {
   return (
-    typeof value === "object" &&
     value !== null &&
+    typeof value === "object" &&    
     "field" in value &&
     typeof value.field === "string" &&
+    "code" in value &&
+    typeof value.code === "string" &&
     "message" in value &&
     typeof value.message === "string"
   );
 }
 
+/**
+ * Converts the API's validation-error array into a field-to-message lookup.
+ *
+ * Example:
+ * [{ field: "name", message: "Name required" }]
+ * becomes:
+ * { price: "Price must be positive" }
+ */
 export function getFieldErrors(
   error: unknown
 ): Record<string, string> {
@@ -49,25 +75,33 @@ export function getFieldErrors(
   return errors
     .filter(isValidationFieldError)
     .reduce<Record<string, string>>((result, fieldError) => {
-      result[fieldError.field] ??= fieldError.message;
+      result[fieldError.field] ??= fieldError.message; // Keep first message if field fails multiple rules
       return result;
     }, {});
 }
 
-export function getFormError(error: unknown): string | null {
+export function getErrorMessage(error: unknown): string {
   const response = getApiError(error);
 
-  if (!response) {
-    return error instanceof Error
-      ? error.message
-      : "An unexpected error occurred";
+  if (response) {
+    return response.detail || response.title || "Request failed";
   }
 
-  if (Object.keys(getFieldErrors(error)).length > 0) {
+  return error instanceof Error
+    ? error.message
+    : "An unexpected error occurred";
+}
+
+export function getFormErrorMessage(
+  error: unknown
+): string | null {
+  const fieldErrors = getFieldErrors(error);
+
+  if (Object.keys(fieldErrors).length > 0) {
     return null;
   }
 
-  return response.detail || response.title || "Request failed";
+  return getErrorMessage(error);
 }
 
 function isCartItemProblem(
