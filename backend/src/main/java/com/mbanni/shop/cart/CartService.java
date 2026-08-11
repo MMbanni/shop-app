@@ -45,8 +45,11 @@ public class CartService {
 
         CartItem existingItem = cart.findItemByProductId(productId);
 
+        int currentQuantity = existingItem == null ? 0 : existingItem.getQuantity();
+        int requestedQuantity = currentQuantity + quantity;
 
-        if(product.getStock()<quantity || existingItem!=null && existingItem.getQuantity()>=product.getStock()){
+
+        if(requestedQuantity > product.getStock()){
             throw new BusinessException(ErrorCode.CART_ERROR, "Not enough stock");
         }
 
@@ -65,6 +68,8 @@ public class CartService {
     public void updateCart(Long userId, Long cartItemId, int quantity) {
         User user = findUserOrThrow(userId);
         Cart cart = user.getCart();
+
+
 
         if (quantity == 0) {
             return;
