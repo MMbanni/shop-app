@@ -87,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <button
             className="button"
             onClick={handleAddToCart}
-            disabled={addMutation.isPending}
+            disabled={isOutOfStock || addMutation.isPending}
           >
 
             {isOutOfStock ?
