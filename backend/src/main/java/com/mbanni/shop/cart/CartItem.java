@@ -55,8 +55,6 @@ public class CartItem {
         return this.priceWhenAdded;
     }
 
-    public boolean priceChanged = false;
-
     public Product getProduct() {
         return this.product;
     }
