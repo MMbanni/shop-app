@@ -1,8 +1,25 @@
 import { money } from "../lib/money";
 import { useCart } from "../hooks/useCart";
-import { ApiErrorResponse } from "../types";
+import { ApiErrorResponse, CartItemProblem } from "../types";
 import { getApiError } from "../lib/ApiError";
 
+function mapProblemsByCartItemId(
+  problems: CartItemProblem[],
+): Map<number, CartItemProblem> {
+  const problemsByItemId =
+    new Map<number, CartItemProblem>();
+
+  for (const problem of problems) {
+    if (problem.cartItemId !== undefined) {
+      problemsByItemId.set(
+        problem.cartItemId,
+        problem,
+      );
+    }
+  }
+
+  return problemsByItemId;
+}
 
 export function CartPage() {
   const {
@@ -26,11 +43,11 @@ export function CartPage() {
 
   function getProductErrorMessage(
     productName: string,
-    error: ApiErrorResponse,
+    error: CartItemProblem,
   ) {
     const availableStock = error.stock;
 
-    if (error.title === "CART_ERROR") {
+    if (error.code === "INSUFFICIENT_STOCK") {
       if (availableStock === 0) {
         return (
           <>
@@ -61,42 +78,60 @@ export function CartPage() {
     (a, b) => a.cartItemId - b.cartItemId,
   );
 
-  const updateError = getApiError(updateMutation.error);
-  const removeError = getApiError(removeMutation.error);
+  const updateError =
+    getApiError(updateMutation.error);
 
-  const checkoutError = getApiError(
-    checkoutMutation.error,
-  )
+  const removeError =
+    getApiError(removeMutation.error);
 
-  /*
-   * Only use checkout item errors when checkout is currently
-   * in an error state. This prevents old checkout errors from
-   * appearing after the cart changes.
-   */
-  const checkoutItemErrors =
-    checkoutMutation.isError
-      ? checkoutError?.itemErrors ??
-        (checkoutError?.cartItemId !== undefined
-          ? [checkoutError]
-          : [])
+  const checkoutError =
+    getApiError(checkoutMutation.error);
+
+  const updateItemErrors =
+    updateMutation.isError
+      ? updateError?.itemErrors ?? []
       : [];
 
-  const checkoutErrorsByItemId = new Map<
-    number,
-    ApiErrorResponse
-  >();
+  const removeItemErrors =
+    removeMutation.isError
+      ? removeError?.itemErrors ?? []
+      : [];
 
-  for (const error of checkoutItemErrors) {
-    if (error.cartItemId !== undefined) {
-      checkoutErrorsByItemId.set(
-        error.cartItemId,
-        error,
-      );
-    }
-  }
+  const checkoutItemErrors =
+    checkoutMutation.isError
+      ? checkoutError?.itemErrors ?? []
+      : [];
+
+  const updateErrorsByItemId =
+    mapProblemsByCartItemId(updateItemErrors);
+
+  const removeErrorsByItemId =
+    mapProblemsByCartItemId(removeItemErrors);
+
+  const checkoutErrorsByItemId =
+    mapProblemsByCartItemId(checkoutItemErrors);
 
   const hasCheckoutItemErrors =
     checkoutErrorsByItemId.size > 0;
+
+  /*
+* An update/remove error that cannot be connected
+* to a particular cart item.
+*/
+
+  const getGeneralActionError = () => {
+    if (updateMutation.isError && updateItemErrors.length === 0) {
+      return updateError?.detail ?? updateMutation.error.message;
+    }
+
+    if (removeMutation.isError && removeItemErrors.length === 0) {
+      return removeError?.detail ?? removeMutation.error.message;
+    }
+
+    return null;
+  };
+
+  const generalActionError = getGeneralActionError();
 
   function updateQuantity(
     itemId: number,
@@ -146,6 +181,15 @@ export function CartPage() {
         <h1>Your cart</h1>
       </div>
 
+      {generalActionError && (
+        <p
+          className="page-message error"
+          role="alert"
+        >
+          {generalActionError}
+        </p>
+      )}
+
       {isEmpty ? (
         <div className="empty-state">
           <h2>Your cart is empty</h2>
@@ -158,16 +202,14 @@ export function CartPage() {
           <div className="cart-list">
             {sortedItems.map((item) => {
               const updateErrorForItem =
-                updateMutation.isError &&
-                updateError?.cartItemId === item.cartItemId
-                  ? updateError
-                  : null;
+                updateErrorsByItemId.get(
+                  item.cartItemId,
+                ) ?? null;
 
               const removeErrorForItem =
-                removeMutation.isError &&
-                removeError?.cartItemId === item.cartItemId
-                  ? removeError
-                  : null;
+                removeErrorsByItemId.get(
+                  item.cartItemId,
+                ) ?? null;
 
               const checkoutErrorForItem =
                 checkoutErrorsByItemId.get(
@@ -182,12 +224,12 @@ export function CartPage() {
               const isUpdatingThisItem =
                 updateMutation.isPending &&
                 updateMutation.variables?.itemId ===
-                  item.cartItemId;
+                item.cartItemId;
 
               const isRemovingThisItem =
                 removeMutation.isPending &&
                 removeMutation.variables ===
-                  item.cartItemId;
+                item.cartItemId;
 
               return (
                 <article
@@ -267,7 +309,10 @@ export function CartPage() {
                   </button>
                 </article>
               );
-            })}
+            }
+            )
+
+            }
           </div>
 
           <aside className="summary-card">
@@ -297,7 +342,7 @@ export function CartPage() {
                 {hasCheckoutItemErrors
                   ? "Please update the highlighted items before checkout."
                   : checkoutError?.detail ??
-                    checkoutMutation.error.message}
+                  checkoutMutation.error.message}
               </p>
             )}
           </aside>

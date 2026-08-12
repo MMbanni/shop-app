@@ -5,6 +5,7 @@ export type ValidationFieldError = {
 };
 
 export type CartItemProblem = {
+  code: string;
   cartItemId: number;
   productId?: number;
   stock?: number;
