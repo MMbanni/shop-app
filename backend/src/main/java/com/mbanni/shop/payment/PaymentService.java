@@ -2,6 +2,7 @@ package com.mbanni.shop.payment;
 
 import com.mbanni.shop.cart.Cart;
 import com.mbanni.shop.cart.CartItem;
+import com.mbanni.shop.cart.dto.CartItemProblem;
 import com.mbanni.shop.checkout.CheckoutItemError;
 import com.mbanni.shop.checkout.CheckoutResponse;
 import com.mbanni.shop.checkout.CheckoutValidationException;
@@ -183,7 +184,7 @@ public class PaymentService {
     }
 
     private void reserveStockAndCopyCartItems(Cart cart, Order order) {
-        List<CheckoutItemError> errors = new ArrayList<>();
+        List<CartItemProblem> errors = new ArrayList<>();
         List<ProductReservation> reservations = new ArrayList<>();
 
         // First pass: lock products and validate every cart item
@@ -199,17 +200,15 @@ public class PaymentService {
 
             if (stock < requestedQuantity) {
                 errors.add(
-                        new CheckoutItemError(
+                        new CartItemProblem(
+                                ErrorCode.INSUFFICIENT_STOCK,
                                 cartItem.getId(),
-                                String.valueOf(ErrorCode.CART_ERROR),
-                                stock == 0
-                                        ? "Product is out of stock."
-                                        : "Only " + stock
-                                        + (stock == 1
-                                        ? " unit is"
-                                        : " units are")
-                                        + " available.",
-                                stock
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                ErrorCode.INSUFFICIENT_STOCK
+                                        .getDefaultMessage()
                         )
                 );
             }

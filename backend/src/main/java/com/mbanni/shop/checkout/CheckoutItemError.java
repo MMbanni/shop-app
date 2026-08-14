@@ -4,7 +4,7 @@ import com.mbanni.shop.common.exception.ErrorCode;
 
 public record CheckoutItemError(
         Long cartItemId,
-        String title,
+        String code,
         String detail,
         Integer stock
 ) {
