@@ -38,11 +38,15 @@ public enum ErrorCode {
     ),
 
     CART_ERROR(
-            "Some items in your cart need attention before checkout"
+            "One or more items in your cart need attention"
     ),
 
     CART_ITEM_NOT_FOUND(
-            "Product not found"
+            "Cart item not found"
+    ),
+
+    INVALID_QUANTITY(
+            "Quantity must be at least 1"
     ),
 
     ILLEGAL_OPERATION(
@@ -50,10 +54,16 @@ public enum ErrorCode {
     ),
 
     EXCEEDED_QUANTITY_LIMIT(
-            "Maximum quantity is 999"
+            "Maximum cart capacity exceeded"
     ),
 
+    INSUFFICIENT_STOCK(
+            "There is not enough stock available"
+    ),
 
+    PRICE_CHANGED(
+            "The product price has changed"
+    ),
 
     ORDER_NOT_FOUND(
             "Order not found"

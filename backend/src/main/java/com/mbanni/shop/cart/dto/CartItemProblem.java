@@ -1,4 +1,14 @@
 package com.mbanni.shop.cart.dto;
 
-public record CartItemProblem() {
+import com.mbanni.shop.common.exception.ErrorCode;
+
+public record CartItemProblem(
+        ErrorCode code,
+        Long cartItemId,
+        Long productId,
+        Integer stock,
+        Integer requestedQuantity,
+        Integer maximumQuantity,
+        String detail
+) {
 }
