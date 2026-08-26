@@ -125,7 +125,7 @@ public class CartService {
         );
         return new BusinessException(
                 ErrorCode.CART_ERROR,
-                "The requested cart quantity is unavailable.",
+                "The requested quantity is unavailable.",
                 Map.of("itemErrors", List.of(itemProblem))
         );
     }
