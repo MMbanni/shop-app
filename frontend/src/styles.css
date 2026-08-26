@@ -325,11 +325,13 @@ input {
 }
 
 .product-error {
-  margin: 2rem;
+  min-height: 3rem;
+  margin: 0.75rem 0 0;
 }
 
 .product-error .error {
-  text-align:center;
+  margin: 0;
+  text-align: center;
 }
 
 .cart-layout {
@@ -505,11 +507,29 @@ table:has(tbody tr) thead th {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.floating-message{
-  background-color: rgba(255, 255, 255, 0.315);  
+.floating-message {
+  position: fixed;
+  z-index: 1000;
+
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.7rem 1rem;
+
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(94, 234, 212, 0.4);
+  border-radius: 0.8rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+  text-align: center;
+  pointer-events: none;
+
   opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translate(-50%, -0.5rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 
 .floating-message.show {

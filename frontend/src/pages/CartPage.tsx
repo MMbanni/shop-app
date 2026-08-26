@@ -3,11 +3,8 @@ import { useCart } from "../hooks/useCart";
 import { ApiErrorResponse, CartItemProblem } from "../types";
 import { getApiError } from "../lib/ApiError";
 
-function mapProblemsByCartItemId(
-  problems: CartItemProblem[],
-): Map<number, CartItemProblem> {
-  const problemsByItemId =
-    new Map<number, CartItemProblem>();
+function mapProblemsByCartItemId( problems: CartItemProblem[]): Map<number, CartItemProblem> {
+  const problemsByItemId = new Map<number, CartItemProblem>();
 
   for (const problem of problems) {
     if (problem.cartItemId !== undefined) {
@@ -17,6 +14,9 @@ function mapProblemsByCartItemId(
       );
     }
   }
+
+  console.log(problemsByItemId);
+  
 
   return problemsByItemId;
 }
@@ -137,10 +137,6 @@ export function CartPage() {
     itemId: number,
     quantity: number,
   ) {
-    /*
-     * The cart is changing, so previous checkout and remove
-     * errors are no longer relevant.
-     */
     checkoutMutation.reset();
     removeMutation.reset();
     updateMutation.reset();
@@ -163,10 +159,8 @@ export function CartPage() {
   }
 
   function checkout() {
-    /*
-     * Update/remove errors should not remain visible when
-     * the user tries checkout again.
-     */
+
+    //Errors should not remain visible when user tries checkout again.
     updateMutation.reset();
     removeMutation.reset();
     checkoutMutation.reset();

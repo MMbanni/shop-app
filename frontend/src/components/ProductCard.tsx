@@ -8,16 +8,19 @@ import { FloatingMessage } from "../components/messages/FloatingMessage";
 import { useState } from "react";
 import { getApiError } from "../lib/ApiError";
 
+import { useRef } from "react";
+
 
 type ProductCardProps = {
   product: Product;
-  onAddSuccess: () => void
+  onAddSuccess: ( button: HTMLButtonElement) => void
 };
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const addButtonRef = useRef<HTMLButtonElement>(null)
   
   const [message, setMessage] = useState<string|null>(null);
 
@@ -42,8 +45,9 @@ export function ProductCard({ product }: ProductCardProps) {
     mutationFn: () => api.addToCart(product.id, 1),
 
     onSuccess: async () => {
-      setMessage(`${product.name} added to cart`)
-      showCartMessage();
+      if (addButtonRef.current){
+        onAddSuccess(addButtonRef.current)
+      }
       await queryClient.invalidateQueries({ queryKey: ["cart"] });
     }
   });
@@ -85,6 +89,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <strong>{money(product.price)}</strong>
 
           <button
+            ref={addButtonRef}
             className="button"
             onClick={handleAddToCart}
             disabled={isOutOfStock || addMutation.isPending}
@@ -103,7 +108,6 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <FloatingMessage className="addedToCartMessage" message={message?message:""} visible={messageVisible} ></FloatingMessage>
       </div>
     </article>
   );
