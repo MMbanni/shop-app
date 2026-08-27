@@ -36,7 +36,7 @@ export function RegisterPage() {
   return (
     <main className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <p className="eyebrow">New customer</p>
+        <p className="section-label">New customer</p>
         <h1>Create account</h1>
 
         <label>

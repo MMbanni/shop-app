@@ -202,7 +202,7 @@ function showCartMessage() {
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
-        <p className="eyebrow">Admin</p>
+        <p className="section-label">Admin</p>
         <h1>Products</h1>
         <p className="muted"></p>
       </div>

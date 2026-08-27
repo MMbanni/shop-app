@@ -51,7 +51,7 @@ export function ProductsPage() {
   return (
     <main className="page-shell">
       <div className="page-heading">
-        <p className="eyebrow">Products</p>
+        <p className="section-label">Products</p>
         <h1>Choose your product</h1>
         <p className="muted"></p>
       </div>

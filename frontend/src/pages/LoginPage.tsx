@@ -32,7 +32,7 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <p className="eyebrow">Welcome back</p>
+        <p className="section-label">Welcome back</p>
         <h1>Login</h1>
 
         <label>

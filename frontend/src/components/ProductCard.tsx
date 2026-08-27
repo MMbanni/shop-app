@@ -79,7 +79,7 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
       />
 
       <div className="product-body">
-        <p className="eyebrow">{stockMessage}</p>
+        <p className="section-label">{stockMessage}</p>
 
         <h3>{product.name}</h3>
 

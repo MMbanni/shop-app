@@ -20,7 +20,7 @@ export function AdminUsersPage() {
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
-        <p className="eyebrow">Admin</p>
+        <p className="section-label">Admin</p>
         <h1>Product overview</h1>
         <p className="muted">TODO: add create/edit/delete forms.</p>
       </div>

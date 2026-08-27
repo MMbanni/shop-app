@@ -12,6 +12,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { AdminPage } from "./pages/admin/AdminPage";
+import { Footer } from "./components/Footer";
+import { ContactPage } from "./pages/ContactPage";
 
 export function App() {
   return (
@@ -20,6 +22,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/contact" element={<ContactPage/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
@@ -63,6 +66,7 @@ export function App() {
           }
         />
       </Routes>
+      <Footer/>
     </>
   );
 }
