@@ -1,6 +1,6 @@
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
@@ -17,26 +17,25 @@ const emptyProductForm: ProductForm = {
 };
 
 
-
-
-
 export function AdminProductsPage() {
   const [selectedTab, setSelectedTab] = useState<AdminProductTab>("ACTIVE");
   const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
 
-  const [message, setMessage] = useState<string|null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageVisible, setMessageVisible] = useState<boolean>(false);
 
-const [messageVisible, setMessageVisible] = useState<boolean>(false);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const [messageAnchor, setMessageAnchor] = useState<HTMLButtonElement | null>(null);
 
-function showCartMessage() {
-  setMessageVisible(true)
+  function showCartMessage() {
+    setMessageVisible(true)
 
-  setTimeout(() => {
-    setMessageVisible(false)
+    setTimeout(() => {
+      setMessageVisible(false)
 
-  }, 3000);
+    }, 3000);
 
-}
+  }
 
   const {
     adminProductsQuery,
@@ -68,11 +67,12 @@ function showCartMessage() {
     },
       {
         onSuccess: () => {
-           setNewProduct(emptyProductForm);
-           setErrorResponse(null);
-           setMessage(`${newProduct.name} added to inactive products`);
-            showCartMessage()
-          },
+          setNewProduct(emptyProductForm);
+          setErrorResponse(null);
+          setMessageAnchor(addButtonRef.current);
+          setMessage(`${newProduct.name} added to inactive products`);
+          showCartMessage()
+        },
         onError: (error) => {
           const newError = getApiError(error);
           if (newError) setErrorResponse(newError)
@@ -346,6 +346,7 @@ function showCartMessage() {
               <td>
                 <div className="admin-add-control">
                   <button
+                    ref={addButtonRef}
                     className="button"
                     onClick={handleAddProduct}
                     disabled={addProduct.isPending || editingProductId != null}
@@ -375,8 +376,8 @@ function showCartMessage() {
         />
       )}
 
-              <FloatingMessage className="addedToCartMessage" message={message?message:""} visible={messageVisible} ></FloatingMessage>
-      
+      <FloatingMessage className="addedToCartMessage" anchor={messageAnchor} message={message ? message : ""} visible={messageVisible} ></FloatingMessage>
+
 
       <BackToAdminButton />
     </main>

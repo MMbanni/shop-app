@@ -9,7 +9,7 @@ export function AdminPage() {
       <div className="page-heading">
         {/*<p className="section-label">Admin</p>*/}
         <h1>Admin portal</h1>
-        <p className="muted">List of admin actions</p>
+        {/*<p className="muted">List of admin actions</p>*/}
       </div>
 
       <section className="admin-panel">
