@@ -22,7 +22,6 @@ export function AdminUsersPage() {
       <div className="page-heading">
         <p className="section-label">Admin</p>
         <h1>Users</h1>
-        <p className="muted">TODO: add create/edit/delete forms.</p>
       </div>
 
       <div className="table-card">
