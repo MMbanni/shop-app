@@ -10,7 +10,7 @@ export function AdminUsersPage() {
   });
 
   if (isLoading) {
-    return <p className="page-message">Loading admin products...</p>;
+    return <p className="page-message">Loading users...</p>;
   }
 
   if (isError) {
@@ -21,7 +21,7 @@ export function AdminUsersPage() {
     <main className="page-shell narrow">
       <div className="page-heading">
         <p className="section-label">Admin</p>
-        <h1>Product overview</h1>
+        <h1>Users</h1>
         <p className="muted">TODO: add create/edit/delete forms.</p>
       </div>
 
