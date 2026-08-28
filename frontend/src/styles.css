@@ -105,9 +105,12 @@ select {
 .page-heading h1,
 .auth-card h1,
 .success-card h1 {
-  margin: 0;
   letter-spacing: -0.06em;
   line-height: 0.98;
+}
+
+.page-heading{
+  text-align: center;
 }
 
 .hero h1 {
@@ -270,8 +273,12 @@ select {
 }
 
 
-.page-heading {
+/*.page-heading {
   margin-bottom: 2rem;
+}*/
+
+nav .button {
+  margin: 2px;
 }
 
 .muted {

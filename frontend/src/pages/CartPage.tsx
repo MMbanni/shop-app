@@ -171,7 +171,7 @@ export function CartPage() {
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
-        <p className="section-label">Cart</p>
+        {/*<p className="section-label">Cart</p>*/}
         <h1>Your cart</h1>
       </div>
 
