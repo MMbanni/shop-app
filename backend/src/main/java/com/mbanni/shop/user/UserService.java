@@ -26,8 +26,11 @@ public class UserService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
-    public List<UserResponseDto> getAllUsers() {
-        List<User> list = userRepository.findAll();
+    public List<UserResponseDto> searchUsers(String status) {
+
+        List<User> list =
+                status.equals("ALL")? userRepository.findAll():
+                userRepository.findByStatus(status);
 
         return userMapper.toResponseList(list);
     }
@@ -64,6 +67,12 @@ public class UserService {
         }
 
         return userMapper.toResponse(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateUserStatus(Long userId, UserStatus status){
+        User user = findUserOrThrow(userId);
+        user.setStatus(status);
     }
 
 

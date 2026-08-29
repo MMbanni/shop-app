@@ -26,7 +26,13 @@ public class UserController {
     // Requires admin role
     @GetMapping
     public List<UserResponseDto> getUsers() {
-        return userService.getAllUsers();
+        return userService.searchUsers("ALL");
+    }
+
+    // Requires admin role
+    @GetMapping("/{status}")
+    public List<UserResponseDto> getUsers(@PathVariable String status) {
+        return userService.searchUsers(status);
     }
 
     @GetMapping("/me")
@@ -38,6 +44,15 @@ public class UserController {
 
     @PatchMapping("/me")
     public UserResponseDto updateUser(Authentication authentication, @Valid @RequestBody UpdateUserRequestDto request) {
+        Long userId = getCurrentUserId(authentication);
+
+        return userService.updateUserInfo(
+                userId,
+                userMapper.toCommand(request)
+        );
+    }
+    @PatchMapping("/{id}")
+    public UserResponseDto updateUserStatus(Authentication authentication, @Valid @RequestBody UpdateUserRequestDto request) {
         Long userId = getCurrentUserId(authentication);
 
         return userService.updateUserInfo(
