@@ -53,12 +53,14 @@ public class UserController {
         );
     }
     @PatchMapping("/{id}/status")
-    public void updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequestDto request) {
+    public ResponseEntity<Void> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequestDto request) {
 
         userService.updateUserStatus(
                 id,
                 userMapper.toCommand(request)
         );
+        return ResponseEntity.noContent().build();
+
     }
 
     @DeleteMapping("/{userId}")
