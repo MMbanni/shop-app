@@ -1,6 +1,7 @@
 package com.mbanni.shop.user;
 
 import com.mbanni.shop.user.dto.UpdateUserRequestDto;
+import com.mbanni.shop.user.dto.UpdateUserStatusRequestDto;
 import com.mbanni.shop.user.dto.UserResponseDto;
 import com.mbanni.shop.user.mapper.UserMapper;
 import jakarta.validation.Valid;
@@ -51,12 +52,11 @@ public class UserController {
                 userMapper.toCommand(request)
         );
     }
-    @PatchMapping("/{id}")
-    public UserResponseDto updateUserStatus(Authentication authentication, @Valid @RequestBody UpdateUserRequestDto request) {
-        Long userId = getCurrentUserId(authentication);
+    @PatchMapping("/{id}/status")
+    public void updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequestDto request) {
 
-        return userService.updateUserInfo(
-                userId,
+        userService.updateUserStatus(
+                id,
                 userMapper.toCommand(request)
         );
     }

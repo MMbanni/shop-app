@@ -38,6 +38,8 @@ public class User {
 
     private String ip;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus status;
 
     private LocalDateTime suspendedUntil;
