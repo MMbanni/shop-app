@@ -152,9 +152,8 @@ export const api = {
   },
 
   adminGetUsers(status: AdminUserTab) {
-    const query = status === "ALL" ? "" : `?status=${status}`;
-    
-    return request<User[]>(`/users/${query}`);
+    if(status=== "ALL") return request<User[]>(`/users`);
+    else return request<User[]>(`/users/${status}`);
   },
 
   changeUserStatus(updateRequest: UpdateUserStatusRequest) {

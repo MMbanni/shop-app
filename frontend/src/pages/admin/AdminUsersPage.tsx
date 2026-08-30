@@ -1,28 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../../lib/api";
-import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
-import type { AdminUserTab, ApiErrorResponse, ProductStatus, UserStatus } from "../../types";
-import { useState, useRef } from "react";
-import { useAdminProducts } from "../../hooks/useAdminProductActions";
+import type { AdminUserTab, ApiErrorResponse, UserStatus } from "../../types";
+import { useState} from "react";
 import { useAdminUsers } from "../../hooks/useAdminUserActions";
 
 
-const tabs: AdminUserTab[] = ["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED", "ALL"];
+const tabs: AdminUserTab[] = ["ALL", "ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"];
 
 
 export function AdminUsersPage() {
 
-  const [selectedTab, setSelectedTab] = useState<AdminUserTab>("ACTIVE");
+  const [selectedTab, setSelectedTab] = useState<AdminUserTab>("ALL");
+  // Leave for error handling update
   const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
-
   const [message, setMessage] = useState<string | null>(null);
   const [messageVisible, setMessageVisible] = useState<boolean>(false);
 
-  const { data: users, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: api.users
-  });
+  
 
   function changeStatus(id: number, status: UserStatus, duration: number) {
     changeUserStatus.mutate({ id, status, duration});
@@ -32,6 +25,8 @@ export function AdminUsersPage() {
     adminUsersQuery,
     changeUserStatus,
   } = useAdminUsers(selectedTab);
+
+  const { data: users, isLoading, isError, error } = adminUsersQuery;
 
   if (isLoading) {
     return <p className="page-message">Loading users...</p>;
