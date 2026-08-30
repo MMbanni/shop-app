@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse,  LoginResponse} from "../dto/";
 
 import { getToken } from "./token";
@@ -149,7 +149,21 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status })
     });
-  }
+  },
+
+  adminGetUsers(status: AdminUserTab) {
+    const query = status === "ALL" ? "" : `?status=${status}`;
+    
+    return request<User[]>(`/users/${query}`);
+  },
+
+  changeUserStatus(updateRequest: UpdateUserStatusRequest) {
+    const {id,status,duration} = updateRequest;
+    return request<void>(`/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({status,duration})
+    });
+  },
 
   
 };
