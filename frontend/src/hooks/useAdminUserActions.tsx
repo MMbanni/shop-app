@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { AdminProductTab, AdminUserTab, UpdateUserStatusRequest, UserStatus } from "../types";
+import { AdminUserTab, UpdateUserStatusRequest} from "../types";
 
 
 export function useAdminUsers(selectedTab: AdminUserTab){
