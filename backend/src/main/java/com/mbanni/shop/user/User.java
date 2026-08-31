@@ -3,9 +3,9 @@ package com.mbanni.shop.user;
 import com.mbanni.shop.cart.Cart;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Locale;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 
 @Entity
 @Table(
@@ -42,7 +42,7 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
-    private LocalDateTime suspendedUntil;
+    private Instant suspendedUntil;
 
     public User() {}
 
@@ -72,7 +72,7 @@ public class User {
 
     public UserStatus getStatus() { return this.status;}
 
-    public LocalDateTime getSuspendedUntil() { return this.suspendedUntil;}
+    public Instant getSuspendedUntil() { return this.suspendedUntil;}
 
     public void setName(String name) {
         this.name=name;
@@ -104,7 +104,7 @@ public class User {
 
     public void suspend(int days) {
         this.status=UserStatus.SUSPENDED;
-        this.suspendedUntil = LocalDateTime.now().plusDays(days);
+        this.suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
     }
     public void ban () {
         this.status=UserStatus.SUSPENDED;
