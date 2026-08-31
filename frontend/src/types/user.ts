@@ -1,9 +1,12 @@
+import { ReactNode } from "react";
+
 export type User = {
   id: number;
   email: string;
   name: string;
   role?: Role;
-  status: string
+  status: string,
+  suspendedUntil: string | null
 };
 
 export type Role = "ADMIN" | "CUSTOMER";

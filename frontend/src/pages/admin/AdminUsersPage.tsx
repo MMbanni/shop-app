@@ -17,9 +17,21 @@ export function AdminUsersPage() {
 
   
 
-  function changeStatus(id: number, status: UserStatus, duration: number) {
-    changeUserStatus.mutate({ id, status, duration});
+  function suspend(id: number,  duration: number) {
+    changeUserStatus.mutate({ id, status:"SUSPENDED", duration});
   }
+  function ban(id: number,  duration: number) {
+    changeUserStatus.mutate({ id, status:"BANNED", duration});
+  }
+  function activate(id: number,  duration: number) {
+    changeUserStatus.mutate({ id, status:"ACTIVE", duration});
+  }
+  function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
   const {
     adminUsersQuery,
@@ -52,6 +64,7 @@ export function AdminUsersPage() {
               <th>Email</th>
               <th>Role</th>
               <th>Status</th>
+              <th>Suspended until</th>
               <th>Actions</th>
 
 
@@ -65,25 +78,15 @@ export function AdminUsersPage() {
                 <td>{user.email}</td>
                 <td>{user.role}</td>
                 <td>{user.status ?? "-"}</td>
-                <td>
-                  <select
-                    value={user.status}
-                    disabled={changeUserStatus.isPending}
-                    onChange={(event) =>
-                      changeStatus(
+                <td>{user.suspendedUntil ? formatDateTime(user.suspendedUntil): "-"}</td>
 
-                        user.id,
-                        event.target.value as UserStatus,
-                      1
-                      )
-                    }
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                    <option value="SUSPENDED">Suspended</option>
-                    <option value="BANNED">Banned</option>
-                  </select>
+                
+                <td>
+                  <button onClick={()=> suspend(user.id, 1)}> Suspend </button>
+                  <button onClick={()=> ban(user.id, 1)}> Ban </button>
+                  <button onClick={()=> activate(user.id, 1)}> Activate </button>
                 </td>
+
 
               </tr>
             ))}
