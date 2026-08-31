@@ -3,6 +3,7 @@ package com.mbanni.shop.user.dto;
 import com.mbanni.shop.user.Role;
 import com.mbanni.shop.user.UserStatus;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record UserResponseDto(
@@ -11,5 +12,5 @@ public record UserResponseDto(
     String name,
     Role role,
     UserStatus status,
-    LocalDateTime suspendedUntil
+    Instant suspendedUntil
 ){}
