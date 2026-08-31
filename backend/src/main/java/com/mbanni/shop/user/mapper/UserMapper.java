@@ -21,7 +21,8 @@ public class UserMapper {
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
-                user.getStatus()
+                user.getStatus(),
+                user.getSuspendedUntil()
         );
     }
 

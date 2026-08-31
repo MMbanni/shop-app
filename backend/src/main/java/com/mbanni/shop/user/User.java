@@ -106,4 +106,14 @@ public class User {
         this.status=UserStatus.SUSPENDED;
         this.suspendedUntil = LocalDateTime.now().plusDays(days);
     }
+    public void ban () {
+        this.status=UserStatus.SUSPENDED;
+        this.suspendedUntil = null;
+
+    }
+
+    public void activate() {
+        this.status=UserStatus.ACTIVE;
+        this.suspendedUntil = null;
+    }
 }

@@ -76,19 +76,15 @@ public class UserService {
         User user = findUserOrThrow(userId);
         String status = command.status().toString();
 
-
-
-        if(status.equals("ACTIVE") || status.equals("BANNED")) {
-            System.out.println(status);
-            System.out.println(UserStatus.valueOf(status));
-            user.setStatus(UserStatus.valueOf(status));
-
+        if(status.equals("BANNED")) {
+            user.ban();
         }
         if(status.equals("SUSPENDED")) {
             user.suspend(command.duration());
-
         }
-
+        if(status.equals("ACTIVE")) {
+            user.activate();
+        }
 
     }
 
