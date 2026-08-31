@@ -125,7 +125,7 @@ function handleClose() {
               onChange={handleChange}       
                 
                 isSubmitting={changeUserStatus.isPending}
-                onSubmit={() => suspend(suspendingUserId, suspendingDuration)}
+                onSubmit={() => {suspend(suspendingUserId, suspendingDuration); handleClose()}}
                 onClose={handleClose}
               />
             )}
