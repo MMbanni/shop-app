@@ -2,6 +2,7 @@ import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import type { AdminUserTab, ApiErrorResponse, UserStatus } from "../../types";
 import { useState} from "react";
 import { useAdminUsers } from "../../hooks/useAdminUserActions";
+import { UserFormModal } from "../../components/admin/UserFormModal";
 
 
 const tabs: AdminUserTab[] = ["ALL", "ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"];
@@ -15,10 +16,15 @@ export function AdminUsersPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageVisible, setMessageVisible] = useState<boolean>(false);
 
+    const [suspendingUserId, setSuspendingUserId] = useState<number | null>(null);
+    const [suspendingDuration, setSuspendingDuration] = useState<string>("");  
+    const [suspending, setSuspending] = useState<boolean>(false);
+
+
   
 
-  function suspend(id: number,  duration: number) {
-    changeUserStatus.mutate({ id, status:"SUSPENDED", duration});
+  function suspend(id: number,  duration: string) {
+    changeUserStatus.mutate({ id, status:"SUSPENDED", duration: Number(duration)});
   }
   function ban(id: number,  duration: number) {
     changeUserStatus.mutate({ id, status:"BANNED", duration});
@@ -32,7 +38,26 @@ export function AdminUsersPage() {
     timeStyle: "short",
   }).format(new Date(value));
 }
+function handleSuspending(userId:number) {
+  setSuspending(true);
 
+  setSuspendingUserId(userId);
+
+}
+
+function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  const value = event.target.value;
+  console.log(value);
+  
+  setSuspendingDuration(value);
+
+}
+function handleClose() {
+  setSuspending(false);
+  setSuspendingDuration("");
+  setSuspendingUserId(null);
+
+}
   const {
     adminUsersQuery,
     changeUserStatus,
@@ -82,7 +107,7 @@ export function AdminUsersPage() {
 
                 
                 <td>
-                  <button onClick={()=> suspend(user.id, 1)}> Suspend </button>
+                  <button onClick={()=> handleSuspending(user.id)}> Suspend </button>
                   <button onClick={()=> ban(user.id, 1)}> Ban </button>
                   <button onClick={()=> activate(user.id, 1)}> Activate </button>
                 </td>
@@ -93,6 +118,17 @@ export function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+      {suspending && suspendingUserId &&(
+              <UserFormModal
+              duration = {suspendingDuration}
+              submitError={null}
+              onChange={handleChange}       
+                
+                isSubmitting={changeUserStatus.isPending}
+                onSubmit={() => suspend(suspendingUserId, suspendingDuration)}
+                onClose={handleClose}
+              />
+            )}
 
       <BackToAdminButton>
 

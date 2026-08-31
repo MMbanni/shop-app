@@ -18,3 +18,7 @@ export type UpdateUserStatusRequest = {
   duration:number
 }
 
+export type SuspendUserForm = {
+  id: number,
+  duration:number
+}

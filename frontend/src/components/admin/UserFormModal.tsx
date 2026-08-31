@@ -1,13 +1,9 @@
 import type { ChangeEvent } from "react";
-import type { ProductForm } from "../../types";
 import "./ProductFormModal.css";
 
-type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
 
-type ProductFormModalProps = {
-  title: string;
-  form: ProductForm;
-  errors: ProductFormErrors;
+type UserFormModalProps = {
+    duration: string;
   submitError?: string | null
   isSubmitting: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -15,16 +11,14 @@ type ProductFormModalProps = {
   onClose: () => void;
 };
 
-export function ProductFormModal({
-  title,
-  form,
-  errors,
+export function UserFormModal({
+    duration,
   submitError,
   isSubmitting,
   onChange,
   onSubmit,
   onClose,
-}: ProductFormModalProps) {
+}: UserFormModalProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit();
@@ -50,8 +44,6 @@ export function ProductFormModal({
         }
       >
         <header className="product-modal-header">
-          <h2 id="product-modal-title">{title}</h2>
-
           <button
             type="button"
             className="modal-close"
@@ -79,84 +71,19 @@ export function ProductFormModal({
 
 
           <label>
-            Product name
-
-            <input
-              name="name"
-              value={form.name}
-              onChange={onChange}
-              disabled={isSubmitting}
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={
-                errors.name ? "product-name-error" : undefined
-              }
-            />
-
-            {errors.name && (
-              <span 
-              id="product-name-error"
-              className="field-error"
-              role="alert"
-              >
-                {errors.name}
-              </span>
-            )}
-          </label>
-
-          <label>
-            Price
-
-            <input
-              name="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.price}
-              onChange={onChange}
-              disabled={isSubmitting}
-              aria-invalid={Boolean(errors.price)}
-              aria-describedby={
-                errors.price ? "product-price-error" : undefined
-              }
-            />
-
-            {errors.price && (
-              <span
-                id="product-price-error"
-                className="field-error"
-                role="alert"
-              >
-                {errors.price}
-              </span>
-            )}
-          </label>
-
-          <label>
-            Stock
+            Enter amount of days to suspend
 
             <input
               name="stock"
               type="number"
-              min="0"
-              step="1"
-              value={form.stock}
+              value={duration}
               onChange={onChange}
+              min="-50"
+              step="1"
               disabled={isSubmitting}
-              aria-invalid={Boolean(errors.stock)}
-              aria-describedby={
-                errors.stock ? "product-stock-error" : undefined
-              }
+
             />
 
-            {errors.stock && (
-              <span
-                id="product-stock-error"
-                className="field-error"
-                role="alert"
-              >
-                {errors.stock}
-              </span>
-            )}
           </label>
 
           <footer className="product-modal-actions">
