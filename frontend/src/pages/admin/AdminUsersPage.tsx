@@ -73,6 +73,10 @@ function handleClose() {
     return <p className="page-message error">{error.message}</p>;
   }
 
+  const sortedUsers = [...users ?? []].sort(
+    (a,b) => a.id - b.id
+  );
+
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
@@ -96,7 +100,7 @@ function handleClose() {
             </tr>
           </thead>
           <tbody>
-            {users?.map((user) => (
+            {sortedUsers?.map((user) => (
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{user.name}</td>
