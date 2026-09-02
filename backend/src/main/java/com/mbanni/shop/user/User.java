@@ -104,10 +104,18 @@ public class User {
 
     public void suspend(int days) {
         this.status=UserStatus.SUSPENDED;
-        this.suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
-    }
+        if(this.suspendedUntil!=null){
+            this.suspendedUntil=this.suspendedUntil.plus(days, ChronoUnit.DAYS);
+        } else {
+            this.suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
+        }
+
+        if (this.suspendedUntil.isBefore(Instant.now())) {
+            activate();
+        }
+                    }
     public void ban () {
-        this.status=UserStatus.SUSPENDED;
+        this.status=UserStatus.BANNED;
         this.suspendedUntil = null;
 
     }
