@@ -6,12 +6,32 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthContextValue } from "../types/auth";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const FORCED_LOGOUT_EVENT = "auth:forced-logout";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const queryClient = useQueryClient();
+
+  // Listen for a forced logout sent by api.ts
+  useEffect(() => {
+    function handleForcedLogout() {
+      logout();
+    }
+
+    window.addEventListener(
+      FORCED_LOGOUT_EVENT,
+      handleForcedLogout
+    );
+
+    return () => {
+      window.removeEventListener(
+        FORCED_LOGOUT_EVENT,
+        handleForcedLogout
+      );
+    };
+  }, [logout]);
 
   useEffect(() => {
     async function loadCurrentUser() {

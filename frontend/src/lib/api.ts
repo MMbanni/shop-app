@@ -46,6 +46,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // fallback if backend did not return JSON.
     }
+
+    if (errorResponse.title === "USER_BANNED") {
+    window.dispatchEvent(
+      new Event("auth:forced-logout")
+    );
+  }
         
     throw new ApiError(errorResponse);
   }
