@@ -1,9 +1,9 @@
 import type { ChangeEvent } from "react";
-import "./ProductFormModal.css";
+import "./FormModal.css";
 
 
 type UserFormModalProps = {
-    duration: string;
+  duration: string;
   submitError?: string | null
   isSubmitting: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -12,7 +12,7 @@ type UserFormModalProps = {
 };
 
 export function UserFormModal({
-    duration,
+  duration,
   submitError,
   isSubmitting,
   onChange,
@@ -35,15 +35,15 @@ export function UserFormModal({
     >
 
       <aside
-        className="product-modal"
+        className="modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="product-modal-title"
+        aria-labelledby="modal-title"
         aria-describedby={
-          submitError ? "product-modal-submit-error" : undefined
+          submitError ? "modal-submit-error" : undefined
         }
       >
-        <header className="product-modal-header">
+        <header className="modal-header">
           <button
             type="button"
             className="modal-close"
@@ -55,14 +55,14 @@ export function UserFormModal({
         </header>
 
         <form
-          className="product-modal-form"
+          className="modal-form"
           onSubmit={handleSubmit}
           noValidate>
-          
+
           {submitError && (
             <div
-              id="product-modal-submit-error"
-              className="product-modal-error"
+              id="modal-submit-error"
+              className="modal-error"
               role="alert"
             >
               {submitError}
@@ -86,7 +86,7 @@ export function UserFormModal({
 
           </label>
 
-          <footer className="product-modal-actions">
+          <footer className="modal-actions">
             <button
               type="button"
               className="button ghost"
@@ -96,10 +96,10 @@ export function UserFormModal({
               Cancel
             </button>
 
-            <button 
-            type="submit" 
-            className="button" 
-            disabled={isSubmitting}
+            <button
+              type="submit"
+              className="button"
+              disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save changes"}
             </button>

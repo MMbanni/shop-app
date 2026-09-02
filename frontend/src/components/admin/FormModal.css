@@ -17,7 +17,7 @@
 }
 
 /* Floating modal card */
-.product-modal {
+.modal {
   width: min(500px, 100%);
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
@@ -39,11 +39,11 @@
     0 30px 80px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.03);
 
-  animation: product-modal-enter 180ms ease-out;
+  animation: modal-enter 180ms ease-out;
 }
 
 /* Header containing the title and close button */
-.product-modal-header {
+.modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -55,7 +55,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.product-modal-header h2 {
+.modal-header h2 {
   margin: 0;
 
   font-size: 1.65rem;
@@ -64,7 +64,7 @@
 }
 
 /* Optional text below the modal title */
-.product-modal-description {
+.modal-description {
   margin: 0.4rem 0 0;
 
   color: #94a3b8;
@@ -112,13 +112,13 @@
 }
 
 /* Form layout */
-.product-modal-form {
+.modal-form {
   display: grid;
   gap: 1.25rem;
 }
 
 /* Each label contains its text, input and error */
-.product-modal-form label {
+.modal-form label {
   display: grid;
   gap: 0.5rem;
 
@@ -128,9 +128,9 @@
 }
 
 /* Input styling */
-.product-modal-form input,
-.product-modal-form select,
-.product-modal-form textarea {
+.modal-form input,
+.modal-form select,
+.modal-form textarea {
   width: 100%;
   min-height: 2.8rem;
 
@@ -150,16 +150,16 @@
     box-shadow 150ms ease;
 }
 
-.product-modal-form input:hover,
-.product-modal-form select:hover,
-.product-modal-form textarea:hover {
+.modal-form input:hover,
+.modal-form select:hover,
+.modal-form textarea:hover {
   background: rgba(255, 255, 255, 0.075);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.product-modal-form input:focus,
-.product-modal-form select:focus,
-.product-modal-form textarea:focus {
+.modal-form input:focus,
+.modal-form select:focus,
+.modal-form textarea:focus {
   background: rgba(255, 255, 255, 0.08);
   border-color: #5eead4;
 
@@ -168,29 +168,29 @@
     0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
-.product-modal-form input::placeholder,
-.product-modal-form textarea::placeholder {
+.modal-form input::placeholder,
+.modal-form textarea::placeholder {
   color: #64748b;
 }
 
 /* Disabled inputs */
-.product-modal-form input:disabled,
-.product-modal-form select:disabled,
-.product-modal-form textarea:disabled {
+.modal-form input:disabled,
+.modal-form select:disabled,
+.modal-form textarea:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 /* Invalid input styling */
-.product-modal-form input[aria-invalid="true"],
-.product-modal-form select[aria-invalid="true"],
-.product-modal-form textarea[aria-invalid="true"] {
+.modal-form input[aria-invalid="true"],
+.modal-form select[aria-invalid="true"],
+.modal-form textarea[aria-invalid="true"] {
   border-color: rgba(248, 113, 113, 0.8);
 }
 
-.product-modal-form input[aria-invalid="true"]:focus,
-.product-modal-form select[aria-invalid="true"]:focus,
-.product-modal-form textarea[aria-invalid="true"]:focus {
+.modal-form input[aria-invalid="true"]:focus,
+.modal-form select[aria-invalid="true"]:focus,
+.modal-form textarea[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14);
 }
 
@@ -205,7 +205,7 @@
 }
 
 /* General server error shown above the fields */
-.product-modal-error {
+.modal-error {
   padding: 0.85rem 1rem;
 
   color: #fecaca;
@@ -219,7 +219,7 @@
 }
 
 /* Bottom action buttons */
-.product-modal-actions {
+.modal-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -231,16 +231,16 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.product-modal-actions .button {
+.modal-actions .button {
   min-width: 7rem;
 }
 
 /* Keyboard accessibility */
 .modal-close:focus-visible,
-.product-modal-form input:focus-visible,
-.product-modal-form select:focus-visible,
-.product-modal-form textarea:focus-visible,
-.product-modal-actions button:focus-visible {
+.modal-form input:focus-visible,
+.modal-form select:focus-visible,
+.modal-form textarea:focus-visible,
+.modal-actions button:focus-visible {
   outline: 3px solid rgba(94, 234, 212, 0.55);
   outline-offset: 3px;
 }
@@ -257,7 +257,7 @@
 }
 
 /* Card appearing */
-@keyframes product-modal-enter {
+@keyframes modal-enter {
   from {
     opacity: 0;
     transform: translateY(1rem) scale(0.97);
@@ -276,7 +276,7 @@
     padding: 0;
   }
 
-  .product-modal {
+  .modal {
     width: 100%;
     max-height: 92vh;
 
@@ -289,15 +289,15 @@
     border-radius: 1.5rem 1.5rem 0 0;
   }
 
-  .product-modal-header {
+  .modal-header {
     margin-bottom: 1.25rem;
   }
 
-  .product-modal-actions {
+  .modal-actions {
     flex-direction: column-reverse;
   }
 
-  .product-modal-actions .button {
+  .modal-actions .button {
     width: 100%;
   }
 }
@@ -305,14 +305,14 @@
 /* Respect users who disable animations */
 @media (prefers-reduced-motion: reduce) {
   .modal-backdrop,
-  .product-modal {
+  .modal {
     animation: none;
   }
 
   .modal-close,
-  .product-modal-form input,
-  .product-modal-form select,
-  .product-modal-form textarea {
+  .modal-form input,
+  .modal-form select,
+  .modal-form textarea {
     transition: none;
   }
 }
