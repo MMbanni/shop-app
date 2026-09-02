@@ -27,10 +27,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final SecurityErrorResponseWriter securityErrorResponseWriter;
 
-    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository, SecurityErrorResponseWriter securityErrorResponseWriter){
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository, SecurityErrorResponseWriter securityErrorResponseWriter) {
         this.jwtService = jwtService;
-        this.userRepository=userRepository;
-        this.securityErrorResponseWriter=securityErrorResponseWriter;
+        this.userRepository = userRepository;
+        this.securityErrorResponseWriter = securityErrorResponseWriter;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Check header for authorization
         String authHeader = request.getHeader("Authorization");
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -59,21 +59,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
         User user = userRepository.findById(userData.id()).orElse(null);
-        if(user!=null){
-            if(user.getStatus() == UserStatus.SUSPENDED){
-                securityErrorResponseWriter.writeSuspended(response, user.getSuspendedUntil());
-
-            }
-            if(user.getStatus() == UserStatus.BANNED){
-                securityErrorResponseWriter.writeBanned(response);
-
-            }
-        }
-
-
 
         if (user == null) {
-            filterChain.doFilter(request,response);
+            filterChain.doFilter(request, response);
+            return;
+        }
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            securityErrorResponseWriter.writeSuspended(response, user.getSuspendedUntil());
+            return;
+        }
+        if (user.getStatus() == UserStatus.BANNED) {
+            securityErrorResponseWriter.writeBanned(response);
+            return;
         }
 
 
@@ -85,16 +82,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 userData.id(),
                 null,
                 authorities
-
-
         );
 
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(authToken);
 
-        filterChain.doFilter(request, response);
+        filterChain
+                .doFilter(request, response);
 
     }
-
 
 
 }
