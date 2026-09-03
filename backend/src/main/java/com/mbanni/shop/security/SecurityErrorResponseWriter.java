@@ -1,6 +1,5 @@
 package com.mbanni.shop.security;
 
-import jakarta.persistence.Column;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +22,7 @@ public class SecurityErrorResponseWriter {
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
         problem.setTitle("USER_SUSPENDED");
-        problem.setDetail("Your account is currently suspended.");
+        problem.setDetail("Account suspended until "+suspendedUntil);
         problem.setProperty("suspendedUntil", suspendedUntil);
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -40,7 +39,7 @@ public class SecurityErrorResponseWriter {
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
         problem.setTitle("USER_BANNED");
-        problem.setDetail("User is Banned");
+        problem.setDetail("Account is Banned");
 
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
