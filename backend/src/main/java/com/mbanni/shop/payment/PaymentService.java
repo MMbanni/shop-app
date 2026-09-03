@@ -178,7 +178,11 @@ public class PaymentService {
         }
 
         order.markPaid(session.getId());
-        order.getUser().getCart().clearItems();
+        List<OrderItem> orderItems = order.getItems();
+        Cart cart = order.getUser().getCart();
+        for(OrderItem item: orderItems) {
+            cart.removeItem(item.getSourceCartItemId(), item.getQuantity());
+        }
     }
 
     @Transactional
@@ -238,6 +242,7 @@ public class PaymentService {
 
             reservations.add(
                     new ProductReservation(
+                            cartItem.getId(),
                             product,
                             requestedQuantity
                     )
@@ -257,6 +262,7 @@ public class PaymentService {
             product.decreaseStock(quantity);
 
             OrderItem orderItem = new OrderItem(
+                    reservation.sourceCartItemId,
                     product.getId(),
                     product.getName(),
                     quantity,
@@ -268,6 +274,7 @@ public class PaymentService {
     }
 
     private record ProductReservation(
+            Long sourceCartItemId,
             Product product,
             int quantity
     ) {

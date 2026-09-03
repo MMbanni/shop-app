@@ -16,6 +16,8 @@ public class OrderItem {
     private Order order;
 
     // Snapshots in case price changes in future
+
+    private Long sourceCartItemId;
     private Long productIdSnapshot;
     private String productNameSnapshot;
     private int quantity;
@@ -25,7 +27,8 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    public OrderItem(Long productIdSnapshot, String productNameSnapshot, int quantity, BigDecimal price) {
+    public OrderItem(Long sourceCartItemId,Long productIdSnapshot, String productNameSnapshot, int quantity, BigDecimal price) {
+        this.sourceCartItemId=sourceCartItemId;
         this.productIdSnapshot = productIdSnapshot;
         this.productNameSnapshot = productNameSnapshot;
         this.quantity = quantity;
@@ -39,6 +42,10 @@ public class OrderItem {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getSourceCartItemId() {
+        return sourceCartItemId;
     }
 
     public Long getProductIdSnapshot() {

@@ -95,6 +95,29 @@ public class Cart {
         }
     }
 
+    // Payment webhook cleanup
+    public void removePurchasedQuantity(Long cartItemId, int purchasedQuantity) {
+        if (cartItemId == null || purchasedQuantity < 1) {
+            return;
+        }
+        CartItem foundItem = findItemById(cartItemId);
+
+        // The customer already removed item.
+        if (foundItem == null) {
+            return;
+        }
+
+        int remainingQuantity =
+                foundItem.getQuantity() - purchasedQuantity;
+
+        if (remainingQuantity <= 0) {
+            items.remove(foundItem);
+            foundItem.detachFromCart();
+        } else {
+            foundItem.setQuantity(remainingQuantity);
+        }
+    }
+
     public void removeAll(Long cartItemId) {
 
         CartItem foundItem = findItemById(cartItemId);
