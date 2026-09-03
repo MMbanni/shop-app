@@ -130,7 +130,7 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (order.getStripeSessionId() == null) {
-            return;
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
         try {
