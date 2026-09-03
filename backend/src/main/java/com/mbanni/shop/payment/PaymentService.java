@@ -36,7 +36,7 @@ import java.util.Optional;
 @Service
 public class PaymentService {
 
-    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(30);
+    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(31);
     private static final int MAX_EXPIRED_CHECKOUTS_PER_DAY = 4;
 
     private final UserRepository userRepository;
@@ -163,6 +163,9 @@ public class PaymentService {
 
     @Transactional
     public void handleCheckoutCompleted(Session session) {
+        if (!"paid".equals(session.getPaymentStatus())) {
+            return;
+        }
         Order order = orderRepository.findByStripeSessionId(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -175,7 +178,6 @@ public class PaymentService {
         }
 
         order.markPaid(session.getId());
-
         order.getUser().getCart().clearItems();
     }
 
