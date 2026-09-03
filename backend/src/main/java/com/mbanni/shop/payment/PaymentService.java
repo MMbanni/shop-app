@@ -129,11 +129,20 @@ public class PaymentService {
         Order order = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        if (order.getStripeSessionId() == null) {
             return;
         }
 
-        expireStripeSessionIfPossible(order);
+        try {
+            Session session = Session.retrieve(order.getStripeSessionId());
+
+            if ("open".equals(session.getStatus())) {
+                session.expire();
+            }
+        } catch (StripeException exception) {
+            throw new RuntimeException("Could not expire Stripe checkout session", exception);
+        }
+
         releaseStock(order);
 
         order.markCancelled();
@@ -259,21 +268,6 @@ public class PaymentService {
         }
     }
 
-    private void expireStripeSessionIfPossible(Order order) {
-        if (order.getStripeSessionId() == null) {
-            return;
-        }
-
-        try {
-            Session session = Session.retrieve(order.getStripeSessionId());
-
-            if ("open".equals(session.getStatus())) {
-                session.expire();
-            }
-        } catch (StripeException exception) {
-            throw new RuntimeException("Could not expire Stripe checkout session", exception);
-        }
-    }
 
     private void expirePendingOrderAndReleaseStock(Order order) {
         if (order.getStatus() == OrderStatus.PAID) {
