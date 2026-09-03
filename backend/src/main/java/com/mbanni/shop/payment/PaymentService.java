@@ -130,24 +130,36 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (order.getStripeSessionId() == null) {
-            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe Session ID");
         }
 
         try {
             Session session = Session.retrieve(order.getStripeSessionId());
 
-            if ("open".equals(session.getStatus())) {
-                session.expire();
+            if ("complete".equals(session.getStatus())) {
+                return;
             }
+
+            if ("expired".equals(session.getStatus())) {
+                expirePendingOrderAndReleaseStock(order);
+                return;
+            }
+
+            if (!"open".equals(session.getStatus())) {
+                throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                        "Unknown Stripe Session status: "
+                                + session.getStatus()
+                );
+            }
+
+            session.expire();
+            releaseStock(order);
+            order.markCancelled();
+
         } catch (StripeException exception) {
             throw new RuntimeException("Could not expire Stripe checkout session", exception);
         }
-
-        releaseStock(order);
-
-        order.markCancelled();
     }
-
 
     @Transactional
     public void handleCheckoutCompleted(Session session) {
