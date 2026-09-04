@@ -62,7 +62,7 @@ public enum ErrorCode {
     ),
 
     PRICE_CHANGED(
-            "The product price has changed"
+            "The price for this item has changed"
     ),
 
     ORDER_NOT_FOUND(
