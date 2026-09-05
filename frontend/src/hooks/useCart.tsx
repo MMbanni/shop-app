@@ -51,6 +51,7 @@ export function useCart() {
     mutationFn: (cartItemId: number)=>api.confirmPrice(cartItemId),
 
     onSuccess: () => {
+      checkoutMutation.reset();
       return queryClient.invalidateQueries({
         queryKey: ["cart"],
       });

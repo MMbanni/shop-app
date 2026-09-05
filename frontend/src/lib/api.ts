@@ -124,7 +124,7 @@ export const api = {
   },
 
   confirmPrice(cartItemId:number) {
-    return request<void>(`/cart/${cartItemId}/confirm`, {
+    return request<void>(`/cart/items/${cartItemId}/confirm`, {
       method: "POST"
     });
   },
