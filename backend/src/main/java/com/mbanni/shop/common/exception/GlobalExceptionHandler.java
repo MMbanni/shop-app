@@ -98,7 +98,8 @@ public class GlobalExceptionHandler {
 
 
             case CART_ERROR,
-                 INSUFFICIENT_STOCK-> HttpStatus.UNPROCESSABLE_CONTENT;
+                 INSUFFICIENT_STOCK,
+                 PRODUCT_NOT_AVAILABLE-> HttpStatus.UNPROCESSABLE_CONTENT;
 
             case EXCEEDED_QUANTITY_LIMIT,
                  ILLEGAL_OPERATION,

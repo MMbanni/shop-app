@@ -29,6 +29,10 @@ public enum ErrorCode {
             "Product not found"
     ),
 
+    PRODUCT_NOT_AVAILABLE(
+            "Product currently unavailable"
+    ),
+
     PRODUCT_ALREADY_EXISTS(
             "Product already exists"
     ),

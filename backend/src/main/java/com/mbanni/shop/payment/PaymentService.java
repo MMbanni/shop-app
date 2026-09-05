@@ -14,6 +14,7 @@ import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
+import com.mbanni.shop.product.ProductStatus;
 import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import com.stripe.Stripe;
@@ -250,6 +251,20 @@ public class PaymentService {
                                 requestedQuantity,
                                 null,
                                 "The price of this item has changed from " + cartItem.getPriceWhenAdded() + " to " +cartItem.getProduct().getPrice()
+                        )
+                );
+            }
+
+            if (cartItem.getProduct().getProductStatus() != ProductStatus.ACTIVE) {
+                errors.add(
+                        new CartItemProblem(
+                                ErrorCode.PRODUCT_NOT_AVAILABLE,
+                                cartItem.getId(),
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                ErrorCode.PRODUCT_NOT_AVAILABLE.getDefaultMessage()
                         )
                 );
             }
