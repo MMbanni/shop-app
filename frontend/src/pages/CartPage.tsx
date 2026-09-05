@@ -2,8 +2,9 @@ import { money } from "../lib/money";
 import { useCart } from "../hooks/useCart";
 import { ApiErrorResponse, CartItemProblem } from "../types";
 import { getApiError } from "../lib/ApiError";
+import { Confirm } from "../components/messages/Confirm";
 
-function mapProblemsByCartItemId( problems: CartItemProblem[]): Map<number, CartItemProblem> {
+function mapProblemsByCartItemId(problems: CartItemProblem[]): Map<number, CartItemProblem> {
   const problemsByItemId = new Map<number, CartItemProblem>();
 
   for (const problem of problems) {
@@ -16,7 +17,7 @@ function mapProblemsByCartItemId( problems: CartItemProblem[]): Map<number, Cart
   }
 
   console.log(problemsByItemId);
-  
+
 
   return problemsByItemId;
 }
@@ -27,6 +28,7 @@ export function CartPage() {
     updateMutation,
     removeMutation,
     checkoutMutation,
+    confirmPrice
   } = useCart();
 
   if (cartQuery.isLoading) {
@@ -210,6 +212,7 @@ export function CartPage() {
                   item.cartItemId,
                 ) ?? null;
 
+
               const itemError =
                 updateErrorForItem ??
                 removeErrorForItem ??
@@ -238,13 +241,25 @@ export function CartPage() {
                     </p>
 
                     {itemError && (
-                      <p className="error" role="alert">
-                        {getProductErrorMessage(
-                          item.productName,
-                          itemError,
-                        )}
-                      </p>
-                    )}
+                      itemError.code === "PRICE_CHANGED" ? (
+
+                        <Confirm
+                          message={`${itemError.detail} would you like to proceed with the current price?`}
+                          onConfirm={()=> confirmPrice.mutate(item.cartItemId)} >
+
+
+                        </Confirm>
+                      ) : (
+
+                    <p className="error" role="alert">
+                      {getProductErrorMessage(
+                        item.productName,
+                        itemError,
+                      )}
+                    </p>
+                    )
+                    )
+                    }
                   </div>
 
                   <div className="quantity-controls">

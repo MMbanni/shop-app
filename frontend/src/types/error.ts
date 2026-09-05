@@ -11,6 +11,7 @@ export type CartItemProblem = {
   stock?: number;
   title?: string;
   detail?: string;
+  priceChanged?:boolean
 };
 
 export type ApiErrorResponse = {

@@ -123,6 +123,12 @@ export const api = {
     });
   },
 
+  confirmPrice(cartItemId:number) {
+    return request<void>(`/cart/${cartItemId}/confirm`, {
+      method: "POST"
+    });
+  },
+
 
   adminRemoveProduct(productId: number) {
     return request<void>(`/admin/products/${productId}`, {
