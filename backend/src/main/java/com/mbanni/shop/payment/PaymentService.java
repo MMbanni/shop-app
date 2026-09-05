@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -239,6 +240,19 @@ public class PaymentService {
                         )
                 );
             }
+            if (cartItem.hasPriceChanged()) {
+                errors.add(
+                        new CartItemProblem(
+                                ErrorCode.PRICE_CHANGED,
+                                cartItem.getId(),
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                "The price of this item has changed from " + cartItem.getPriceWhenAdded() + " to " +cartItem.getProduct().getPrice()
+                        )
+                );
+            }
 
             reservations.add(
                     new ProductReservation(
@@ -272,7 +286,7 @@ public class PaymentService {
             order.addItem(orderItem);
         }
     }
-
+    // TOTO Extract
     private record ProductReservation(
             Long sourceCartItemId,
             Product product,
@@ -347,5 +361,27 @@ public class PaymentService {
         if (expiredCheckouts >= MAX_EXPIRED_CHECKOUTS_PER_DAY) {
             throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
         }
+    }
+
+    private boolean checkoutMatchesCart(Order order, Cart cart) {
+        List<CartItem> cartItems = cart.getItems();
+        List<OrderItem> orderItems = order.getItems();
+
+        for(OrderItem orderItem: orderItems){
+            CartItem match = cartItems.stream()
+                    .filter(cartItem -> Objects.equals(
+                            cartItem.getId(), orderItem.getSourceCartItemId()
+                    ))
+                    .findFirst().orElse(null);
+
+            if(match == null) return false;
+            Product product = match.getProduct();
+
+            if(!Objects.equals(product.getId(), orderItem.getProductIdSnapshot())) return false;
+            if(match.getQuantity() != orderItem.getQuantity()) return false;
+
+        }
+        return true;
+
     }
 }

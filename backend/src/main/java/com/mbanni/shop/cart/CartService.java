@@ -106,6 +106,14 @@ public class CartService {
         );
     }
 
+    @Transactional
+    public void acceptNewPrice(Long userId, Long cartItemId) {
+        User user = findUserOrThrow(userId);
+        CartItem cartItem = user.getCart().findItemById(cartItemId);
+
+        cartItem.setPriceWhenAdded(cartItem.getProduct().getPrice());
+    }
+
 
     private User findUserOrThrow(Long userId) {
         return userRepository.findById(userId)
