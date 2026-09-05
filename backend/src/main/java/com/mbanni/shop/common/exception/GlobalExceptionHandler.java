@@ -88,7 +88,8 @@ public class GlobalExceptionHandler {
 
             case EMAIL_ALREADY_USED,
                  PRICE_CHANGED,
-                 PRODUCT_ALREADY_EXISTS-> HttpStatus.CONFLICT;
+                 PRODUCT_ALREADY_EXISTS,
+                 PROCESSING-> HttpStatus.CONFLICT;
 
             case INVALID_CREDENTIALS -> HttpStatus.UNAUTHORIZED;
 
@@ -107,6 +108,7 @@ public class GlobalExceptionHandler {
                  PRODUCT_NOT_IN_CART -> HttpStatus.BAD_REQUEST;
 
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
+
         };
     }
 }

@@ -75,6 +75,10 @@ public enum ErrorCode {
 
     TOO_MANY_ATTEMPTS(
             "Too many attempts"
+    ),
+
+    PROCESSING (
+            "Please wait"
     );
 
     private String defaultMessage;
