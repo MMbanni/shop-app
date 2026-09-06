@@ -1,4 +1,12 @@
 package com.mbanni.shop.order.dto;
 
-public record OrderResponseDto() {
+import com.mbanni.shop.order.OrderStatus;
+
+import java.time.Instant;
+
+public record OrderResponseDto(
+        Long orderId,
+        OrderStatus status,
+        Instant paidAt
+) {
 }
