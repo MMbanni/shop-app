@@ -91,6 +91,10 @@ export const api = {
     return request<Cart>("/cart");
   },
 
+  orderStatus(sessionId: string) {
+    return request<Cart>(`/orders/by-session/${sessionId}`);
+  },
+
   addToCart(productId: number, quantity = 1) {
     return request<Cart>("/cart", {
       method: "POST",

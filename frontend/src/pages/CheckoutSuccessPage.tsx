@@ -1,8 +1,16 @@
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { api } from "../lib/api";
 
 export function CheckoutSuccessPage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
+
+  useEffect(()=>{
+    if (sessionId == null) return;
+
+    api.orderStatus(sessionId)
+  }, [sessionId, ]);
 
   return (
     <main className="page-shell narrow">
