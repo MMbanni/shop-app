@@ -78,7 +78,7 @@ public enum ErrorCode {
     ),
 
     PROCESSING (
-            "Please wait"
+            "You have a pending order being processed. Please wait..."
     );
 
     private String defaultMessage;

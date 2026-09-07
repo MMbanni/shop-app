@@ -3,10 +3,7 @@ package com.mbanni.shop.order;
 import com.mbanni.shop.order.dto.OrderResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/orders")
@@ -18,7 +15,7 @@ public class OrderController {
     }
 
 
-    @PostMapping("/by-session/{sessionId}")
+    @GetMapping("/by-session/{sessionId}")
     public OrderResponseDto getOrder(@PathVariable String sessionId, Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         Order order = orderService.getOrder(userId, sessionId);
