@@ -28,7 +28,7 @@ export function UserFormModal({
     <div
       className="modal-backdrop"
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && !isSubmitting) {
           onClose();
         }
       }}
