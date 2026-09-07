@@ -26,7 +26,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-        <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+        <Route path="/checkout/cancel" element={<CheckoutSuccessPage />} />
         <Route
           path="/cart"
           element={

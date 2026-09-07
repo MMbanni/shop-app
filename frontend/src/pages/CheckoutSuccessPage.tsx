@@ -17,8 +17,6 @@ export function CheckoutSuccessPage() {
     if (!sessionId) {
       return;
     }
-
-    let cancelled = false;
     let timeoutId: number | undefined;
 
     async function checkOrderStatus() {
@@ -41,16 +39,12 @@ export function CheckoutSuccessPage() {
         return
       }
 
-      if (cancelled) {
-        return;
-      }
 
     }
 
     void checkOrderStatus();
 
     return () => {
-      cancelled = true;
 
       if (timeoutId !== undefined) {
         window.clearTimeout(timeoutId);
@@ -61,8 +55,21 @@ export function CheckoutSuccessPage() {
   const paymentConfirmed = orderStatus === "PAID"
   const cancelled = orderStatus === "CANCELLED";
   const expired = orderStatus === "EXPIRED";
-  const notFound = getApiError(apiError)?.status == 404;
 
+  if (!sessionId) {
+    return (
+      <main className="page-shell narrow">
+        <div className="success-card">
+          <h1>Invalid checkout session</h1>
+          <p>No checkout session was provided.</p>
+
+          <Link className="button large" to="/products">
+            Continue shopping
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
 
   return (
@@ -72,13 +79,17 @@ export function CheckoutSuccessPage() {
 
         {
           apiError ?
-            
-              (<h1> {`${getApiError(apiError)?.detail}`} </h1>) 
-              : cancelled ? (
-                <><h1>Order has been cancelled</h1> <p> No payment was taken </p>
+
+            (<h1> {`${getApiError(apiError)?.detail}`} </h1>)
+            : cancelled ? (
+              <><h1>Order has been cancelled</h1> <p> No payment was taken </p>
+              </>)
+              : paymentConfirmed ? (
+                <><h1>Payment confirmed</h1> <p> Thank you for your order</p>
                 </>)
-                : paymentConfirmed ? (
-                  <><h1>Payment confirmed</h1> <p> Thank you for your order</p>
+
+                : expired ? (
+                  <><h1>Order expired</h1> <p> Please try again</p>
                   </>)
                   : (
                     <><h1>Confirming payment</h1> <p> Please wait... </p>
