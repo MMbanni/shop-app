@@ -44,6 +44,7 @@ export function UserFormModal({
         }
       >
         <header className="modal-header">
+          <h2 id="modal-title">Suspend user</h2>
           <button
             type="button"
             className="modal-close"
