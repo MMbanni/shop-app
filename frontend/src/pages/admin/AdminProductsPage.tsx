@@ -91,7 +91,7 @@ export function AdminProductsPage() {
   }
 
   function startEdit(product: Product) {
-    updateProduct.reset;
+    updateProduct.reset();
 
     setEditingProductId(product.id);
 
