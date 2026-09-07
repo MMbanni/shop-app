@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
-import { ApiError, getApiError, getFieldErrors, getFormErrorMessage } from "../../lib/ApiError";
+import { getFieldErrors, getFormErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
 import { FloatingMessage } from "../../components/messages/FloatingMessage";
 
@@ -19,7 +19,6 @@ const emptyProductForm: ProductForm = {
 
 export function AdminProductsPage() {
   const [selectedTab, setSelectedTab] = useState<AdminProductTab>("ACTIVE");
-  const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
 
   const [message, setMessage] = useState<string | null>(null);
   const [messageVisible, setMessageVisible] = useState<boolean>(false);
@@ -84,17 +83,11 @@ export function AdminProductsPage() {
       {
         onSuccess: () => {
           setNewProduct(emptyProductForm);
-          setErrorResponse(null);
           setMessageAnchor(addButtonRef.current);
           setMessage(`${newProduct.name} added to inactive products`);
           showCartMessage()
         },
-        onError: (error) => {
-          const newError = getApiError(error);
-          if (newError) setErrorResponse(newError)
-        }
       }
-
     );
   }
 
@@ -114,7 +107,6 @@ export function AdminProductsPage() {
   function cancelEdit() {
     setEditingProductId(null);
     setEditProduct(emptyProductForm);
-    setErrorResponse(null);
   }
 
 
@@ -344,7 +336,7 @@ export function AdminProductsPage() {
             </tr>
           </tbody>
         </table>
-        
+
         {addSubmitError && (
           <p className="error" role="alert">
             {addSubmitError}
