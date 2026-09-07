@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
-import { ApiError, getApiError } from "../../lib/ApiError";
+import { ApiError, getApiError, getFieldErrors, getFormErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
 import { FloatingMessage } from "../../components/messages/FloatingMessage";
 
@@ -45,6 +45,14 @@ export function AdminProductsPage() {
     removeProduct
   } = useAdminProducts(selectedTab);
 
+  const editFieldErrors = updateProduct.isError
+    ? getFieldErrors(updateProduct.error)
+    : {};
+
+  const editSubmitError = updateProduct.isError
+    ? getFormErrorMessage(updateProduct.error)
+    : null;
+
 
   const {
     data: products,
@@ -83,13 +91,14 @@ export function AdminProductsPage() {
   }
 
   function startEdit(product: Product) {
+    updateProduct.reset;
+
     setEditingProductId(product.id);
-    setErrorResponse(null);
 
     setEditProduct({
       name: product.name,
       price: String(product.price),
-      stock: String(product.stock ?? 0),
+      stock: String(product.stock),
     });
 
   }
@@ -135,11 +144,6 @@ export function AdminProductsPage() {
         onSuccess: () => {
           setEditingProductId(null);
           setEditProduct(emptyProductForm);
-          setErrorResponse(null);
-        },
-        onError: (error) => {
-          const newError = getApiError(error);
-          if (newError) setErrorResponse(newError)
         }
       });
   }
@@ -158,28 +162,6 @@ export function AdminProductsPage() {
 
       }
     }
-
-  }
-
-  function getUpdateProductError(fieldName: keyof ProductForm): string | undefined {
-    const fieldErrors = errorResponse?.errors
-
-    if (!fieldErrors) return undefined;
-
-
-    for (const fieldError of fieldErrors) {
-      const belongsToField = Object.values(fieldError).includes(fieldName);
-      const message = fieldError["message"];
-
-
-      if (belongsToField && message) {
-        return String(message)
-
-
-      }
-
-    }
-    return undefined;
 
   }
 
@@ -364,11 +346,8 @@ export function AdminProductsPage() {
         <ProductFormModal
           title="Edit Product"
           form={editProduct}
-          errors={{
-            name: getUpdateProductError("name"),
-            price: getUpdateProductError("price"),
-            stock: getUpdateProductError("stock"),
-          }}
+          errors={editFieldErrors}
+          submitError={editSubmitError}
           isSubmitting={updateProduct.isPending}
           onChange={handleEditProductChange}
           onSubmit={() => handleSaveEdit(editingProductId)}
