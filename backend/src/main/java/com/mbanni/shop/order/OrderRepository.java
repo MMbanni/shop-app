@@ -31,5 +31,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Instant createdAt
     );
 
-    Order findByUserIdAndStripeSessionId(Long userId, String sessionId);
+    Optional<Order> findByUserIdAndStripeSessionId(Long userId, String sessionId);
 }
