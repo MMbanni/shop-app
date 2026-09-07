@@ -1,7 +1,8 @@
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import { useState, useRef } from "react";
-import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
+import type { AdminProductTab, Product, ProductStatus } from "../../types";
+import { ApiErrorMessage } from "../../components/messages/ApiErrorMessage";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
 import { getFieldErrors, getFormErrorMessage } from "../../lib/ApiError";
@@ -111,8 +112,15 @@ export function AdminProductsPage() {
 
 
   function changeStatus(productId: number, status: ProductStatus) {
+    removeProduct.reset()
     changeProductStatus.mutate({ productId, status });
   }
+
+  function handleRemoveProduct(productId: number) {
+  changeProductStatus.reset();
+
+  removeProduct.mutate(productId);
+}
 
   function handleAddProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -197,6 +205,19 @@ export function AdminProductsPage() {
         ))}
       </div>
 
+      {removeProduct.isError && (
+        <ApiErrorMessage
+          error={removeProduct.error}
+          fallback="Could not delete the product."
+        />
+      )}
+
+      {changeProductStatus.isError && (
+        <ApiErrorMessage
+          error={changeProductStatus.error}
+          fallback="Could not change the product status."
+        />
+      )}
       <div className="table-card">
         <table>
           <thead>
@@ -229,7 +250,7 @@ export function AdminProductsPage() {
                   <td>
                     <select
                       value={product.status}
-                      disabled={changeProductStatus.isPending}
+                      disabled={changeProductStatus.isPending || removeProduct.isPending}
                       onChange={(event) =>
                         changeStatus(
                           product.id,
@@ -256,8 +277,8 @@ export function AdminProductsPage() {
 
                       <button
                         className="button danger"
-                        onClick={() => removeProduct.mutate(product.id)}
-                        disabled={removeProduct.isPending}
+                        onClick={() => handleRemoveProduct(product.id)}
+                        disabled={removeProduct.isPending || changeProductStatus.isPending}
                       >
                         ×
                       </button>
