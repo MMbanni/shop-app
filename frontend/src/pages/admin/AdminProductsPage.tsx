@@ -53,6 +53,14 @@ export function AdminProductsPage() {
     ? getFormErrorMessage(updateProduct.error)
     : null;
 
+  const addFieldErrors = addProduct.isError
+    ? getFieldErrors(addProduct.error)
+    : {};
+
+  const addSubmitError = addProduct.isError
+    ? getFormErrorMessage(addProduct.error)
+    : null;
+
 
   const {
     data: products,
@@ -148,20 +156,16 @@ export function AdminProductsPage() {
       });
   }
 
-  function handleAddProductErrors(name: string) {
-    let fieldErrors = errorResponse?.errors
+  function handleAddProductErrors(field: keyof ProductForm) {
+    const message = addFieldErrors[field];
 
-    if (fieldErrors) {
-      for (const error of fieldErrors) {
-        if (!editingProductId && error.field == name) {
-          return <div className="add-product-error" role="alert">
-            {error.message}
-
-          </div>
-        }
-
-      }
+    if (!message) {
+      return null;
     }
+
+    return <div className="add-product-error" role="alert">
+      {message}
+    </div>
 
   }
 
@@ -340,6 +344,13 @@ export function AdminProductsPage() {
             </tr>
           </tbody>
         </table>
+        
+        {addSubmitError && (
+          <p className="error" role="alert">
+            {addSubmitError}
+          </p>
+        )}
+
       </div>
 
       {editingProductId !== null && (
