@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest, Order } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse,  LoginResponse} from "../dto/";
 
 import { getToken } from "./token";
@@ -92,7 +92,7 @@ export const api = {
   },
 
   orderStatus(sessionId: string) {
-    return request<Cart>(`/orders/by-session/${sessionId}`);
+    return request<Order>(`/orders/by-session/${sessionId}`);
   },
 
   addToCart(productId: number, quantity = 1) {
