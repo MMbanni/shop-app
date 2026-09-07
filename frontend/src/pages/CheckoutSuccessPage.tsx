@@ -34,11 +34,12 @@ export function CheckoutSuccessPage() {
         }
       }
       catch (e) {
-        setApiError(e as ApiErrorResponse)
-
-        return
+        const error = getApiError(e)
+        if (error) {
+          setApiError(error);
+        }
+        return;
       }
-
 
     }
 
@@ -52,7 +53,7 @@ export function CheckoutSuccessPage() {
     };
   }, [sessionId]);
 
-  const paymentConfirmed = orderStatus === "PAID"
+  const paymentConfirmed = orderStatus === "PAID";
   const cancelled = orderStatus === "CANCELLED";
   const expired = orderStatus === "EXPIRED";
 
@@ -79,20 +80,27 @@ export function CheckoutSuccessPage() {
 
         {
           apiError ?
-
-            (<h1> {`${getApiError(apiError)?.detail}`} </h1>)
+            (<h1> {`${apiError.detail}`} </h1>)
             : cancelled ? (
-              <><h1>Order has been cancelled</h1> <p> No payment was taken </p>
+              <>
+                <h1>Order has been cancelled</h1>
+                <p>No payment was taken </p>
               </>)
               : paymentConfirmed ? (
-                <><h1>Payment confirmed</h1> <p> Thank you for your order</p>
+                <>
+                  <h1>Payment confirmed</h1>
+                  <p>Thank you for your order</p>
                 </>)
 
                 : expired ? (
-                  <><h1>Order expired</h1> <p> Please try again</p>
+                  <>
+                    <h1>Order expired</h1>
+                    <p>Please try again</p>
                   </>)
                   : (
-                    <><h1>Confirming payment</h1> <p> Please wait... </p>
+                    <>
+                      <h1>Confirming payment</h1>
+                      <p>Please wait...</p>
                     </>)
         }
 
