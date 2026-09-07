@@ -4,24 +4,29 @@ import { api } from "../lib/api";
 import { useState } from "react";
 import { FloatingMessage } from "../components/messages/FloatingMessage";
 
+type CartMessage = {
+  text: string;
+  anchor: HTMLButtonElement;
+};
+
 export function ProductsPage() {
   const { data: products, isLoading, isError, error } = useQuery({
     queryKey: ["products"],
     queryFn: api.products
   });
 
-  const [cartMessage, setCartMessage] = useState<string|null>(null);
+  const [cartMessage, setCartMessage] = useState<CartMessage | null>(null);
   const [cartMessageVisible, setCartMessageVisible] = useState<boolean>(false);
 
 
-  function showCartMessage(message: string){
-    setCartMessage(message);
+  function showCartMessage(text: string, button: HTMLButtonElement) {
+    setCartMessage({ text, anchor: button });
     setCartMessageVisible(true)
 
 
-    setTimeout(()=>{
-    setCartMessageVisible(false)
-      
+    setTimeout(() => {
+      setCartMessageVisible(false)
+
     }, 3000);
 
   }
@@ -32,27 +37,39 @@ export function ProductsPage() {
   }
 
   if (isError) {
-    return <p className="page-message error">{error.message}</p>;
+    return (
+      <p className="page-message error">
+        {error instanceof Error
+          ? error.message
+          : "Could not load products"
+        }
+
+      </p>
+    );
   }
 
   return (
     <main className="page-shell">
       <div className="page-heading">
-        <p className="eyebrow">Products</p>
-        <h1>Choose your product</h1>
-        <p className="muted"></p>
+        <h1>Products</h1>
       </div>
 
       <section className="product-grid">
-        {products?.map((product) => 
-        <ProductCard
-         key={product.id} 
-         product={product} 
-         onAddSuccess={()=> showCartMessage(`${product.name} added to cart`)} 
-         />)}
-      </section>
+        {products?.map((product) =>
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddSuccess={(button) => showCartMessage(`${product.name} added to cart`, button)}
 
-      {cartMessage && <FloatingMessage message={cartMessage} visible={cartMessageVisible}></FloatingMessage>}
+          />)}
+      </section>
+      <FloatingMessage
+        className="added-to-cart-message"
+        message={cartMessage?.text ?? ""}
+        anchor={cartMessage?.anchor ?? null}
+        visible={cartMessageVisible}
+      />
+
     </main>
   );
 }

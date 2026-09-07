@@ -27,11 +27,7 @@ public class BusinessException extends RuntimeException{
         this(errorCode, errorCode.getDefaultMessage(), Map.of());
     }
 
-    public static BusinessException forField(
-            ErrorCode errorCode,
-            String field,
-            String message
-    ) {
+    public static BusinessException forField(ErrorCode errorCode, String field, String message) {
         ValidationFieldError fieldError = new ValidationFieldError(
                 field,
                 errorCode.name(),

@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Locale;
 
@@ -46,6 +47,7 @@ public class AuthService {
 
         user.setEmail(email);
         user.setName(command.name().trim());
+        user.setStatus(UserStatus.INACTIVE);
 
         String hashedPassword = passwordEncoder.encode(command.password());
         user.setPassword(hashedPassword);
@@ -76,7 +78,7 @@ public class AuthService {
         }
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
-            if(user.getSuspendedUntil().isBefore(LocalDateTime.now())){
+            if(user.getSuspendedUntil().isBefore(Instant.now())){
                 user.setStatus(UserStatus.ACTIVE);
             } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);

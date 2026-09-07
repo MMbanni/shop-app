@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest, Order } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse,  LoginResponse} from "../dto/";
 
 import { getToken } from "./token";
@@ -46,6 +46,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // fallback if backend did not return JSON.
     }
+
+    if (errorResponse.title === "USER_BANNED") {
+    window.dispatchEvent(
+      new Event("auth:forced-logout")
+    );
+  }
         
     throw new ApiError(errorResponse);
   }
@@ -85,6 +91,10 @@ export const api = {
     return request<Cart>("/cart");
   },
 
+  orderStatus(sessionId: string) {
+    return request<Order>(`/orders/by-session/${sessionId}`);
+  },
+
   addToCart(productId: number, quantity = 1) {
     return request<Cart>("/cart", {
       method: "POST",
@@ -113,6 +123,12 @@ export const api = {
 
   cancelCheckout() {
     return request<void>("/payments/checkout/cancel", {
+      method: "POST"
+    });
+  },
+
+  confirmPrice(cartItemId:number) {
+    return request<void>(`/cart/items/${cartItemId}/confirm`, {
       method: "POST"
     });
   },
@@ -149,7 +165,20 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status })
     });
-  }
+  },
+
+  adminGetUsers(status: AdminUserTab) {
+    if(status=== "ALL") return request<User[]>(`/users`);
+    else return request<User[]>(`/users/${status}`);
+  },
+
+  changeUserStatus(updateRequest: UpdateUserStatusRequest) {
+    const {id,status,duration} = updateRequest;
+    return request<void>(`/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({status,duration})
+    });
+  },
 
   
 };

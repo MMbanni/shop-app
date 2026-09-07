@@ -3,9 +3,9 @@ package com.mbanni.shop.user;
 import com.mbanni.shop.cart.Cart;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Locale;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 
 @Entity
 @Table(
@@ -38,9 +38,11 @@ public class User {
 
     private String ip;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus status;
 
-    private LocalDateTime suspendedUntil;
+    private Instant suspendedUntil;
 
     public User() {}
 
@@ -70,7 +72,7 @@ public class User {
 
     public UserStatus getStatus() { return this.status;}
 
-    public LocalDateTime getSuspendedUntil() { return this.suspendedUntil;}
+    public Instant getSuspendedUntil() { return this.suspendedUntil;}
 
     public void setName(String name) {
         this.name=name;
@@ -102,6 +104,24 @@ public class User {
 
     public void suspend(int days) {
         this.status=UserStatus.SUSPENDED;
-        this.suspendedUntil = LocalDateTime.now().plusDays(days);
+        if(this.suspendedUntil!=null){
+            this.suspendedUntil=this.suspendedUntil.plus(days, ChronoUnit.DAYS);
+        } else {
+            this.suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
+        }
+
+        if (this.suspendedUntil.isBefore(Instant.now())) {
+            activate();
+        }
+                    }
+    public void ban () {
+        this.status=UserStatus.BANNED;
+        this.suspendedUntil = null;
+
+    }
+
+    public void activate() {
+        this.status=UserStatus.ACTIVE;
+        this.suspendedUntil = null;
     }
 }

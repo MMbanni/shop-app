@@ -2,6 +2,7 @@ package com.mbanni.shop.payment;
 
 import com.mbanni.shop.cart.Cart;
 import com.mbanni.shop.cart.CartItem;
+import com.mbanni.shop.cart.dto.CartItemProblem;
 import com.mbanni.shop.checkout.CheckoutItemError;
 import com.mbanni.shop.checkout.CheckoutResponse;
 import com.mbanni.shop.checkout.CheckoutValidationException;
@@ -13,6 +14,7 @@ import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
+import com.mbanni.shop.product.ProductStatus;
 import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import com.stripe.Stripe;
@@ -30,14 +32,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class PaymentService {
 
-    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(30);
+    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(31);
     private static final int MAX_EXPIRED_CHECKOUTS_PER_DAY = 4;
-
 
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
@@ -70,6 +72,9 @@ public class PaymentService {
     public CheckoutResponse createCheckoutSession(Long userId) {
         Instant now = Instant.now();
 
+        User user = getUserOrThrow(userId);
+        Cart cart = getValidCartOrThrow(user);
+
         checkForCheckoutAbuse(userId, now);
 
         Optional<Order> existingPending =
@@ -78,15 +83,15 @@ public class PaymentService {
         if (existingPending.isPresent()) {
             Order pendingOrder = existingPending.get();
 
-            if (!pendingOrder.hasExpired(now)) {
+            if(pendingOrder.hasExpired(now)){
+                expirePendingOrderAndReleaseStock(pendingOrder);
+            } else if(checkoutMatchesCart(pendingOrder, cart)) {
                 return new CheckoutResponse(pendingOrder.getCheckoutUrl());
+            } else {
+                supersedePendingCheckout(pendingOrder);
             }
 
-            expirePendingOrderAndReleaseStock(pendingOrder);
         }
-
-        User user = getUserOrThrow(userId);
-        Cart cart = getValidCartOrThrow(user);
 
         Instant expiresAt = now.plus(CHECKOUT_EXPIRY);
 
@@ -129,19 +134,43 @@ public class PaymentService {
         Order order = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (order.getStatus() != OrderStatus.PENDING) {
-            return;
+        if (order.getStripeSessionId() == null) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe Session ID");
         }
 
-        expireStripeSessionIfPossible(order);
-        releaseStock(order);
+        try {
+            Session session = Session.retrieve(order.getStripeSessionId());
 
-        order.markCancelled();
+            if ("complete".equals(session.getStatus())) {
+                return;
+            }
+
+            if ("expired".equals(session.getStatus())) {
+                expirePendingOrderAndReleaseStock(order);
+                return;
+            }
+
+            if (!"open".equals(session.getStatus())) {
+                throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                        "Unknown Stripe Session status: "
+                                + session.getStatus()
+                );
+            }
+
+            session.expire();
+            releaseStock(order);
+            order.markCancelled();
+
+        } catch (StripeException exception) {
+            throw new RuntimeException("Could not expire Stripe checkout session", exception);
+        }
     }
-
 
     @Transactional
     public void handleCheckoutCompleted(Session session) {
+        if (!"paid".equals(session.getPaymentStatus())) {
+            return;
+        }
         Order order = orderRepository.findByStripeSessionId(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -154,8 +183,11 @@ public class PaymentService {
         }
 
         order.markPaid(session.getId());
-
-        order.getUser().getCart().getItems().clear();
+        List<OrderItem> orderItems = order.getItems();
+        Cart cart = order.getUser().getCart();
+        for(OrderItem item: orderItems) {
+            cart.removeItem(item.getSourceCartItemId(), item.getQuantity());
+        }
     }
 
     @Transactional
@@ -184,7 +216,7 @@ public class PaymentService {
     }
 
     private void reserveStockAndCopyCartItems(Cart cart, Order order) {
-        List<CheckoutItemError> errors = new ArrayList<>();
+        List<CartItemProblem> errors = new ArrayList<>();
         List<ProductReservation> reservations = new ArrayList<>();
 
         // First pass: lock products and validate every cart item
@@ -200,23 +232,49 @@ public class PaymentService {
 
             if (stock < requestedQuantity) {
                 errors.add(
-                        new CheckoutItemError(
+                        new CartItemProblem(
+                                ErrorCode.INSUFFICIENT_STOCK,
                                 cartItem.getId(),
-                                String.valueOf(ErrorCode.CART_ERROR),
-                                stock == 0
-                                        ? "Product is out of stock."
-                                        : "Only " + stock
-                                        + (stock == 1
-                                        ? " unit is"
-                                        : " units are")
-                                        + " available.",
-                                stock
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                ErrorCode.INSUFFICIENT_STOCK
+                                        .getDefaultMessage()
+                        )
+                );
+            }
+            if (cartItem.hasPriceChanged()) {
+                errors.add(
+                        new CartItemProblem(
+                                ErrorCode.PRICE_CHANGED,
+                                cartItem.getId(),
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                "The price of this item has changed from " + cartItem.getPriceWhenAdded() + " to " +cartItem.getProduct().getPrice()
+                        )
+                );
+            }
+
+            if (cartItem.getProduct().getProductStatus() != ProductStatus.ACTIVE) {
+                errors.add(
+                        new CartItemProblem(
+                                ErrorCode.PRODUCT_NOT_AVAILABLE,
+                                cartItem.getId(),
+                                product.getId(),
+                                stock,
+                                requestedQuantity,
+                                null,
+                                ErrorCode.PRODUCT_NOT_AVAILABLE.getDefaultMessage()
                         )
                 );
             }
 
             reservations.add(
                     new ProductReservation(
+                            cartItem.getId(),
                             product,
                             requestedQuantity
                     )
@@ -236,6 +294,7 @@ public class PaymentService {
             product.decreaseStock(quantity);
 
             OrderItem orderItem = new OrderItem(
+                    reservation.sourceCartItemId,
                     product.getId(),
                     product.getName(),
                     quantity,
@@ -245,8 +304,9 @@ public class PaymentService {
             order.addItem(orderItem);
         }
     }
-
+    // TOTO Extract
     private record ProductReservation(
+            Long sourceCartItemId,
             Product product,
             int quantity
     ) {
@@ -261,21 +321,6 @@ public class PaymentService {
         }
     }
 
-    private void expireStripeSessionIfPossible(Order order) {
-        if (order.getStripeSessionId() == null) {
-            return;
-        }
-
-        try {
-            Session session = Session.retrieve(order.getStripeSessionId());
-
-            if ("open".equals(session.getStatus())) {
-                session.expire();
-            }
-        } catch (StripeException exception) {
-            throw new RuntimeException("Could not expire Stripe checkout session", exception);
-        }
-    }
 
     private void expirePendingOrderAndReleaseStock(Order order) {
         if (order.getStatus() == OrderStatus.PAID) {
@@ -334,5 +379,81 @@ public class PaymentService {
         if (expiredCheckouts >= MAX_EXPIRED_CHECKOUTS_PER_DAY) {
             throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
         }
+    }
+
+    private void supersedePendingCheckout(Order order) {
+        if (order.getStripeSessionId() == null) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION
+            );
+        }
+
+        try {
+            Session session =
+                    Session.retrieve(order.getStripeSessionId());
+
+            if ("complete".equals(session.getStatus())) {
+                // Payment may already be completing.
+                // Do not release stock or create a replacement.
+                throw new BusinessException(
+                        ErrorCode.PROCESSING
+                );
+            }
+
+            if ("expired".equals(session.getStatus())) {
+                expirePendingOrderAndReleaseStock(order);
+                return;
+            }
+
+            if (!"open".equals(session.getStatus())) {
+                throw new BusinessException(
+                        ErrorCode.ILLEGAL_OPERATION
+                );
+            }
+
+            // If payment wins the race, Stripe rejects this call
+            // and the database transaction rolls back.
+            session.expire();
+
+            releaseStock(order);
+            order.markSuperseded();
+
+        } catch (StripeException exception) {
+            throw new RuntimeException(
+                    "Could not replace Stripe checkout session",
+                    exception
+            );
+        }
+    }
+
+
+    private boolean checkoutMatchesCart(Order order, Cart cart) {
+        List<CartItem> cartItems = cart.getItems();
+        List<OrderItem> orderItems = order.getItems();
+
+        for(OrderItem orderItem: orderItems){
+            CartItem match = cartItems.stream()
+                    .filter(cartItem -> Objects.equals(
+                            cartItem.getId(), orderItem.getSourceCartItemId()
+                    ))
+                    .findFirst().orElse(null);
+
+            if(match == null) return false;
+            Product product = match.getProduct();
+
+            if (cartItems.size() != orderItems.size()) {
+                return false;
+            }
+            if(!Objects.equals(product.getId(), orderItem.getProductIdSnapshot())) return false;
+            if(match.getQuantity() != orderItem.getQuantity()) return false;
+
+            if (product.getPrice()
+                    .compareTo(orderItem.getPrice()) != 0) {
+                return false;
+            }
+
+        }
+        return true;
+
     }
 }

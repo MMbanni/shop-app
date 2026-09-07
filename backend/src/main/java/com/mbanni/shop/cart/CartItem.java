@@ -26,16 +26,22 @@ public class CartItem {
     private BigDecimal discount = BigDecimal.ZERO;
 
     @Column(nullable = false)
+    private BigDecimal priceWhenAdded;
+
+    @Column(nullable = false)
     private int quantity;
 
 
-    public CartItem(){}
+    public CartItem(){
+    }
 
     CartItem(Cart cart, Product product, int quantity) {
 
-        this.product = product;
         this.cart = cart;
+        this.product = product;
+        setPriceWhenAdded(product.getPrice());
         setQuantity(quantity);
+
     }
 
     public Long getId() {
@@ -44,6 +50,9 @@ public class CartItem {
 
     public BigDecimal getDiscount() {
         return this.discount;
+    }
+    public BigDecimal getPriceWhenAdded() {
+        return this.priceWhenAdded;
     }
 
     public Product getProduct() {
@@ -66,6 +75,18 @@ public class CartItem {
         }
 
         this.discount = discount;
+    }
+
+    public void setPriceWhenAdded(BigDecimal price ) {
+        this.priceWhenAdded = price;
+    }
+
+    public boolean hasPriceChanged() {
+        return priceWhenAdded.compareTo(product.getPrice()) != 0;
+    }
+
+    public void acceptCurrentPrice() {
+        this.priceWhenAdded = product.getPrice();
     }
 
     void setQuantity(int value) {

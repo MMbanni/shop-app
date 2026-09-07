@@ -69,6 +69,7 @@ public class Cart {
         }
 
         CartItem item = new CartItem(this, product, quantity);
+        item.setPriceWhenAdded(item.getProduct().getPrice());
         items.add(item);
     }
 
@@ -94,6 +95,29 @@ public class Cart {
         }
     }
 
+    // Payment webhook cleanup
+    public void removePurchasedQuantity(Long cartItemId, int purchasedQuantity) {
+        if (cartItemId == null || purchasedQuantity < 1) {
+            return;
+        }
+        CartItem foundItem = findItemById(cartItemId);
+
+        // The customer already removed item.
+        if (foundItem == null) {
+            return;
+        }
+
+        int remainingQuantity =
+                foundItem.getQuantity() - purchasedQuantity;
+
+        if (remainingQuantity <= 0) {
+            items.remove(foundItem);
+            foundItem.detachFromCart();
+        } else {
+            foundItem.setQuantity(remainingQuantity);
+        }
+    }
+
     public void removeAll(Long cartItemId) {
 
         CartItem foundItem = findItemById(cartItemId);
@@ -102,6 +126,10 @@ public class Cart {
 
         items.remove(foundItem);
 
+    }
+
+    public void clearItems() {
+        items.clear();
     }
 
     public BigDecimal calculateTotal() {
@@ -122,7 +150,6 @@ public class Cart {
                 return item;
             }
         }
-
         return null;
     }
 

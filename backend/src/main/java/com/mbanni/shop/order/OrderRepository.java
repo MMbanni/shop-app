@@ -30,4 +30,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             OrderStatus status,
             Instant createdAt
     );
+
+    Optional<Order> findByUserIdAndStripeSessionId(Long userId, String sessionId);
 }

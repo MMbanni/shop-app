@@ -68,4 +68,17 @@ public class CartController {
         return ResponseEntity.noContent().build();
 
     }
+
+    @PostMapping("/items/{cartItemId}/confirm")
+    public ResponseEntity<Void> confirmPrice(
+            Authentication authentication,
+            @PathVariable Long cartItemId
+    ) {
+        Long userId = Long.valueOf(authentication.getName());
+
+        cartService.acceptNewPrice(userId, cartItemId);
+
+        return ResponseEntity.noContent().build();
+
+    }
 }

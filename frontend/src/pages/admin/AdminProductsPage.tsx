@@ -1,11 +1,13 @@
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
-import { useState } from "react";
-import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
+import { useState, useRef } from "react";
+import type { AdminProductTab, Product, ProductStatus } from "../../types";
+import { ApiErrorMessage } from "../../components/messages/ApiErrorMessage";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
-import { ApiError, getApiError } from "../../lib/ApiError";
+import { getFieldErrors, getFormErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
+import { FloatingMessage } from "../../components/messages/FloatingMessage";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
 
@@ -15,16 +17,49 @@ const emptyProductForm: ProductForm = {
   stock: "0",
 };
 
+
 export function AdminProductsPage() {
   const [selectedTab, setSelectedTab] = useState<AdminProductTab>("ACTIVE");
-  const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
+
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageVisible, setMessageVisible] = useState<boolean>(false);
+
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const [messageAnchor, setMessageAnchor] = useState<HTMLButtonElement | null>(null);
+
+  function showCartMessage() {
+    setMessageVisible(true)
+
+    setTimeout(() => {
+      setMessageVisible(false)
+
+    }, 3000);
+
+  }
 
   const {
     adminProductsQuery,
     addProduct,
     updateProduct,
     changeProductStatus,
-    removeProduct } = useAdminProducts(selectedTab);
+    removeProduct
+  } = useAdminProducts(selectedTab);
+
+  const editFieldErrors = updateProduct.isError
+    ? getFieldErrors(updateProduct.error)
+    : {};
+
+  const editSubmitError = updateProduct.isError
+    ? getFormErrorMessage(updateProduct.error)
+    : null;
+
+  const addFieldErrors = addProduct.isError
+    ? getFieldErrors(addProduct.error)
+    : {};
+
+  const addSubmitError = addProduct.isError
+    ? getFormErrorMessage(addProduct.error)
+    : null;
 
 
   const {
@@ -47,24 +82,25 @@ export function AdminProductsPage() {
       stock: Number(newProduct.stock),
     },
       {
-        onSuccess: () => setNewProduct(emptyProductForm),
-        onError: (error) => {
-          const newError = getApiError(error);
-          if (newError) setErrorResponse(newError)
-        }
+        onSuccess: () => {
+          setNewProduct(emptyProductForm);
+          setMessageAnchor(addButtonRef.current);
+          setMessage(`${newProduct.name} added to inactive products`);
+          showCartMessage()
+        },
       }
-
     );
   }
 
   function startEdit(product: Product) {
+    updateProduct.reset();
+
     setEditingProductId(product.id);
-    setErrorResponse(null);
 
     setEditProduct({
       name: product.name,
       price: String(product.price),
-      stock: String(product.stock ?? 0),
+      stock: String(product.stock),
     });
 
   }
@@ -72,13 +108,19 @@ export function AdminProductsPage() {
   function cancelEdit() {
     setEditingProductId(null);
     setEditProduct(emptyProductForm);
-    setErrorResponse(null);
   }
 
 
   function changeStatus(productId: number, status: ProductStatus) {
+    removeProduct.reset()
     changeProductStatus.mutate({ productId, status });
   }
+
+  function handleRemoveProduct(productId: number) {
+  changeProductStatus.reset();
+
+  removeProduct.mutate(productId);
+}
 
   function handleAddProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -110,51 +152,20 @@ export function AdminProductsPage() {
         onSuccess: () => {
           setEditingProductId(null);
           setEditProduct(emptyProductForm);
-          setErrorResponse(null);
-        },
-        onError: (error) => {
-          const newError = getApiError(error);
-          if (newError) setErrorResponse(newError)
         }
       });
   }
 
-  function handleAddProductErrors(name: string) {
-    let fieldErrors = errorResponse?.errors
+  function handleAddProductErrors(field: keyof ProductForm) {
+    const message = addFieldErrors[field];
 
-    if (fieldErrors) {
-      for (const error of fieldErrors) {
-        if (!editingProductId && error[name]) {
-          return <p className="error" role="alert">
-            {error[name]}
-
-          </p>
-        }
-
-      }
+    if (!message) {
+      return null;
     }
 
-  }
-
-  function getUpdateProductError(fieldName: keyof ProductForm): string | undefined {
-    const fieldErrors = errorResponse?.errors
-
-    if (!fieldErrors) return undefined;
-
-
-    for (const fieldError of fieldErrors) {
-      const belongsToField = Object.values(fieldError).includes(fieldName);
-      const message = fieldError["message"];
-
-
-      if (belongsToField && message) {
-        return String(message)
-
-
-      }
-
-    }
-    return undefined;
+    return <div className="add-product-error" role="alert">
+      {message}
+    </div>
 
   }
 
@@ -177,7 +188,7 @@ export function AdminProductsPage() {
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
-        <p className="eyebrow">Admin</p>
+        <p className="section-label">Admin</p>
         <h1>Products</h1>
         <p className="muted"></p>
       </div>
@@ -194,6 +205,19 @@ export function AdminProductsPage() {
         ))}
       </div>
 
+      {removeProduct.isError && (
+        <ApiErrorMessage
+          error={removeProduct.error}
+          fallback="Could not delete the product."
+        />
+      )}
+
+      {changeProductStatus.isError && (
+        <ApiErrorMessage
+          error={changeProductStatus.error}
+          fallback="Could not change the product status."
+        />
+      )}
       <div className="table-card">
         <table>
           <thead>
@@ -226,7 +250,7 @@ export function AdminProductsPage() {
                   <td>
                     <select
                       value={product.status}
-                      disabled={changeProductStatus.isPending}
+                      disabled={changeProductStatus.isPending || removeProduct.isPending}
                       onChange={(event) =>
                         changeStatus(
                           product.id,
@@ -253,8 +277,8 @@ export function AdminProductsPage() {
 
                       <button
                         className="button danger"
-                        onClick={() => removeProduct.mutate(product.id)}
-                        disabled={removeProduct.isPending}
+                        onClick={() => handleRemoveProduct(product.id)}
+                        disabled={removeProduct.isPending || changeProductStatus.isPending}
                       >
                         ×
                       </button>
@@ -266,75 +290,97 @@ export function AdminProductsPage() {
             })}
 
             <tr className="admin-add">
-              <td>New</td>
-
               <td>
-                <input
-                  name="name"
-                  value={newProduct.name}
-                  onChange={handleAddProductChange}
-                  placeholder="Product name"
-                />
-                {handleAddProductErrors("name")}
-
+                <div className="admin-add-control">New</div>
               </td>
 
               <td>
-                <input
-                  name="price"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={handleAddProductChange}
-                  placeholder="Price"
-                />
-                {handleAddProductErrors("price")}
-
-
+                <div className="admin-add-field">
+                  <input
+                    name="name"
+                    value={newProduct.name}
+                    onChange={handleAddProductChange}
+                    placeholder="Product name"
+                  />
+                  <div className="admin-add-error-slot">
+                    {handleAddProductErrors("name")}
+                  </div>
+                </div>
               </td>
 
               <td>
-                <input
-                  name="stock"
-                  type="number"
-                  value={newProduct.stock}
-                  onChange={handleAddProductChange}
-                  placeholder="Stock"
-                />
-                {handleAddProductErrors("stock")}
-
+                <div className="admin-add-field">
+                  <input
+                    name="price"
+                    type="number"
+                    value={newProduct.price}
+                    onChange={handleAddProductChange}
+                    placeholder="Price"
+                  />
+                  <div className="admin-add-error-slot">
+                    {handleAddProductErrors("price")}
+                  </div>
+                </div>
               </td>
 
-              <td>Active</td>
+              <td>
+                <div className="admin-add-field">
+                  <input
+                    name="stock"
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={handleAddProductChange}
+                    placeholder="Stock"
+                  />
+                  <div className="admin-add-error-slot">
+                    {handleAddProductErrors("stock")}
+                  </div>
+                </div>
+              </td>
 
               <td>
-                <button
-                  className="button"
-                  onClick={handleAddProduct}
-                  disabled={addProduct.isPending || editingProductId != null}
-                >
-                  {addProduct.isPending ? "Adding..." : "Add"}
-                </button>
+                <div className="admin-add-control">Inactive</div>
+              </td>
+
+              <td>
+                <div className="admin-add-control">
+                  <button
+                    ref={addButtonRef}
+                    className="button"
+                    onClick={handleAddProduct}
+                    disabled={addProduct.isPending || editingProductId != null}
+                  >
+                    {addProduct.isPending ? "Adding..." : "Add"}
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
+
+        {addSubmitError && (
+          <p className="error" role="alert">
+            {addSubmitError}
+          </p>
+        )}
+
       </div>
 
       {editingProductId !== null && (
         <ProductFormModal
           title="Edit Product"
           form={editProduct}
-          errors={{
-            name: getUpdateProductError("name"),
-            price: getUpdateProductError("price"),
-            stock: getUpdateProductError("stock"),
-          }}
+          errors={editFieldErrors}
+          submitError={editSubmitError}
           isSubmitting={updateProduct.isPending}
           onChange={handleEditProductChange}
           onSubmit={() => handleSaveEdit(editingProductId)}
           onClose={cancelEdit}
         />
       )}
+
+      <FloatingMessage className="addedToCartMessage" anchor={messageAnchor} message={message ? message : ""} visible={messageVisible} ></FloatingMessage>
+
 
       <BackToAdminButton />
     </main>

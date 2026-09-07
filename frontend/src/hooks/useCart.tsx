@@ -47,10 +47,22 @@ export function useCart() {
     },
   });
 
+  const confirmPrice = useMutation({
+    mutationFn: (cartItemId: number)=>api.confirmPrice(cartItemId),
+
+    onSuccess: () => {
+      checkoutMutation.reset();
+      return queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+    },
+  });
+
   return {
     cartQuery,
     updateMutation,
     removeMutation,
     checkoutMutation,
+    confirmPrice
   };
 }

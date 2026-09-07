@@ -16,7 +16,7 @@ export function CheckoutCancelPage() {
   return (
     <main className="page-shell narrow">
       <div className="success-card">
-        <p className="eyebrow">Checkout cancelled</p>
+        <p className="section-label">Checkout cancelled</p>
         <h1>No payment was taken.</h1>
         <p className="muted">You can go back to your cart and try again.</p>
         <Link className="button large" to="/cart">Back to cart</Link>

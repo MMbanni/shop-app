@@ -3,6 +3,7 @@ package com.mbanni.shop.user;
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.user.command.UpdateUserCommand;
+import com.mbanni.shop.user.command.UpdateUserStatusCommand;
 import com.mbanni.shop.user.dto.UserResponseDto;
 import com.mbanni.shop.user.mapper.UserMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,8 +27,11 @@ public class UserService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
-    public List<UserResponseDto> getAllUsers() {
-        List<User> list = userRepository.findAll();
+    public List<UserResponseDto> searchUsers(String status) {
+
+        List<User> list =
+                status.equals("ALL")? userRepository.findAll():
+                userRepository.findByStatus(status);
 
         return userMapper.toResponseList(list);
     }
@@ -64,6 +68,24 @@ public class UserService {
         }
 
         return userMapper.toResponse(user);
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateUserStatus(Long userId, UpdateUserStatusCommand command){
+        User user = findUserOrThrow(userId);
+        String status = command.status().toString();
+
+        if(status.equals("BANNED")) {
+            user.ban();
+        }
+        if(status.equals("SUSPENDED")) {
+            user.suspend(command.duration());
+        }
+        if(status.equals("ACTIVE")) {
+            user.activate();
+        }
+
     }
 
 

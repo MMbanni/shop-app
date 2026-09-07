@@ -1,7 +1,9 @@
 package com.mbanni.shop.security;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,31 +32,32 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Filter chain
-     * Only login and home permitted
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/",
-                        "/products",
-                        "/auth/register",
-                        "/auth/login",
-                        "/payments/webhook").permitAll()
+                http
+                        .cors(Customizer.withDefaults())
+                        .csrf(csrf -> csrf.disable())
+                        .authorizeHttpRequests(auth -> auth
+                                // Do not hide controller/service failures behind a 403
+                                // when Spring performs its secondary /error dispatch.
+                                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
-                        .anyRequest().authenticated()
+                                .requestMatchers("/",
+                                        "/products",
+                                        "/auth/register",
+                                        "/auth/login").permitAll()
 
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                                .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
+
+                                .anyRequest().authenticated()
+
+                        )
+                        .sessionManagement(session -> session
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        )
+                        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                        .build();
 
     }
 

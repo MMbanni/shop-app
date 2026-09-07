@@ -98,6 +98,16 @@ public class Order {
         status = OrderStatus.CANCELLED;
     }
 
+    public void markSuperseded() {
+        if (status != OrderStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Only pending orders can be superseded"
+            );
+        }
+
+        status = OrderStatus.SUPERSEDED;
+    }
+
     public Long getId() {
         return id;
     }

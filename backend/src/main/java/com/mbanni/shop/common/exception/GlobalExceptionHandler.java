@@ -43,6 +43,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("VALIDATION_ERROR");
         problem.setDetail("Invalid request body");
 
+        // Jackson will convert Java list into JSON array
         List<ValidationFieldError> errors = ex.getBindingResult()
                         .getFieldErrors()
                         .stream()
@@ -86,7 +87,9 @@ public class GlobalExceptionHandler {
                  ORDER_NOT_FOUND-> HttpStatus.NOT_FOUND;
 
             case EMAIL_ALREADY_USED,
-                 PRODUCT_ALREADY_EXISTS-> HttpStatus.CONFLICT;
+                 PRICE_CHANGED,
+                 PRODUCT_ALREADY_EXISTS,
+                 PROCESSING-> HttpStatus.CONFLICT;
 
             case INVALID_CREDENTIALS -> HttpStatus.UNAUTHORIZED;
 
@@ -95,13 +98,17 @@ public class GlobalExceptionHandler {
                  ACCOUNT_SUSPENDED-> HttpStatus.FORBIDDEN;
 
 
-            case CART_ERROR -> HttpStatus.UNPROCESSABLE_CONTENT;
+            case CART_ERROR,
+                 INSUFFICIENT_STOCK,
+                 PRODUCT_NOT_AVAILABLE-> HttpStatus.UNPROCESSABLE_CONTENT;
 
             case EXCEEDED_QUANTITY_LIMIT,
                  ILLEGAL_OPERATION,
+                 INVALID_QUANTITY,
                  PRODUCT_NOT_IN_CART -> HttpStatus.BAD_REQUEST;
 
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
+
         };
     }
 }
