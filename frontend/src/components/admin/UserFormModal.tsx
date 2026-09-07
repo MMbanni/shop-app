@@ -49,6 +49,7 @@ export function UserFormModal({
             className="modal-close"
             onClick={onClose}
             aria-label="Close modal"
+            disabled={isSubmitting}
           >
             ×
           </button>
