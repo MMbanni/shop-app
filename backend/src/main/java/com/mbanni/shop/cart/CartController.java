@@ -75,7 +75,7 @@ public class CartController {
     @PostMapping("/items/{cartItemId}/confirm")
     public ResponseEntity<Void> confirmPrice(
             Authentication authentication,
-            @PathVariable Long cartItemId, @RequestBody ConfirmPriceRequestDto request
+            @Valid @PathVariable Long cartItemId, @Valid @RequestBody ConfirmPriceRequestDto request
             ) {
         Long userId = Long.valueOf(authentication.getName());
         BigDecimal agreedPrice = request.agreedPrice();
