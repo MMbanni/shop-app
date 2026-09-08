@@ -104,7 +104,7 @@ export const api = {
 
   updateCartItem(itemId: number, quantity: number) {
     return request<void>(`/cart/items/${itemId}`, {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify(quantity)
     });
   },
