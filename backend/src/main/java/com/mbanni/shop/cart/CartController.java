@@ -2,6 +2,7 @@ package com.mbanni.shop.cart;
 
 import com.mbanni.shop.cart.dto.AddToCartRequestDto;
 import com.mbanni.shop.cart.dto.CartResponseDto;
+import com.mbanni.shop.cart.dto.ConfirmPriceRequestDto;
 import com.mbanni.shop.cart.dto.RemoveFromCartRequestDto;
 import com.mbanni.shop.cart.mapper.CartMapper;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @Validated
 @RestController
@@ -72,11 +75,11 @@ public class CartController {
     @PostMapping("/items/{cartItemId}/confirm")
     public ResponseEntity<Void> confirmPrice(
             Authentication authentication,
-            @PathVariable Long cartItemId
-    ) {
+            @PathVariable Long cartItemId, @RequestBody ConfirmPriceRequestDto request
+            ) {
         Long userId = Long.valueOf(authentication.getName());
-
-        cartService.acceptNewPrice(userId, cartItemId);
+        BigDecimal agreedPrice = request.agreedPrice();
+        cartService.acceptNewPrice(userId, cartItemId, agreedPrice);
 
         return ResponseEntity.noContent().build();
 
