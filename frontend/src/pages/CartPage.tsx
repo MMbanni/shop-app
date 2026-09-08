@@ -169,6 +169,12 @@ export function CartPage() {
         </p>
       )}
 
+      {confirmPrice.isError && (
+        <p className="page-message error" role="alert">
+          {getErrorMessage(confirmPrice.error)}
+        </p>
+      )}
+
       {isEmpty ? (
         <div className="empty-state">
           <h2>Your cart is empty</h2>
