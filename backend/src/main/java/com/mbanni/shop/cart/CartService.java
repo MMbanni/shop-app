@@ -12,6 +12,7 @@ import com.mbanni.shop.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +86,6 @@ public class CartService {
             return;
         }
 
-
         Product product = cartItem.getProduct();
 
         int requestedQuantity =
@@ -99,20 +99,20 @@ public class CartService {
             );
         }
 
-        addToCart(
-                userId,
-                product.getId(),
-                quantity
-        );
+        cart.addItem( product, quantity );
     }
 
     @Transactional
-    public void acceptNewPrice(Long userId, Long cartItemId) {
+    public void acceptNewPrice(Long userId, Long cartItemId, BigDecimal agreedPrice) {
         User user = findUserOrThrow(userId);
         CartItem cartItem = user.getCart().findItemById(cartItemId);
 
         if (cartItem == null) {
             throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
+        }
+        BigDecimal currentPrice = cartItem.getProduct().getPrice();
+        if(currentPrice.compareTo(agreedPrice)!= 0) {
+            throw new BusinessException(ErrorCode.PRICE_CHANGED, "Price has changed again, please review the latest price");
         }
 
         cartItem.setPriceWhenAdded(cartItem.getProduct().getPrice());
