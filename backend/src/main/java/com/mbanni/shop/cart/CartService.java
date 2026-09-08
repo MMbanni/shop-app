@@ -111,6 +111,10 @@ public class CartService {
         User user = findUserOrThrow(userId);
         CartItem cartItem = user.getCart().findItemById(cartItemId);
 
+        if (cartItem == null) {
+            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
+        }
+
         cartItem.setPriceWhenAdded(cartItem.getProduct().getPrice());
     }
 
