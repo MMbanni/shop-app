@@ -3,6 +3,7 @@ export type CartItem = {
   productId: number;
   productName: string;
   quantity: number;
+  priceWhenAdded: number
   price: number;
   lineTotal: number;
 };

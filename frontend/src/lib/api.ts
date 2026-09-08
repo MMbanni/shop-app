@@ -127,9 +127,10 @@ export const api = {
     });
   },
 
-  confirmPrice(cartItemId:number) {
+  confirmPrice(cartItemId:number, agreedPrice:number) {
     return request<void>(`/cart/items/${cartItemId}/confirm`, {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify({agreedPrice})
     });
   },
 

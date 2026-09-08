@@ -48,7 +48,7 @@ export function useCart() {
   });
 
   const confirmPrice = useMutation({
-    mutationFn: (cartItemId: number)=>api.confirmPrice(cartItemId),
+    mutationFn: ({cartItemId, agreedPrice}:{cartItemId:number, agreedPrice:number})=>api.confirmPrice(cartItemId, agreedPrice),
 
     onSuccess: () => {
       checkoutMutation.reset();
