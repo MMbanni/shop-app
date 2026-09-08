@@ -96,14 +96,14 @@ export const api = {
   },
 
   addToCart(productId: number, quantity = 1) {
-    return request<Cart>("/cart", {
+    return request<void>("/cart", {
       method: "POST",
       body: JSON.stringify({ productId, quantity })
     });
   },
 
   updateCartItem(itemId: number, quantity: number) {
-    return request<Cart>(`/cart/items/${itemId}`, {
+    return request<void>(`/cart/items/${itemId}`, {
       method: "PUT",
       body: JSON.stringify(quantity)
     });
