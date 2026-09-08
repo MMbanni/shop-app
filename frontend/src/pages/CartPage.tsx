@@ -122,9 +122,12 @@ export function CartPage() {
     itemId: number,
     quantity: number,
   ) {
+    if(isCartBusy) {
+      return;
+    }
     checkoutMutation.reset();
     removeMutation.reset();
-    updateMutation.reset();
+    confirmPrice.reset();
 
     updateMutation.mutate({
       itemId,
@@ -133,22 +136,26 @@ export function CartPage() {
   }
 
   function removeItem(itemId: number) {
-    /*
-     * Clear errors from previous actions before removing.
-     */
+    if(isCartBusy) {
+      return;
+    }
+    
+    // Clear errors from previous actions before removing.    
     checkoutMutation.reset();
     updateMutation.reset();
-    removeMutation.reset();
+    confirmPrice.reset();
 
     removeMutation.mutate(itemId);
   }
 
   function checkout() {
 
-    //Errors should not remain visible when user tries checkout again.
+    if(isCartBusy) {
+      return;
+    }
     updateMutation.reset();
     removeMutation.reset();
-    checkoutMutation.reset();
+    confirmPrice.reset();
 
     checkoutMutation.mutate();
   }
@@ -255,10 +262,7 @@ export function CartPage() {
                   <div className="quantity-controls">
                     <button
                       className="round-button"
-                      disabled={
-                        isUpdatingThisItem ||
-                        isRemovingThisItem
-                      }
+                      disabled={isCartBusy}
                       onClick={() =>
                         updateQuantity(
                           item.cartItemId,
@@ -273,10 +277,7 @@ export function CartPage() {
 
                     <button
                       className="round-button"
-                      disabled={
-                        isUpdatingThisItem ||
-                        isRemovingThisItem
-                      }
+                      disabled={isCartBusy}
                       onClick={() =>
                         updateQuantity(
                           item.cartItemId,
@@ -294,10 +295,7 @@ export function CartPage() {
 
                   <button
                     className="button danger"
-                    disabled={
-                      removeMutation.isPending ||
-                      isUpdatingThisItem
-                    }
+                    disabled={isCartBusy}
                     onClick={() =>
                       removeItem(item.cartItemId)
                     }
@@ -325,11 +323,7 @@ export function CartPage() {
             <button
               className="button large full"
               onClick={checkout}
-              disabled={
-                checkoutMutation.isPending ||
-                updateMutation.isPending ||
-                removeMutation.isPending
-              }
+              disabled={isCartBusy}
             >
               {checkoutMutation.isPending
                 ? "Opening Stripe..."
