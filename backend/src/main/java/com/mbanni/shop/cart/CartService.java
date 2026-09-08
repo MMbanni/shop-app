@@ -7,6 +7,7 @@ import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
+import com.mbanni.shop.product.ProductStatus;
 import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,9 @@ public class CartService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        if(product.getProductStatus() != ProductStatus.ACTIVE){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_AVAILABLE);
+        }
         CartItem existingItem = cart.findItemByProductId(productId);
 
         int existingQuantity = existingItem == null ? 0 : existingItem.getQuantity();
@@ -87,6 +91,9 @@ public class CartService {
         }
 
         Product product = cartItem.getProduct();
+        if(product.getProductStatus() != ProductStatus.ACTIVE){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_AVAILABLE);
+        }
 
         int requestedQuantity =
                 cartItem.getQuantity() + quantity;
