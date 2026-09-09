@@ -4,19 +4,41 @@ import { CartItemProblem } from "../types";
 import { getApiError, getCartItemProblems, getErrorMessage } from "../lib/ApiError";
 import { Confirm } from "../components/messages/Confirm";
 
+function problemPriority(problem: CartItemProblem): number {
+  switch (problem.code) {
+    case "PRODUCT_NOT_AVAILABLE":
+      return 3;
+    case "INSUFFICIENT_STOCK":
+      return 2;
+    case "PRICE_CHANGED":
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 // { CartItem ID: Problem }
-function mapProblemsByCartItemId(problems: CartItemProblem[]): Map<number, CartItemProblem> {
-  const problemsByItemId = new Map<number, CartItemProblem>();
+function mapProblemsByCartItemId(
+  problems: CartItemProblem[],
+): Map<number, CartItemProblem> {
+  const result = new Map<number, CartItemProblem>();
 
   for (const problem of problems) {
-    if (problem.cartItemId !== undefined) {
-      problemsByItemId.set(
-        problem.cartItemId,
-        problem,
-      );
+    const id = problem.cartItemId;
+
+    if (typeof id !== "number") continue;
+
+    const existing = result.get(id);
+
+    if (
+      !existing ||
+      problemPriority(problem) > problemPriority(existing)
+    ) {
+      result.set(id, problem);
     }
   }
-  return problemsByItemId;
+
+  return result;
 }
 
 export function CartPage() {
