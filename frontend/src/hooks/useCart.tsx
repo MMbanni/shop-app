@@ -34,14 +34,20 @@ export function useCart() {
   });
 
   const removeMutation = useMutation({
-    mutationFn: (itemId: number) => api.removeCartItem(itemId),
+  mutationFn: (itemId: number) => api.removeCartItem(itemId),
 
-    onSuccess: () => {
-      return queryClient.invalidateQueries({
-        queryKey: ["cart"],
-      });
-    },
-  });
+  onSuccess: (_response, itemId) => {
+    setCheckoutProblems((problems) =>
+      problems.filter(
+        (problem) => problem.cartItemId !== itemId
+      )
+    );
+
+    return queryClient.invalidateQueries({
+      queryKey: ["cart"],
+    });
+  },
+});
 
   const checkoutMutation = useMutation({
     mutationFn: api.createCheckout,
@@ -50,27 +56,44 @@ export function useCart() {
       setCheckoutProblems([]);
       window.location.href = response.checkoutUrl;
     },
-     onError: (error) => {
-    setCheckoutProblems(getCartItemProblems(error));
+    onError: (error) => {
+      setCheckoutProblems(getCartItemProblems(error));
 
-    if (
-      getApiError(error)?.title === "CHECKOUT_VALIDATION_FAILED"
-    ) {
-      return queryClient.invalidateQueries({
-        queryKey: ["cart"],
-      });
+      if (
+        getApiError(error)?.title === "CHECKOUT_VALIDATION_FAILED"
+      ) {
+        return queryClient.invalidateQueries({
+          queryKey: ["cart"],
+        });
+      }
     }
-  }
   });
 
   const confirmPrice = useMutation({
-    mutationFn: ({cartItemId, agreedPrice}:{cartItemId:number, agreedPrice:number})=>api.confirmPrice(cartItemId, agreedPrice),
+    mutationFn: ({ cartItemId, agreedPrice }: { cartItemId: number, agreedPrice: number }) => api.confirmPrice(cartItemId, agreedPrice),
 
-    onSuccess: () => {
-      checkoutMutation.reset();
+    onSuccess: (_response, variables) => {
+      setCheckoutProblems((problems) =>
+        problems.filter(
+          (problem) =>
+            !(
+              problem.cartItemId === variables.cartItemId &&
+              problem.code === "PRICE_CHANGED"
+            )
+        )
+      );
+
       return queryClient.invalidateQueries({
         queryKey: ["cart"],
       });
+    },
+
+    onError: (error) => {
+      if (getApiError(error)?.title === "PRICE_CHANGED") {
+        return queryClient.invalidateQueries({
+          queryKey: ["cart"],
+        });
+      }
     },
   });
 
