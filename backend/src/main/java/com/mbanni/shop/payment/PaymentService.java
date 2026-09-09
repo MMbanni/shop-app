@@ -186,7 +186,7 @@ public class PaymentService {
         List<OrderItem> orderItems = order.getItems();
         Cart cart = order.getUser().getCart();
         for(OrderItem item: orderItems) {
-            cart.removeItem(item.getSourceCartItemId(), item.getQuantity());
+            cart.removePurchasedQuantity(item.getSourceCartItemId(), item.getQuantity());
         }
     }
 
