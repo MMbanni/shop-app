@@ -111,6 +111,14 @@ public class CartService {
 
     @Transactional
     public void acceptNewPrice(Long userId, Long cartItemId, BigDecimal agreedPrice) {
+        if (agreedPrice == null || agreedPrice.signum() < 0) {
+            throw BusinessException.forField(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "agreedPrice",
+                    "Agreed price must be zero or greater"
+            );
+        }
+
         User user = findUserOrThrow(userId);
         CartItem cartItem = user.getCart().findItemById(cartItemId);
 

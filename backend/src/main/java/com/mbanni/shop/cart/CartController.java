@@ -44,11 +44,11 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/items/{cartItemId}")
+    @PostMapping("/items/{cartItemId}")
     public ResponseEntity<Void> updateCartItem(
             Authentication authentication,
             @PathVariable Long cartItemId,
-            @RequestBody @Min(-1) @Max(1) int quantity
+            @Valid @RequestBody int quantity
     ) {
 
         Long userId = Long.valueOf(authentication.getName());
