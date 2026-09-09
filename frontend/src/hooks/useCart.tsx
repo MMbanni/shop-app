@@ -4,9 +4,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { useState } from "react";
+import { CartItemProblem } from "../types";
+import { getCartItemProblems, getApiError } from "../lib/ApiError";
 
 export function useCart() {
   const queryClient = useQueryClient();
+  const [checkoutProblems, setCheckoutProblems] = useState<CartItemProblem[]>([]);
 
   const cartQuery = useQuery({
     queryKey: ["cart"],
@@ -43,8 +47,20 @@ export function useCart() {
     mutationFn: api.createCheckout,
 
     onSuccess: (response) => {
+      setCheckoutProblems([]);
       window.location.href = response.checkoutUrl;
     },
+     onError: (error) => {
+    setCheckoutProblems(getCartItemProblems(error));
+
+    if (
+      getApiError(error)?.title === "CHECKOUT_VALIDATION_FAILED"
+    ) {
+      return queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+    }
+  }
   });
 
   const confirmPrice = useMutation({
