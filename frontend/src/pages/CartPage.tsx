@@ -1,7 +1,7 @@
 import { money } from "../lib/money";
 import { useCart } from "../hooks/useCart";
 import { CartItemProblem } from "../types";
-import { getApiError, getCartItemProblems, getErrorMessage } from "../lib/ApiError";
+import { getCartItemProblems, getErrorMessage } from "../lib/ApiError";
 import { Confirm } from "../components/messages/Confirm";
 
 function problemPriority(problem: CartItemProblem): number {
@@ -47,7 +47,8 @@ export function CartPage() {
     updateMutation,
     removeMutation,
     checkoutMutation,
-    confirmPrice
+    confirmPrice,
+    checkoutProblems
   } = useCart();
 
   const isCartBusy =
@@ -107,7 +108,7 @@ export function CartPage() {
 
   const updateItemErrors = getCartItemProblems(updateMutation.error);
   const removeItemErrors = getCartItemProblems(removeMutation.error);
-  const checkoutItemErrors = getCartItemProblems(checkoutMutation.error);
+  const checkoutItemErrors = checkoutProblems;
 
   const updateErrorsByItemId =
     mapProblemsByCartItemId(updateItemErrors);
@@ -144,7 +145,7 @@ export function CartPage() {
     itemId: number,
     quantity: number,
   ) {
-    if(isCartBusy) {
+    if (isCartBusy) {
       return;
     }
     checkoutMutation.reset();
@@ -158,10 +159,10 @@ export function CartPage() {
   }
 
   function removeItem(itemId: number) {
-    if(isCartBusy) {
+    if (isCartBusy) {
       return;
     }
-    
+
     // Clear errors from previous actions before removing.    
     checkoutMutation.reset();
     updateMutation.reset();
@@ -172,7 +173,7 @@ export function CartPage() {
 
   function checkout() {
 
-    if(isCartBusy) {
+    if (isCartBusy) {
       return;
     }
     updateMutation.reset();
@@ -263,7 +264,7 @@ export function CartPage() {
 
                         <Confirm
                           message={`The price of this item has changed from ${item.priceWhenAdded} to ${item.price}. Would you like to proceed with the current price?`}
-                          onConfirm={() => confirmPrice.mutate({cartItemId: item.cartItemId, agreedPrice:item.price})}
+                          onConfirm={() => confirmPrice.mutate({ cartItemId: item.cartItemId, agreedPrice: item.price })}
                           disabled={isCartBusy} >
 
 
@@ -352,13 +353,15 @@ export function CartPage() {
                 : "Pay with Stripe"}
             </button>
 
-            {checkoutMutation.isError && (
+            {hasCheckoutItemErrors ? (
               <p className="error" role="alert">
-                {hasCheckoutItemErrors
-                  ? "Please update the highlighted items before checkout."
-                  : getErrorMessage(checkoutMutation.error)}
+                Please update the highlighted items before checkout.
               </p>
-            )}
+            ) : checkoutMutation.isError ? (
+              <p className="error" role="alert">
+                {getErrorMessage(checkoutMutation.error)}
+              </p>
+            ) : null}
           </aside>
         </section>
       )}

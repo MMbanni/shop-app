@@ -73,6 +73,8 @@ export function useCart() {
     mutationFn: ({ cartItemId, agreedPrice }: { cartItemId: number, agreedPrice: number }) => api.confirmPrice(cartItemId, agreedPrice),
 
     onSuccess: (_response, variables) => {
+
+      checkoutMutation.reset();
       setCheckoutProblems((problems) =>
         problems.filter(
           (problem) =>
@@ -102,6 +104,7 @@ export function useCart() {
     updateMutation,
     removeMutation,
     checkoutMutation,
-    confirmPrice
+    confirmPrice,
+    checkoutProblems
   };
 }
