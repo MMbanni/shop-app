@@ -26,28 +26,65 @@ export function useCart() {
       quantity: number;
     }) => api.updateCartItem(itemId, quantity),
 
-    onSuccess: () => {
+    onSuccess: async (_response, variables) => {
+      try {
+        const updatedCart = await api.cart();
+
+        queryClient.setQueryData(["cart"], updatedCart);
+
+        const updatedItem = updatedCart.items.find(
+          (item) => item.cartItemId === variables.itemId
+        );
+
+        setCheckoutProblems((problems) =>
+          problems.filter((problem) => {
+            // Keep problems belonging to other items.
+            if (problem.cartItemId !== variables.itemId) {
+              return true;
+            }
+
+            // Decreasing to zero may have removed the item.
+            if (!updatedItem) {
+              return false;
+            }
+
+            // Clear the stock warning if the quantity now fits.
+            if (
+              problem.code === "INSUFFICIENT_STOCK" &&
+              typeof problem.stock === "number"
+            ) {
+              return updatedItem.quantity > problem.stock;
+            }
+
+            // Keep price and availability problems.
+            return true;
+          })
+        );
+      } catch {
+        // Update succeeded but refreshing failed.
+        // Keep the warnings and request another cart refresh.
+        return queryClient.invalidateQueries({
+          queryKey: ["cart"],
+        });
+      }
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (itemId: number) => api.removeCartItem(itemId),
+
+    onSuccess: (_response, itemId) => {
+      setCheckoutProblems((problems) =>
+        problems.filter(
+          (problem) => problem.cartItemId !== itemId
+        )
+      );
+
       return queryClient.invalidateQueries({
         queryKey: ["cart"],
       });
     },
   });
-
-  const removeMutation = useMutation({
-  mutationFn: (itemId: number) => api.removeCartItem(itemId),
-
-  onSuccess: (_response, itemId) => {
-    setCheckoutProblems((problems) =>
-      problems.filter(
-        (problem) => problem.cartItemId !== itemId
-      )
-    );
-
-    return queryClient.invalidateQueries({
-      queryKey: ["cart"],
-    });
-  },
-});
 
   const checkoutMutation = useMutation({
     mutationFn: api.createCheckout,

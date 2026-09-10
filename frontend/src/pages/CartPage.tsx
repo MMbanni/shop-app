@@ -263,7 +263,7 @@ export function CartPage() {
                       itemError.code === "PRICE_CHANGED" ? (
 
                         <Confirm
-                          message={`The price of this item has changed from ${item.priceWhenAdded} to ${item.price}. Would you like to proceed with the current price?`}
+                          message={`The price of this item has changed from ${money(item.priceWhenAdded)} to ${money(item.price)}. Would you like to proceed with the current price?`}
                           onConfirm={() => confirmPrice.mutate({ cartItemId: item.cartItemId, agreedPrice: item.price })}
                           disabled={isCartBusy} >
 
