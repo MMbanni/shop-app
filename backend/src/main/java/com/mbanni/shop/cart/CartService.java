@@ -40,7 +40,7 @@ public class CartService {
 
     @Transactional
     public void addToCart(Long userId, Long productId, int quantity) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
         Cart cart = user.getCart();
 
@@ -65,7 +65,7 @@ public class CartService {
 
     @Transactional
     public void removeFromCart(Long userId, Long cartItemId) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
         Cart cart = user.getCart();
         cart.removeAll(cartItemId);
@@ -73,7 +73,7 @@ public class CartService {
 
     @Transactional
     public void updateCart(Long userId, Long cartItemId, int quantity) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
         Cart cart = user.getCart();
 
         if (quantity == 0) {
@@ -119,7 +119,7 @@ public class CartService {
             );
         }
 
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
         CartItem cartItem = user.getCart().findItemById(cartItemId);
 
         if (cartItem == null) {
@@ -138,6 +138,13 @@ public class CartService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+    }
+
+    private User findUserForUpdateOrThrow(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
     }
 
     private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity){

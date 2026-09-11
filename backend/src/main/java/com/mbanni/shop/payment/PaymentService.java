@@ -81,8 +81,8 @@ public class PaymentService {
 
         checkForCheckoutAbuse(userId, now);
 
-        Optional<Order> existingPending =
-                orderRepository.findFirstByUser_IdAndStatus(userId, OrderStatus.PENDING);
+        Optional<Order> existingPending = orderRepository.findByUserIdAndStatusForUpdate(
+                userId, OrderStatus.PENDING);
 
         if (existingPending.isPresent()) {
             Order pendingOrder = existingPending.get();
@@ -135,6 +135,7 @@ public class PaymentService {
 
     @Transactional
     public void cancelCurrentCheckout(Long userId) {
+        lockUserOrThrow(userId);
         Order order = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -175,8 +176,7 @@ public class PaymentService {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
         }
-        Order order = orderRepository.findByStripeSessionIdForUpdate(session.getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        Order order = lockOrderForSession(session.getId());
 
         if (order.getStatus() == OrderStatus.PAID) {
             return;
@@ -196,10 +196,7 @@ public class PaymentService {
 
     @Transactional
     public void handleCheckoutExpired(Session session) {
-        String stripeSessionId = session.getId();
-
-        Order order = orderRepository.findByStripeSessionIdForUpdate(stripeSessionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        Order order = lockOrderForSession(session.getId());
 
         expirePendingOrderAndReleaseStock(order);
     }
@@ -323,6 +320,29 @@ public class PaymentService {
 
             product.increaseStock(item.getQuantity());
         }
+    }
+
+    private void lockUserOrThrow(Long userId) {
+        userRepository.findByIdForUpdate(userId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
+    }
+
+    private Order lockOrderForSession(String sessionId) {
+        Long userId = orderRepository
+                .findUserIdByStripeSessionId(sessionId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
+                );
+
+        lockUserOrThrow(userId);
+
+        return orderRepository
+                .findByStripeSessionIdForUpdate(sessionId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
+                );
     }
 
 

@@ -41,4 +41,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     );
 
     Optional<Order> findByUserIdAndStripeSessionId(Long userId, String sessionId);
+
+    @Query("""
+    select o.user.id from Order o
+    where o.stripeSessionId = :sessionId
+    """)
+    Optional<Long> findUserIdByStripeSessionId(
+            @Param("sessionId") String sessionId
+    );
 }
