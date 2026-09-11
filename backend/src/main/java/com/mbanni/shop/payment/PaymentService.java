@@ -84,7 +84,7 @@ public class PaymentService {
             Order pendingOrder = existingPending.get();
 
             if(pendingOrder.hasExpired(now)){
-                expirePendingOrderAndReleaseStock(pendingOrder);
+                expireCheckout(pendingOrder);
             } else if(checkoutMatchesCart(pendingOrder, cart)) {
                 return new CheckoutResponse(pendingOrder.getCheckoutUrl());
             } else {
@@ -171,7 +171,7 @@ public class PaymentService {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
         }
-        Order order = orderRepository.findByStripeSessionId(session.getId())
+        Order order = orderRepository.findByStripeSessionIdForUpdate(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (order.getStatus() == OrderStatus.PAID) {
@@ -194,7 +194,7 @@ public class PaymentService {
     public void handleCheckoutExpired(Session session) {
         String stripeSessionId = session.getId();
 
-        Order order = orderRepository.findByStripeSessionId(stripeSessionId)
+        Order order = orderRepository.findByStripeSessionIdForUpdate(stripeSessionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         expirePendingOrderAndReleaseStock(order);
@@ -338,6 +338,36 @@ public class PaymentService {
         releaseStock(order);
 
         order.markExpired();
+    }
+
+    private void expireCheckout(Order order) {
+        if(order.getStripeSessionId()== null){
+            throw new BusinessException( ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe session");
+        }
+
+        try {
+            Session session = Session.retrieve(order.getStripeSessionId());
+            if ("complete".equals(session.getStatus())) {
+                // Keep the reservation while payment is processed.
+                throw new BusinessException(ErrorCode.PROCESSING);
+            }
+
+            if ("open".equals(session.getStatus())) {
+                // Release stock only if Stripe confirms expiration.
+                session = session.expire();
+            }
+
+            if (!"expired".equals(session.getStatus())) {
+                throw new BusinessException(
+                        ErrorCode.ILLEGAL_OPERATION,
+                        "Could not confirm checkout expiration"
+                );
+            }
+
+            expirePendingOrderAndReleaseStock(order);
+        } catch (StripeException e) {
+            throw new RuntimeException("Could not verify or expire checkout session ",e);
+        }
     }
 
     private List<SessionCreateParams.LineItem> toStripeLineItems(Order order) {

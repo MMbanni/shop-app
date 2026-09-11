@@ -25,6 +25,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("status") OrderStatus status
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    select o from Order o
+    where o.stripeSessionId = :sessionId
+    """)
+    Optional<Order> findByStripeSessionIdForUpdate(
+            @Param("sessionId") String sessionId
+    );
+
     long countByUser_IdAndStatusAndCreatedAtAfter(
             Long userId,
             OrderStatus status,
