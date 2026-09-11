@@ -70,9 +70,13 @@ public class PaymentService {
 
     @Transactional
     public CheckoutResponse createCheckoutSession(Long userId) {
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
+
         Instant now = Instant.now();
 
-        User user = getUserOrThrow(userId);
         Cart cart = getValidCartOrThrow(user);
 
         checkForCheckoutAbuse(userId, now);
