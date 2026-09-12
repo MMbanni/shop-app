@@ -5,6 +5,10 @@ import com.mbanni.shop.cart.dto.CartResponseDto;
 import com.mbanni.shop.cart.mapper.CartMapper;
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.Order;
+import com.mbanni.shop.order.OrderItem;
+import com.mbanni.shop.order.OrderRepository;
+import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
 import com.mbanni.shop.product.ProductStatus;
@@ -16,18 +20,25 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CartService {
 
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CartMapper cartMapper;
 
 
     // Inject dependencies
-    public CartService(ProductRepository productRepository, UserRepository userRepository, CartMapper cartMapper) {
+    public CartService(
+            ProductRepository productRepository,
+            UserRepository userRepository,
+            OrderRepository orderRepository,
+            CartMapper cartMapper) {
         this.productRepository = productRepository;
+        this.orderRepository=orderRepository;
         this.userRepository = userRepository;
         this.cartMapper = cartMapper;
     }
@@ -56,7 +67,7 @@ public class CartService {
         int requestedQuantity = existingQuantity + quantity;
 
 
-        if(requestedQuantity > product.getStock()){
+        if(requestedQuantity > stockAvailableForUser(userId,product)){
             throw insufficientStock(existingItem, product, requestedQuantity);
         }
 
@@ -98,7 +109,7 @@ public class CartService {
         int requestedQuantity =
                 cartItem.getQuantity() + quantity;
 
-        if (requestedQuantity > product.getStock()) {
+        if (requestedQuantity > stockAvailableForUser(userId, product)) {
             throw insufficientStock(
                     cartItem,
                     product,
@@ -145,6 +156,29 @@ public class CartService {
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
                 );
+    }
+
+    private long stockAvailableForUser(Long userId, Product product) {
+        Optional<Order> pendingOrder = orderRepository.findByUserIdAndStatusForUpdate(
+                userId, OrderStatus.PENDING);
+
+        int reserved = 0;
+
+        if(pendingOrder.isPresent()) {
+
+            List<OrderItem> items = pendingOrder.get().getItems();
+
+            Optional <OrderItem> matchingItem = items.stream()
+                    .filter(item -> product.getId().
+                            equals(item.getProductIdSnapshot())
+                    )
+                    .findFirst();
+
+            reserved = matchingItem.map(OrderItem::getQuantity).orElse(0);
+
+        }
+        return (long) product.getStock() + reserved;
+
     }
 
     private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity){
