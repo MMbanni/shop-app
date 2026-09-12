@@ -516,7 +516,12 @@ public class PaymentService {
                     .findFirst().orElse(null);
 
             if(match == null) return false;
+
             Product product = match.getProduct();
+
+            if (product.getProductStatus() != ProductStatus.ACTIVE) {
+                return false;
+            }
 
             if(!Objects.equals(product.getId(), orderItem.getProductIdSnapshot())) return false;
             if(match.getQuantity() != orderItem.getQuantity()) return false;
