@@ -86,15 +86,34 @@ public class PaymentService {
 
         if (existingPending.isPresent()) {
             Order pendingOrder = existingPending.get();
+            Session session = retrieveStripeSession(pendingOrder);
 
-            if(pendingOrder.hasExpired(now)){
-                expireCheckout(pendingOrder);
-            } else if(checkoutMatchesCart(pendingOrder, cart)) {
-                return new CheckoutResponse(pendingOrder.getCheckoutUrl());
-            } else {
-                supersedePendingCheckout(pendingOrder);
+            if ("complete".equals(session.getStatus())) {
+                // Wait for payment processing/webhook confirmation.
+                throw new BusinessException(ErrorCode.PROCESSING);
             }
 
+            if ("expired".equals(session.getStatus())) {
+                expirePendingOrderAndReleaseStock(pendingOrder);
+
+            } else if ("open".equals(session.getStatus())) {
+
+                if (pendingOrder.hasExpired(now)) {
+                    expireCheckout(pendingOrder);
+
+                } else if (checkoutMatchesCart(pendingOrder, cart)) {
+                    return new CheckoutResponse(session.getUrl());
+
+                } else {
+                    supersedePendingCheckout(pendingOrder);
+                }
+
+            } else {
+                throw new BusinessException(
+                        ErrorCode.ILLEGAL_OPERATION,
+                        "Unknown Stripe checkout status"
+                );
+            }
         }
 
         Instant expiresAt = now.plus(CHECKOUT_EXPIRY);
@@ -509,5 +528,23 @@ public class PaymentService {
         }
         return true;
 
+    }
+
+    private Session retrieveStripeSession(Order order) {
+        if (order.getStripeSessionId() == null) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "Order has no Stripe session"
+            );
+        }
+
+        try {
+            return Session.retrieve(order.getStripeSessionId());
+        } catch (StripeException exception) {
+            throw new RuntimeException(
+                    "Could not retrieve Stripe checkout session",
+                    exception
+            );
+        }
     }
 }
