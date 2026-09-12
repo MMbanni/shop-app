@@ -504,6 +504,10 @@ public class PaymentService {
         List<CartItem> cartItems = cart.getItems();
         List<OrderItem> orderItems = order.getItems();
 
+        if (cartItems.size() != orderItems.size()) {
+            return false;
+        }
+
         for(OrderItem orderItem: orderItems){
             CartItem match = cartItems.stream()
                     .filter(cartItem -> Objects.equals(
@@ -514,9 +518,6 @@ public class PaymentService {
             if(match == null) return false;
             Product product = match.getProduct();
 
-            if (cartItems.size() != orderItems.size()) {
-                return false;
-            }
             if(!Objects.equals(product.getId(), orderItem.getProductIdSnapshot())) return false;
             if(match.getQuantity() != orderItem.getQuantity()) return false;
 
