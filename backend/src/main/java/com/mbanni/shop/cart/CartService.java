@@ -65,10 +65,11 @@ public class CartService {
 
         int existingQuantity = existingItem == null ? 0 : existingItem.getQuantity();
         int requestedQuantity = existingQuantity + quantity;
+        long availableStock = stockAvailableForUser(userId,product);
 
 
-        if(requestedQuantity > stockAvailableForUser(userId,product)){
-            throw insufficientStock(existingItem, product, requestedQuantity);
+        if(requestedQuantity > availableStock){
+            throw insufficientStock(existingItem, product, requestedQuantity, availableStock);
         }
 
         cart.addItem(product, quantity);
@@ -108,12 +109,15 @@ public class CartService {
 
         int requestedQuantity =
                 cartItem.getQuantity() + quantity;
+        long availableStock = stockAvailableForUser(userId, product);
 
-        if (requestedQuantity > stockAvailableForUser(userId, product)) {
+        if (requestedQuantity > availableStock) {
             throw insufficientStock(
                     cartItem,
                     product,
-                    requestedQuantity
+                    requestedQuantity,
+                    availableStock
+
             );
         }
 
@@ -141,7 +145,7 @@ public class CartService {
             throw new BusinessException(ErrorCode.PRICE_CHANGED, "Price has changed again, please review the latest price");
         }
 
-        cartItem.setPriceWhenAdded(cartItem.getProduct().getPrice());
+        cartItem.acceptCurrentPrice();
     }
 
 
@@ -181,12 +185,12 @@ public class CartService {
 
     }
 
-    private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity){
+    private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity, long availableStock){
         CartItemProblem itemProblem = new CartItemProblem(
                 ErrorCode.INSUFFICIENT_STOCK,
                 existingItem == null? null : existingItem.getId(),
                 product.getId(),
-                product.getStock(),
+                Math.toIntExact(availableStock),
                 requestedQuantity,
                 null,
                 "Only " + product.getStock() + " units are available"
