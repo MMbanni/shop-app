@@ -39,7 +39,7 @@ public class CartItem {
 
         this.cart = cart;
         this.product = product;
-        setPriceWhenAdded(product.getPrice());
+        this.priceWhenAdded=(product.getPrice());
         setQuantity(quantity);
 
     }
@@ -77,9 +77,6 @@ public class CartItem {
         this.discount = discount;
     }
 
-    public void setPriceWhenAdded(BigDecimal price ) {
-        this.priceWhenAdded = price;
-    }
 
     public boolean hasPriceChanged() {
         return priceWhenAdded.compareTo(product.getPrice()) != 0;
