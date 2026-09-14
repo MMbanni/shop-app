@@ -193,7 +193,7 @@ public class CartService {
                 Math.toIntExact(availableStock),
                 requestedQuantity,
                 null,
-                "Only " + product.getStock() + " units are available"
+                "Only " + availableStock + " units are available"
         );
         return new BusinessException(
                 ErrorCode.CART_ERROR,
