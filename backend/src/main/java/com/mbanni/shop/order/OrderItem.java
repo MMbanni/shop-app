@@ -33,10 +33,6 @@ public class OrderItem {
         if (quantity < 1) {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
-        if (price == null || price.signum() < 0) {
-            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
-                    "Order item price must be zero or greater");
-        }
         this.sourceCartItemId=sourceCartItemId;
         this.productIdSnapshot = productIdSnapshot;
         this.productNameSnapshot = productNameSnapshot;
