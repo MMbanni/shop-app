@@ -207,10 +207,6 @@ public class PaymentService {
         }
         Order order = lockOrderForSession(session.getId());
 
-        if (order.getStatus() == OrderStatus.PAID) {
-            return;
-        }
-
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
