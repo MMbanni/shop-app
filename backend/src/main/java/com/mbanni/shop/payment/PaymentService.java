@@ -20,20 +20,20 @@ import com.mbanni.shop.user.UserRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+import com.stripe.model.tax.Registration;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class PaymentService {
@@ -44,6 +44,7 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private EntityManager entityManager;
 
     private final String stripeSecretKey;
     private String frontendUrl;
@@ -53,6 +54,7 @@ public class PaymentService {
             UserRepository userRepository,
             OrderRepository orderRepository,
             ProductRepository productRepository,
+            EntityManager entityManager,
             @Value("${stripe.secret-key}") String stripeSecretKey,
             @Value("${app.frontend-url}") String frontendUrl
     ) {
@@ -61,6 +63,7 @@ public class PaymentService {
         this.productRepository = productRepository;
         this.stripeSecretKey = stripeSecretKey;
         this.frontendUrl = frontendUrl;
+        this.entityManager = entityManager;
     }
 
     @PostConstruct
@@ -84,6 +87,13 @@ public class PaymentService {
         Optional<Order> existingPending = orderRepository.findByUserIdAndStatusForUpdate(
                 userId, OrderStatus.PENDING);
 
+        List<Long>productIds = new ArrayList<>(cart.getItems().stream()
+                .map(item -> item.getProduct().getId())
+                .toList());
+
+        existingPending.ifPresent(order -> productIds.addAll(orderProductIds(order)));
+
+        Map<Long, Product> lockedProducts = lockProducts(productIds);
         if (existingPending.isPresent()) {
             Order pendingOrder = existingPending.get();
             Session session = retrieveStripeSession(pendingOrder);
@@ -94,18 +104,18 @@ public class PaymentService {
             }
 
             if ("expired".equals(session.getStatus())) {
-                expirePendingOrderAndReleaseStock(pendingOrder);
+                expirePendingOrderAndReleaseStock(pendingOrder, lockedProducts);
 
             } else if ("open".equals(session.getStatus())) {
 
                 if (pendingOrder.hasExpired(now)) {
-                    expireCheckout(pendingOrder);
+                    expireCheckout(pendingOrder, lockedProducts);
 
                 } else if (checkoutMatchesCart(pendingOrder, cart)) {
                     return new CheckoutResponse(session.getUrl());
 
                 } else {
-                    supersedePendingCheckout(pendingOrder);
+                    supersedePendingCheckout(pendingOrder, lockedProducts);
                 }
 
             } else {
@@ -120,7 +130,7 @@ public class PaymentService {
 
         Order order = new Order(user, expiresAt);
 
-        reserveStockAndCopyCartItems(cart, order);
+        reserveStockAndCopyCartItems(cart, order, lockedProducts);
 
         orderRepository.save(order);
 
@@ -166,11 +176,11 @@ public class PaymentService {
             Session session = Session.retrieve(order.getStripeSessionId());
 
             if ("complete".equals(session.getStatus())) {
-                return;
+                throw new BusinessException(ErrorCode.PROCESSING);
             }
 
             if ("expired".equals(session.getStatus())) {
-                expirePendingOrderAndReleaseStock(order);
+                expirePendingOrderAndReleaseStock(order, lockProducts(orderProductIds(order)));
                 return;
             }
 
@@ -182,7 +192,7 @@ public class PaymentService {
             }
 
             session.expire();
-            releaseStock(order);
+            releaseStock(order, lockProducts(orderProductIds(order)));
             order.markCancelled();
 
         } catch (StripeException exception) {
@@ -217,7 +227,7 @@ public class PaymentService {
     public void handleCheckoutExpired(Session session) {
         Order order = lockOrderForSession(session.getId());
 
-        expirePendingOrderAndReleaseStock(order);
+        expirePendingOrderAndReleaseStock(order, lockProducts(orderProductIds(order)));
     }
 
     private User getUserOrThrow(Long userId) {
@@ -235,17 +245,13 @@ public class PaymentService {
         return cart;
     }
 
-    private void reserveStockAndCopyCartItems(Cart cart, Order order) {
+    private void reserveStockAndCopyCartItems(Cart cart, Order order, Map<Long,Product> lockedProducts) {
         List<CartItemProblem> errors = new ArrayList<>();
         List<ProductReservation> reservations = new ArrayList<>();
 
         // First pass: lock products and validate every cart item
         for (CartItem cartItem : cart.getItems()) {
-            Product product = productRepository.findByIdForUpdate(
-                    cartItem.getProduct().getId()
-            ).orElseThrow(
-                    () -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
-            );
+            Product product = lockedProducts.get(cartItem.getProduct().getId());
 
             int requestedQuantity = cartItem.getQuantity();
             int stock = product.getStock();
@@ -296,7 +302,8 @@ public class PaymentService {
                     new ProductReservation(
                             cartItem.getId(),
                             product,
-                            requestedQuantity
+                            requestedQuantity,
+                            cartItem.calculateUnitPrice()
                     )
             );
         }
@@ -318,7 +325,7 @@ public class PaymentService {
                     product.getId(),
                     product.getName(),
                     quantity,
-                    product.getPrice()
+                    reservation.unitPrice()
             );
 
             order.addItem(orderItem);
@@ -328,17 +335,37 @@ public class PaymentService {
     private record ProductReservation(
             Long sourceCartItemId,
             Product product,
-            int quantity
+            int quantity,
+            BigDecimal unitPrice
     ) {
     }
 
-    private void releaseStock(Order order) {
+    private Map<Long, Product> lockProducts(Collection<Long> productIds) {
+        Map<Long, Product> locked = new HashMap<>();
+        List<Long> processed = new ArrayList<>();
+        for(Long id:productIds.stream().sorted().toList()){
+            if(processed.contains(id)) continue;
+            processed.add(id);
+            Product product = productRepository.findByIdForUpdate(id)
+                    .orElseThrow(()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+            entityManager.refresh(product);
+            locked.put(id,product);
+        }
+        return locked;
+
+    }
+
+    private void releaseStock(Order order, Map<Long,Product> lockedProducts) {
         for (OrderItem item : order.getItems()) {
-            Product product = productRepository.findByIdForUpdate(item.getProductIdSnapshot())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+            Product product = lockedProducts.get(item.getProductIdSnapshot());
 
             product.increaseStock(item.getQuantity());
         }
+    }
+
+    private List<Long> orderProductIds(Order order){
+        return order.getItems().stream()
+                .map(OrderItem::getProductIdSnapshot).toList();
     }
 
     private void lockUserOrThrow(Long userId) {
@@ -365,25 +392,16 @@ public class PaymentService {
     }
 
 
-    private void expirePendingOrderAndReleaseStock(Order order) {
-        if (order.getStatus() == OrderStatus.PAID) {
-            return;
-        }
-
-        if (order.getStatus() == OrderStatus.EXPIRED) {
-            return;
-        }
-
+    private void expirePendingOrderAndReleaseStock(Order order, Map<Long,Product> lockedProducts) {
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
-
-        releaseStock(order);
+        releaseStock(order, lockedProducts);
 
         order.markExpired();
     }
 
-    private void expireCheckout(Order order) {
+    private void expireCheckout(Order order, Map<Long,Product> lockedProducts) {
         if(order.getStripeSessionId()== null){
             throw new BusinessException( ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe session");
         }
@@ -407,7 +425,7 @@ public class PaymentService {
                 );
             }
 
-            expirePendingOrderAndReleaseStock(order);
+            expirePendingOrderAndReleaseStock(order, lockedProducts);
         } catch (StripeException e) {
             throw new RuntimeException("Could not verify or expire checkout session ",e);
         }
@@ -454,7 +472,7 @@ public class PaymentService {
         }
     }
 
-    private void supersedePendingCheckout(Order order) {
+    private void supersedePendingCheckout(Order order, Map<Long,Product> lockedProducts) {
         if (order.getStripeSessionId() == null) {
             throw new BusinessException(
                     ErrorCode.ILLEGAL_OPERATION
@@ -474,7 +492,7 @@ public class PaymentService {
             }
 
             if ("expired".equals(session.getStatus())) {
-                expirePendingOrderAndReleaseStock(order);
+                expirePendingOrderAndReleaseStock(order, lockedProducts);
                 return;
             }
 
@@ -488,7 +506,7 @@ public class PaymentService {
             // and the database transaction rolls back.
             session.expire();
 
-            releaseStock(order);
+            releaseStock(order, lockedProducts);
             order.markSuperseded();
 
         } catch (StripeException exception) {
@@ -526,7 +544,7 @@ public class PaymentService {
             if(!Objects.equals(product.getId(), orderItem.getProductIdSnapshot())) return false;
             if(match.getQuantity() != orderItem.getQuantity()) return false;
 
-            if (product.getPrice()
+            if (match.calculateUnitPrice()
                     .compareTo(orderItem.getPrice()) != 0) {
                 return false;
             }
