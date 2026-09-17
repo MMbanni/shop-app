@@ -5,6 +5,7 @@ import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.json.JsonParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,9 +35,9 @@ public class PaymentWebhookController {
             event = Webhook.constructEvent(payload, stripeSignature, webhookSecret);
         } catch (SignatureVerificationException exception) {
             return ResponseEntity.badRequest().body("Invalid Stripe signature");
+        } catch (JsonParseException exception) {
+            return ResponseEntity.badRequest().body("Invalid Stripe payload");
         }
-
-
 
         if (event.getType().equals("checkout.session.completed")) {
             Session session = (Session) event.getDataObjectDeserializer()
