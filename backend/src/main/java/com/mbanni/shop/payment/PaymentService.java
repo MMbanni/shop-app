@@ -191,7 +191,9 @@ public class PaymentService {
                 );
             }
 
-            session.expire();
+            session = session.expire();
+            requireExpired(session);
+            ;
             releaseStock(order, lockProducts(orderProductIds(order)));
             order.markCancelled();
 
@@ -387,6 +389,11 @@ public class PaymentService {
                 );
     }
 
+    private void requireExpired(Session session) {
+        if (!"expired".equals(session.getStatus())) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Could not confirm checkout expiration");
+        }
+    }
 
     private void expirePendingOrderAndReleaseStock(Order order, Map<Long,Product> lockedProducts) {
         if (order.getStatus() != OrderStatus.PENDING) {
@@ -412,6 +419,7 @@ public class PaymentService {
             if ("open".equals(session.getStatus())) {
                 // Release stock only if Stripe confirms expiration.
                 session = session.expire();
+                requireExpired(session);
             }
 
             if (!"expired".equals(session.getStatus())) {
@@ -500,7 +508,8 @@ public class PaymentService {
 
             // If payment wins the race, Stripe rejects this call
             // and the database transaction rolls back.
-            session.expire();
+            session = session.expire();
+            requireExpired(session);
 
             releaseStock(order, lockedProducts);
             order.markSuperseded();
