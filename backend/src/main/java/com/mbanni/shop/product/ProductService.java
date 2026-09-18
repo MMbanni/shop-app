@@ -21,7 +21,6 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
 
-
     public ProductService(ProductRepository productRepository, OrderRepository orderRepository) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
@@ -102,8 +101,6 @@ public class ProductService {
             product.setStock(request.stock());
         }
 
-
-
         return product;
     }
 
@@ -122,7 +119,7 @@ public class ProductService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void changeProductStatus(Long productId, ProductStatus status) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         if (status == ProductStatus.ACTIVE) {
