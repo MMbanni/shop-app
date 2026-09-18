@@ -63,7 +63,6 @@ public class AuthService {
     public AuthResponseDto login (LoginRequestDto request ) {
 
         String email = request.email().trim().toLowerCase(Locale.ROOT);
-        System.out.println(email);
 
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
