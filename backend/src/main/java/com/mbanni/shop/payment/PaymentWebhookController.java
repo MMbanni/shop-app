@@ -71,12 +71,9 @@ public class PaymentWebhookController {
                     .body("Could not decode checkout event");
         }
 
-        if ("checkout.session.completed".equals(event.getType())) {
-            paymentService.handleCheckoutCompleted(session);
-        }
-
-        if ("checkout.session.expired".equals(event.getType())) {
-            paymentService.handleCheckoutExpired(session);
+        switch (event.getType()) {
+            case "checkout.session.completed" -> paymentService.handleCheckoutCompleted(session);
+            case "checkout.session.expired" -> paymentService.handleCheckoutExpired(session);
         }
 
         return ResponseEntity.ok("ok");
