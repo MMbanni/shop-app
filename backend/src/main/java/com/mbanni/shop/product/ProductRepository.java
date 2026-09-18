@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     public boolean existsByNameIgnoreCase(String name);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Product> findByNameIgnoreCase(String name);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
