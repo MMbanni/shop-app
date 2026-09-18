@@ -1,9 +1,6 @@
 package com.mbanni.shop.product;
 
-import com.mbanni.shop.product.dto.AdminProductResponseDto;
-import com.mbanni.shop.product.dto.ProductStatusRequestDto;
-import com.mbanni.shop.product.dto.ProductRequestDto;
-import com.mbanni.shop.product.dto.ProductResponseDto;
+import com.mbanni.shop.product.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +53,7 @@ public class ProductController {
     public AdminProductResponseDto updateProduct(
             @PathVariable Long id,
             @Valid
-            @RequestBody ProductRequestDto request
+            @RequestBody UpdateProductRequestDto request
     ) {
 
         Product product = productService.updateProduct(id, productMapper.toUpdateCommand(request));
