@@ -36,9 +36,7 @@ public class ProductService {
                 Product product = existingProduct.get();
                 product.activate();
                 return product;
-
             }
-
         }
 
         Product product = new Product(name, request.price(), request.description());
@@ -76,7 +74,7 @@ public class ProductService {
     @PreAuthorize("hasRole('ADMIN')")
     public Product updateProduct(Long Id, UpdateProductCommand request) {
 
-        Product product = productRepository.findById(Id).
+        Product product = productRepository.findByIdForUpdate(Id).
                 orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
 
