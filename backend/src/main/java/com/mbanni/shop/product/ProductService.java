@@ -2,6 +2,8 @@ package com.mbanni.shop.product;
 
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.OrderRepository;
+import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.command.CreateProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
 import com.mbanni.shop.product.dto.ProductRequestDto;
@@ -17,9 +19,12 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
-    public ProductService(ProductRepository productRepository) {
+
+    public ProductService(ProductRepository productRepository, OrderRepository orderRepository) {
         this.productRepository = productRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Transactional
@@ -105,7 +110,13 @@ public class ProductService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteProduct(Long Id) {
-        productRepository.deleteById(Id);
+        Product product = productRepository.findByIdForUpdate(Id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, Id)) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "This product is reserved by a pending checkout. Archive it instead of deleting it.");
+        }
+        productRepository.delete(product);
     }
 
     @Transactional
