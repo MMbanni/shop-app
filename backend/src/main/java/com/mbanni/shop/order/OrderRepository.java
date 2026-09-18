@@ -10,6 +10,11 @@ import java.time.Instant;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("select count(o) > 0 from Order o join o.items item "
+            + "where o.status = :status and item.productIdSnapshot = :productId")
+    boolean existsByStatusAndProductId(@Param("status") OrderStatus status, @Param("productId") Long productId);
+
     Optional<Order> findByStripeSessionId(String stripeSessionId);
 
     Optional<Order> findFirstByUser_IdAndStatus(Long userId, OrderStatus status);
