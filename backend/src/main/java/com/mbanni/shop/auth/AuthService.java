@@ -64,7 +64,8 @@ public class AuthService {
 
         String email = request.email().trim().toLowerCase(Locale.ROOT);
 
-        User user = userRepository.findByEmail(email)
+        // Using method with pessimistic write because login may change user status
+        User user = userRepository.findByEmailForUpdate(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         boolean match = passwordEncoder.matches(request.password(), user.getPassword());
