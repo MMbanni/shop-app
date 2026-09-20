@@ -59,7 +59,7 @@ public class AuthService {
 
 
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponseDto login (LoginRequestDto request ) {
 
         String email = request.email().trim().toLowerCase(Locale.ROOT);
