@@ -79,7 +79,7 @@ public class AuthService {
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
             if(user.getSuspendedUntil().isBefore(Instant.now())){
-                user.setStatus(UserStatus.ACTIVE);
+                user.activate();
             } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
             }
