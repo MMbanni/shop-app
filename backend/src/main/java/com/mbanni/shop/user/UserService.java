@@ -45,7 +45,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto updateUserInfo(Long userId, UpdateUserCommand command) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
         if(command.name() != null) {
             String name = command.name().trim();
@@ -73,7 +73,7 @@ public class UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void updateUserStatus(Long userId, UpdateUserStatusCommand command){
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
         String status = command.status().toString();
 
         if(status.equals("BANNED")) {
@@ -99,6 +99,11 @@ public class UserService {
 
     private User findUserOrThrow(Long userId) {
         return userRepository.findById(userId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private User findUserForUpdateOrThrow(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
