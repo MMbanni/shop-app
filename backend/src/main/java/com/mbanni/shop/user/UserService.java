@@ -28,10 +28,17 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public List<UserResponseDto> searchUsers(String status) {
+        UserStatus userStatus;
+        try{
+            userStatus = UserStatus.valueOf(status.toUpperCase());
+
+        } catch(Exception e){
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        }
 
         List<User> list =
-                status.equals("ALL")? userRepository.findAll():
-                userRepository.findByStatus(status);
+                status.equalsIgnoreCase("ALL")? userRepository.findAll():
+                userRepository.findByStatus(userStatus);
 
         return userMapper.toResponseList(list);
     }
