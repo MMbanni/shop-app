@@ -39,7 +39,7 @@ import java.util.*;
 public class PaymentService {
 
     private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(31);
-    private static final int MAX_EXPIRED_CHECKOUTS_PER_DAY = 4;
+    private static final int MAX_UNPAID_CHECKOUTS_PER_DAY = 5;
 
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
@@ -465,13 +465,13 @@ public class PaymentService {
         Instant since = now.minus(Duration.ofHours(24));
 
         long expiredCheckouts =
-                orderRepository.countByUser_IdAndStatusAndCreatedAtAfter(
+                orderRepository.countByUser_IdAndStatusInAndCreatedAtAfter(
                         userId,
-                        OrderStatus.EXPIRED,
+                        List.of(OrderStatus.EXPIRED, OrderStatus.CANCELLED, OrderStatus.SUPERSEDED),
                         since
                 );
 
-        if (expiredCheckouts >= MAX_EXPIRED_CHECKOUTS_PER_DAY) {
+        if (expiredCheckouts >= MAX_UNPAID_CHECKOUTS_PER_DAY) {
             throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
         }
     }
