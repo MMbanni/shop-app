@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    boolean existsByUser_Id(Long userId);
 
     @Query("select count(o) > 0 from Order o join o.items item "
             + "where o.status = :status and item.productIdSnapshot = :productId")

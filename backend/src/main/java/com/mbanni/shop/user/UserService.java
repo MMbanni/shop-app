@@ -2,6 +2,7 @@ package com.mbanni.shop.user;
 
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.user.command.UpdateUserCommand;
 import com.mbanni.shop.user.command.UpdateUserStatusCommand;
 import com.mbanni.shop.user.dto.UserResponseDto;
@@ -17,10 +18,12 @@ import java.util.Locale;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
     private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
         this.userMapper = userMapper;
     }
 
@@ -99,7 +102,14 @@ public class UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long userId) {
-        User user = findUserOrThrow(userId);
+        User user = userRepository.findByIdForUpdate(userId).orElseThrow(
+                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+        if(orderRepository.existsByUser_Id(userId)){
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "This user has orders and cannot be deleted.");
+        }
         userRepository.delete(user);
     }
 
