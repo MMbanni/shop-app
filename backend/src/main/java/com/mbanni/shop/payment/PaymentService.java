@@ -73,10 +73,7 @@ public class PaymentService {
 
     @Transactional
     public CheckoutResponse createCheckoutSession(Long userId) {
-        User user = userRepository.findByIdForUpdate(userId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
-                );
+        User user = lockUserOrThrow(userId);
 
         Instant now = Instant.now();
 
@@ -168,12 +165,7 @@ public class PaymentService {
         Order order = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (order.getStripeSessionId() == null) {
-            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe Session ID");
-        }
-
-        try {
-            Session session = Session.retrieve(order.getStripeSessionId());
+            Session session = retrieveStripeSession(order);
 
             if ("complete".equals(session.getStatus())) {
                 throw new BusinessException(ErrorCode.PROCESSING);
@@ -190,16 +182,17 @@ public class PaymentService {
                                 + session.getStatus()
                 );
             }
+            try {
+                session = session.expire();
+            } catch (StripeException e) {
+                throw new RuntimeException("Could not expire Stripe session", e);
+            }
 
-            session = session.expire();
             requireExpired(session);
-            ;
+
             releaseStock(order, lockProducts(orderProductIds(order)));
             order.markCancelled();
 
-        } catch (StripeException exception) {
-            throw new RuntimeException("Could not expire Stripe checkout session", exception);
-        }
     }
 
     @Transactional
@@ -366,8 +359,8 @@ public class PaymentService {
                 .map(OrderItem::getProductIdSnapshot).toList();
     }
 
-    private void lockUserOrThrow(Long userId) {
-        userRepository.findByIdForUpdate(userId)
+    private User lockUserOrThrow(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
                 );
