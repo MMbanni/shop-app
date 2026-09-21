@@ -106,12 +106,16 @@ public class ProductService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteProduct(Long Id) {
-        Product product = productRepository.findByIdForUpdate(Id)
+    public void deleteProduct(Long id) {
+        Product product = productRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, Id)) {
+        if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, id)) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
                     "This product is reserved by a pending checkout. Archive it instead of deleting it.");
+        }
+        if(productRepository.existsInAnyCart(id)) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "This product exists in a user's cart. Please archive instead of deleting.");
         }
         productRepository.delete(product);
     }
