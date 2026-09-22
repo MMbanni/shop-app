@@ -31,7 +31,12 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public List<UserResponseDto> searchUsers(String status) {
+
+        if(status.equalsIgnoreCase("ALL")) {
+            return userMapper.toResponseList(userRepository.findAll());
+        }
         UserStatus userStatus;
+
         try{
             userStatus = UserStatus.valueOf(status.toUpperCase());
 
@@ -39,11 +44,7 @@ public class UserService {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
-        List<User> list =
-                status.equalsIgnoreCase("ALL")? userRepository.findAll():
-                userRepository.findByStatus(userStatus);
-
-        return userMapper.toResponseList(list);
+        return userMapper.toResponseList(userRepository.findByStatus(userStatus));
     }
 
     @Transactional(readOnly = true)
