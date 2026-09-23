@@ -247,7 +247,7 @@ public class PaymentService {
 
         Session session = retrieveStripeSession(order);
 
-        if ("paid".equals(session.getPaymentStatus())) {
+        if ("paid".equals(session.getPaymentStatus()) || "no_payment_required".equals(session.getPaymentStatus())) {
             handleCheckoutCompleted(session);
 
         } else if ("expired".equals(session.getStatus())) {
