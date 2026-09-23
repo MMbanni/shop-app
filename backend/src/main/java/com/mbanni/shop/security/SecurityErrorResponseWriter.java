@@ -52,5 +52,42 @@ public class SecurityErrorResponseWriter {
         );
 
     }
+    public void writeUnauthorized(HttpServletResponse response)
+            throws IOException {
+        response.setHeader("WWW-Authenticate", "Bearer");
+
+        writeProblem(
+                response,
+                HttpStatus.UNAUTHORIZED,
+                "AUTHENTICATION_REQUIRED",
+                "Please log in to continue."
+        );
+    }
+
+    public void writeAccessDenied(HttpServletResponse response)
+            throws IOException {
+        writeProblem(
+                response,
+                HttpStatus.FORBIDDEN,
+                "ACCESS_DENIED",
+                "You do not have permission to do this."
+        );
+    }
+
+    private void writeProblem(
+            HttpServletResponse response,
+            HttpStatus status,
+            String title,
+            String detail
+    ) throws IOException {
+        ProblemDetail problem = ProblemDetail.forStatus(status);
+        problem.setTitle(title);
+        problem.setDetail(detail);
+
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+
+        objectMapper.writeValue(response.getOutputStream(), problem);
+    }
 
 }
