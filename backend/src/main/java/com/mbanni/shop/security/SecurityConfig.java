@@ -49,6 +49,7 @@ public class SecurityConfig {
 
                                 .requestMatchers("/",
                                         "/products",
+                                        "/products/{id}",
                                         "/auth/register",
                                         "/auth/login").permitAll()
 
