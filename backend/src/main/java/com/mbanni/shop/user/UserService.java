@@ -95,6 +95,8 @@ public class UserService {
         }
         if(status.equals("ACTIVE")) {
             user.activate();
+        }if(status.equals("INACTIVE")) {
+            user.setStatus(UserStatus.INACTIVE);
         }
 
     }
