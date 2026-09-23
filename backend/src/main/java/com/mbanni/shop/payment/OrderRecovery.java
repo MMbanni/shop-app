@@ -26,7 +26,7 @@ public class OrderRecovery {
 
     @Scheduled(
             initialDelay = 5,
-            fixedDelay = 10,
+            fixedDelay = 60,
             timeUnit = TimeUnit.SECONDS
     )
     public void runRecovery(){
