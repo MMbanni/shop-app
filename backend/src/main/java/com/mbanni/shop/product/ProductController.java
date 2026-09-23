@@ -64,7 +64,7 @@ public class ProductController {
     @PatchMapping("/admin/products/{id}/status")
     public ResponseEntity<Void> changeStatus(
             @PathVariable Long id,
-            @RequestBody ProductStatusRequestDto request
+            @Valid @RequestBody ProductStatusRequestDto request
     ) {
         productService.changeProductStatus(id, request.status());
 
