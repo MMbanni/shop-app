@@ -20,6 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdForUpdate(Long id);
 
     List<Product> findByStatus(ProductStatus status);
+    Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
 
     @Query("""
     select count(item) > 0

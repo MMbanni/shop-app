@@ -6,8 +6,6 @@ import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.command.CreateProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
-import com.mbanni.shop.product.dto.ProductRequestDto;
-import com.mbanni.shop.product.dto.ProductResponseDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,9 +50,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Product getProduct(Long Id) {
-
-        return productRepository.findById(Id)
+    public Product getProduct(Long id) {
+        return productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
                 .orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
@@ -76,9 +73,9 @@ public class ProductService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public Product updateProduct(Long Id, UpdateProductCommand request) {
+    public Product updateProduct(Long id, UpdateProductCommand request) {
 
-        Product product = productRepository.findByIdForUpdate(Id).
+        Product product = productRepository.findByIdForUpdate(id).
                 orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
 
