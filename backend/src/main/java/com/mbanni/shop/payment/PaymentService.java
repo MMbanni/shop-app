@@ -207,7 +207,17 @@ public class PaymentService {
 
     @Transactional
     public void handleCheckoutCompleted(Session session) {
-        if (!"paid".equals(session.getPaymentStatus())) {
+        if (!"complete".equals(session.getStatus())) {
+            return;
+        }
+
+        boolean paid = "paid".equals(session.getPaymentStatus());
+
+        boolean free =
+                "no_payment_required".equals(session.getPaymentStatus())
+                        && Long.valueOf(0L).equals(session.getAmountTotal());
+
+        if (!paid && !free) {
             return;
         }
         Order order = lockOrderForSession(session.getId());
