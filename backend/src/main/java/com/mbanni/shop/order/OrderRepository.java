@@ -20,6 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByStripeSessionId(String stripeSessionId);
 
     Optional<Order> findFirstByUser_IdAndStatus(Long userId, OrderStatus status);
+    List<Order> findAllByStatus(OrderStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
