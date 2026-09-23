@@ -32,15 +32,15 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserResponseDto> searchUsers(String status) {
 
-        if(status.equalsIgnoreCase("ALL")) {
+        if (status.equalsIgnoreCase("ALL")) {
             return userMapper.toResponseList(userRepository.findAll());
         }
         UserStatus userStatus;
 
-        try{
+        try {
             userStatus = UserStatus.valueOf(status.toUpperCase());
 
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
@@ -58,9 +58,9 @@ public class UserService {
     public UserResponseDto updateUserInfo(Long userId, UpdateUserCommand command) {
         User user = findUserForUpdateOrThrow(userId);
 
-        if(command.name() != null) {
+        if (command.name() != null) {
             String name = command.name().trim();
-            if(name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+            if (name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
             user.setName(name);
         }
         if (command.email() != null) {
@@ -83,19 +83,27 @@ public class UserService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public void updateUserStatus(Long userId, UpdateUserStatusCommand command){
+    public void updateUserStatus(Long userId, UpdateUserStatusCommand command) {
         User user = findUserForUpdateOrThrow(userId);
         String status = command.status().toString();
 
-        if(status.equals("BANNED")) {
+        if (status.equals("BANNED")) {
             user.ban();
         }
-        if(status.equals("SUSPENDED")) {
+        if (status.equals("SUSPENDED")) {
+            if (command.duration() == null) {
+                throw BusinessException.forField(
+                        ErrorCode.ILLEGAL_OPERATION,
+                        "duration",
+                        "Duration required when suspending a user"
+                );
+            }
             user.suspend(command.duration());
         }
-        if(status.equals("ACTIVE")) {
+        if (status.equals("ACTIVE")) {
             user.activate();
-        }if(status.equals("INACTIVE")) {
+        }
+        if (status.equals("INACTIVE")) {
             user.setStatus(UserStatus.INACTIVE);
         }
 
@@ -106,9 +114,9 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long userId) {
         User user = userRepository.findByIdForUpdate(userId).orElseThrow(
-                ()-> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
         );
-        if(orderRepository.existsByUser_Id(userId)){
+        if (orderRepository.existsByUser_Id(userId)) {
             throw new BusinessException(
                     ErrorCode.ILLEGAL_OPERATION,
                     "This user has orders and cannot be deleted.");
@@ -119,12 +127,12 @@ public class UserService {
 
     private User findUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
     private User findUserForUpdateOrThrow(Long userId) {
         return userRepository.findByIdForUpdate(userId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
 }
