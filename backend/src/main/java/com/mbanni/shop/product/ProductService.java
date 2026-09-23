@@ -32,13 +32,8 @@ public class ProductService {
 
         Optional<Product> existingProduct = productRepository.findByNameIgnoreCase(name);
         if(existingProduct.isPresent()){
-            if(existingProduct.get().getProductStatus()==ProductStatus.ACTIVE){
-                throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS, "name");
-            } else {
-                Product product = existingProduct.get();
-                product.activate();
-                return product;
-            }
+            throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name",
+                    "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
         }
 
         Product product = new Product(name, request.price(), request.description());
