@@ -62,7 +62,8 @@ public class ProductMapper {
         return new UpdateProductCommand(
                 request.name(),
                 request.stock(),
-                request.price()
+                request.price(),
+                request.description()
 
         );
     }
