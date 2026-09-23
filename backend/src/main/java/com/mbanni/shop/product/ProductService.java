@@ -93,6 +93,10 @@ public class ProductService {
             product.setStock(request.stock());
         }
 
+        if(request.description()!= null) {
+            product.setDescription(request.description());
+        }
+
         return product;
     }
 
