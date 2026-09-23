@@ -34,6 +34,7 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.INACTIVE;
 
+    @Column(length = 500)
     private String description;
 
     public Product() {}
