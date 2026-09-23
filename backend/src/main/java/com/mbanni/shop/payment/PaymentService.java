@@ -207,6 +207,9 @@ public class PaymentService {
 
     @Transactional
     public void handleCheckoutCompleted(Session session) {
+        if (!"paid".equals(session.getPaymentStatus())) {
+            return;
+        }
         Order order = lockOrderForSession(session.getId());
 
         if (order.getStatus() != OrderStatus.PENDING) {
