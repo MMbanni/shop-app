@@ -13,6 +13,11 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByUser_Id(Long userId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") Long id);
+
+
     @Query("select count(o) > 0 from Order o join o.items item "
             + "where o.status = :status and item.productIdSnapshot = :productId")
     boolean existsByStatusAndProductId(@Param("status") OrderStatus status, @Param("productId") Long productId);
