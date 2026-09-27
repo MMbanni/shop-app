@@ -214,13 +214,14 @@ public class CheckoutTransactions {
     @Transactional
     public Order supersedeOrder(Long userId, Long orderId, List<Long> productIds) {
         lockUserOrThrow(userId);
-        Order order = lockOrderOrThrow(orderId);
+        Order lockedOrder = lockOrderOrThrow(orderId);
+        entityManager.refresh(lockedOrder);
 
-        releaseStock(order, productIds);
+        releaseStock(lockedOrder, productIds);
 
-        order.markSuperseded();
+        lockedOrder.markSuperseded();
 
-        return replaceOrder(order, productIds);
+        return replaceOrder(lockedOrder, productIds);
     }
 
     @Transactional
@@ -232,7 +233,6 @@ public class CheckoutTransactions {
         if (lockedOrder.getStatus() != OrderStatus.PENDING) {
             return;
         }
-
 
         releaseStock(lockedOrder, productIds);
         lockedOrder.markExpired();
@@ -256,16 +256,17 @@ public class CheckoutTransactions {
     public Order handleOrderExpired(Long userId, Long orderId, List<Long> productIds) {
 
         lockUserOrThrow(userId);
-        Order order = lockOrderOrThrow(orderId);
+        Order lockedOrder = lockOrderOrThrow(orderId);
+        entityManager.refresh(lockedOrder);
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
             throw new BusinessException(ErrorCode.PROCESSING);
         }
 
-        releaseStock(order, productIds);
-        order.markExpired();
+        releaseStock(lockedOrder, productIds);
+        lockedOrder.markExpired();
 
-        return replaceOrder(order, productIds);
+        return replaceOrder(lockedOrder, productIds);
 
     }
 
@@ -274,6 +275,7 @@ public class CheckoutTransactions {
     public void handleOrderCancelled(Long userId, Order order, List<Long> productIds) {
         lockUserOrThrow(userId);
         Order lockedOrder = lockOrderOrThrow(order.getId());
+        entityManager.refresh(lockedOrder);
         if(lockedOrder.getStatus() != OrderStatus.PENDING){
             return;
         }
