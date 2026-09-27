@@ -217,6 +217,10 @@ public class CheckoutTransactions {
         Order lockedOrder = lockOrderOrThrow(orderId);
         entityManager.refresh(lockedOrder);
 
+        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
+            throw new BusinessException(ErrorCode.PROCESSING);
+        }
+
         releaseStock(lockedOrder, productIds);
 
         lockedOrder.markSuperseded();
