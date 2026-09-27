@@ -75,21 +75,27 @@ public class PaymentService {
         if (incomingOrder.isPreexisting()) {
             Session session = retrieveStripeSession(order);
 
-            // Wait for payment processing/webhook confirmation.
             if (isComplete(session)) {
                 throw new BusinessException(ErrorCode.PROCESSING);
             }
 
             // Resume same checkout with same cart
-            if (isOpen(session)
-                    && !incomingOrder.hasExpired()
-                    && incomingOrder.hasSameCart()) {
+            if (isOpen(session) && !incomingOrder.hasExpired()) {
+                if  (incomingOrder.hasSameCart()) {
+                    return new CheckoutResponse(session.getUrl());
+                }
+                else {
 
-                return new CheckoutResponse(session.getUrl());
+                    Order newOrder = supersedePendingOrder(userId,order, productIds);
+                    Session newSession = createStripeSession(newOrder, userId);
+                    checkoutTransactions.attachStripeSession(new FinalizeCheckoutDto(newOrder.getId(), newSession.getId(), newSession.getUrl()));
+                    return new CheckoutResponse(newSession.getUrl());
+                }
+
             }
             if (isExpired(session) || incomingOrder.hasExpired()) {
-                expireCheckout(order, productIds);
-                Order newOrder = checkoutTransactions.replaceOrder(order, productIds);
+                expireCheckout(order);
+                Order newOrder = checkoutTransactions.handleOrderExpired(userId, order.getId(), productIds);
                 Session newSession = createStripeSession(newOrder, userId);
                 checkoutTransactions.attachStripeSession(new FinalizeCheckoutDto(newOrder.getId(), newSession.getId(), newSession.getUrl()));
                 return new CheckoutResponse(newSession.getUrl());
@@ -99,26 +105,9 @@ public class PaymentService {
                         "Unknown Stripe checkout status"
                 );
             }
-        }
-
-        // not expired
-        if (incomingOrder.isPreexisting()) {
-            Session session = retrieveStripeSession(order);
-
-            if (isOpen(session)) {
-                if (!incomingOrder.hasSameCart()) {
-
-                    Order newOrder = supersedePendingOrder(order, productIds);
-                    Session newSession = createStripeSession(newOrder, userId);
-                    checkoutTransactions.attachStripeSession(new FinalizeCheckoutDto(newOrder.getId(), newSession.getId(), newSession.getUrl()));
-                    return new CheckoutResponse(newSession.getUrl());
-
-
-                }
-
-            }
 
         }
+
 
         Session session = createStripeSession(order, userId);
 
@@ -148,8 +137,8 @@ public class PaymentService {
     }
 
     public void cancelCurrentCheckout(Long userId) {
-        checkoutTransactions.lockUserOrThrow(userId);
-        Order order = checkoutTransactions.lockPendingOrderByUserId(userId);
+        Order order = orderRepository.findFirstByUser_IdAndStatus(userId, OrderStatus.PENDING)
+                .orElseThrow(()-> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         Session session = retrieveStripeSession(order);
 
         if (isComplete(session)) {
@@ -157,7 +146,7 @@ public class PaymentService {
         }
 
         if (isExpired(session)) {
-            checkoutTransactions.expirePendingOrderAndReleaseStock(order.getId(), orderProductIds(order));
+            checkoutTransactions.expirePendingOrderAndReleaseStock(order, orderProductIds(order));
             return;
         }
 
@@ -167,10 +156,10 @@ public class PaymentService {
                             + session.getStatus()
             );
         }
+
+
         requireExpired(order.getStripeSessionId());
-
-
-        checkoutTransactions.cancelOrder(order, orderProductIds(order));
+        checkoutTransactions.handleOrderCancelled(userId, order, orderProductIds(order));
 
     }
 
@@ -207,7 +196,7 @@ public class PaymentService {
     public void handleCheckoutExpired(Session session) {
         Order order = checkoutTransactions.lockUserAndOrderBySession(session.getId());
 
-        checkoutTransactions.expirePendingOrderAndReleaseStock(order.getId(), orderProductIds(order));
+        checkoutTransactions.expirePendingOrderAndReleaseStock(order, orderProductIds(order));
     }
 
     @Transactional
@@ -271,18 +260,16 @@ public class PaymentService {
 
     }
 
-    private void expireCheckout(Order order, List<Long> productIds) {
+    private void expireCheckout(Order order) {
         if (order.getStripeSessionId() == null) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order has no Stripe session");
         }
             requireExpired(order.getStripeSessionId());
-            checkoutTransactions.expirePendingOrderAndReleaseStock(order.getId(), productIds);
-
     }
 
-    private Order supersedePendingOrder(Order order, List<Long> productIds) {
+    private Order supersedePendingOrder(Long userId, Order order, List<Long> productIds) {
         requireExpired(order.getStripeSessionId());
-            return checkoutTransactions.supersedeOrder(order.getId(), productIds);
+            return checkoutTransactions.supersedeOrder(userId, order.getId(), productIds);
     }
 
     private Session retrieveStripeSession(Order order) {

@@ -102,17 +102,7 @@ public class CheckoutTransactions {
         order.setCheckoutUrl(finalizeCheckoutDto.sessionUrl());
     }
 
-    @Transactional
-    public void expirePendingOrderAndReleaseStock(Long orderId, List<Long> productIds) {
-        Order order = lockOrderOrThrow(orderId);
-        if (order.getStatus() != OrderStatus.PENDING) {
-            return;
-        }
 
-
-        releaseStock(order, productIds);
-        order.markExpired();
-    }
 
 
     public User lockUserOrThrow(Long userId) {
@@ -220,18 +210,10 @@ public class CheckoutTransactions {
                 );
     }
 
-    @Transactional
-    public Order lockPendingOrderByUserId(Long userId) {
-         return orderRepository
-                .findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
-
-    }
 
     @Transactional
-    public Order supersedeOrder(Long orderId, List<Long> productIds) {
+    public Order supersedeOrder(Long userId, Long orderId, List<Long> productIds) {
+        lockUserOrThrow(userId);
         Order order = lockOrderOrThrow(orderId);
 
         releaseStock(order, productIds);
@@ -242,7 +224,23 @@ public class CheckoutTransactions {
     }
 
     @Transactional
+    public void expirePendingOrderAndReleaseStock(Order order, List<Long> productIds) {
+        lockUserOrThrow(order.getUser().getId());
+        Order lockedOrder = lockOrderOrThrow(order.getId());
+        entityManager.refresh(lockedOrder);
+
+        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
+            return;
+        }
+
+
+        releaseStock(lockedOrder, productIds);
+        lockedOrder.markExpired();
+    }
+
+
     public Order replaceOrder(Order previousOrder, List<Long> productIds){
+
         Order order = new Order(previousOrder.getUser(), Instant.now().plus(CHECKOUT_EXPIRY));
         Map<Long, Product> lockedProducts = lockProducts(productIds);
         List<ProductReservation> reservedProducts =
@@ -253,16 +251,35 @@ public class CheckoutTransactions {
         return orderRepository.save(order);
 
     }
+
     @Transactional
-    public void cancelOrder(Order order, List<Long> productIds) {
+    public Order handleOrderExpired(Long userId, Long orderId, List<Long> productIds) {
 
+        lockUserOrThrow(userId);
+        Order order = lockOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new BusinessException(ErrorCode.PROCESSING);
+        }
+
+        releaseStock(order, productIds);
+        order.markExpired();
+
+        return replaceOrder(order, productIds);
+
+    }
+
+
+    @Transactional
+    public void handleOrderCancelled(Long userId, Order order, List<Long> productIds) {
+        lockUserOrThrow(userId);
         Order lockedOrder = lockOrderOrThrow(order.getId());
-
         if(lockedOrder.getStatus() != OrderStatus.PENDING){
             return;
         }
         releaseStock(lockedOrder, productIds);
         lockedOrder.markCancelled();
+
     }
 
     public List<ProductReservation> validateCart(Cart cart, Map<Long, Product> lockedProducts, Order pendingOrder) {
