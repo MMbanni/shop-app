@@ -298,7 +298,7 @@ public class PaymentService {
     }
 
     private List<SessionCreateParams.LineItem> toStripeLineItems(Order order) {
-        return order.getItems().stream()
+        return order.getItems().stream().sorted(Comparator.comparing(OrderItem::getId))
                 .map(item -> SessionCreateParams.LineItem.builder()
                         .setQuantity((long) item.getQuantity())
                         .setPriceData(
