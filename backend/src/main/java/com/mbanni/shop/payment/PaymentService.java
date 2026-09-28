@@ -14,6 +14,7 @@ import com.mbanni.shop.user.UserRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
@@ -129,8 +130,11 @@ public class PaymentService {
                     .addAllLineItem(toStripeLineItems(order))
                     .build();
 
+            RequestOptions options = RequestOptions.builder()
+                    .setIdempotencyKey("checkout:create:order:" + order.getId())
+                    .build();
 
-            return Session.create(params);
+            return Session.create(params, options);
         } catch (StripeException exception) {
             throw new RuntimeException("Could not create Stripe checkout session", exception);
         }
@@ -201,17 +205,8 @@ public class PaymentService {
 
     @Transactional
     public Order refreshOrderStatus(Long userId, String sessionId) {
-        checkoutTransactions.lockUserOrThrow(userId);
 
-        Order order = orderRepository
-                .findByUserIdAndStripeSessionId(userId, sessionId)
-                .orElseThrow(() ->
-                        new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
-
-        if (!order.isPending()) {
-            return order;
-        }
+        Order order = checkoutTransactions.lockOrderForRefresh(userId, sessionId);
 
         Session session = retrieveStripeSession(order);
 
