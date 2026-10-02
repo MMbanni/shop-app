@@ -257,6 +257,24 @@ public class CheckoutTransactions {
     }
 
     @Transactional
+    public Order lockOrderForRefresh(Long userId, Long orderId) {
+        lockUserOrThrow(userId);
+        Order lockedOrder = orderRepository
+                .findByIdForUpdate(orderId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.ORDER_NOT_FOUND)
+                );
+
+        if (!lockedOrder.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        entityManager.refresh(lockedOrder);
+
+        return lockedOrder;
+    }
+
+    @Transactional
     public Order lockOrderForRefresh(Long userId, String sessionId) {
         lockUserOrThrow(userId);
         Order lockedOrder = orderRepository

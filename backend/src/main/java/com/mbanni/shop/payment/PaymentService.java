@@ -83,7 +83,7 @@ public class PaymentService {
             // Resume same checkout with same cart
             if (isOpen(session) && !incomingOrder.hasExpired()) {
                 if (incomingOrder.hasSameCart()) {
-                    return new CheckoutResponse(session.getUrl());
+                    return checkoutResponseFor(session);
                 } else {
                     requireExpired(session.getId());
 
@@ -94,7 +94,7 @@ public class PaymentService {
                     );
 
                     Session newSession = ensureStripeSession(newOrder, userId);
-                    return new CheckoutResponse(newSession.getUrl());
+                    return checkoutResponseFor(newSession);
                 }
 
             }
@@ -102,7 +102,7 @@ public class PaymentService {
                 requireExpired(session.getId());
                 Order newOrder = checkoutTransactions.handleOrderExpired(userId, order.getId(), productIds);
                 Session newSession = ensureStripeSession(newOrder, userId);
-                return new CheckoutResponse(newSession.getUrl());
+                return checkoutResponseFor(newSession);
             } else if (!isOpen(session) && !isExpired(session)) {
                 throw new BusinessException(
                         ErrorCode.ILLEGAL_OPERATION,
@@ -115,7 +115,7 @@ public class PaymentService {
 
         Session session = ensureStripeSession(order, userId);
 
-        return new CheckoutResponse(session.getUrl());
+        return checkoutResponseFor(session);
     }
 
     private Session createStripeSession(Order order, Long userId) {
@@ -222,11 +222,28 @@ public class PaymentService {
     }
 
     @Transactional
+    public Order refreshOrderStatus(Long userId, Long orderId) {
+
+        Order order = checkoutTransactions.lockOrderForRefresh(userId, orderId);
+
+        Session session = ensureStripeSession(order, userId);
+
+        if ("paid".equals(session.getPaymentStatus()) || "no_payment_required".equals(session.getPaymentStatus())) {
+            handleCheckoutCompleted(session);
+
+        } else if ("expired".equals(session.getStatus())) {
+            handleCheckoutExpired(session);
+        }
+
+        return order;
+    }
+
+    @Transactional
     public Order refreshOrderStatus(Long userId, String sessionId) {
 
         Order order = checkoutTransactions.lockOrderForRefresh(userId, sessionId);
 
-        Session session = retrieveStripeSession(order);
+        Session session = ensureStripeSession(order, userId);
 
         if ("paid".equals(session.getPaymentStatus()) || "no_payment_required".equals(session.getPaymentStatus())) {
             handleCheckoutCompleted(session);
@@ -284,6 +301,22 @@ public class PaymentService {
                     exception
             );
         }
+    }
+
+    private CheckoutResponse checkoutResponseFor(Session session) {
+        if(isComplete(session)){
+            throw  new BusinessException(ErrorCode.PROCESSING);
+        }
+
+        if (!isOpen(session) || session.getUrl() == null) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "Checkout is no longer available. Please try checkout again."
+            );
+        }
+
+        return new CheckoutResponse(session.getUrl());
+
     }
 
     private boolean isOpen(Session session) {

@@ -36,7 +36,7 @@ public class OrderRecovery {
             try {
                 paymentService.refreshOrderStatus(
                         order.getUser().getId(),
-                        order.getStripeSessionId()
+                        order.getId()
                 );
 
             } catch (RuntimeException e) {
