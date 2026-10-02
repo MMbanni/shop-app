@@ -94,17 +94,17 @@ public class CheckoutTransactions {
     }
 
     @Transactional
-    public void attachStripeSession(FinalizeCheckoutDto finalizeCheckoutDto) {
+    public Order attachStripeSession(FinalizeCheckoutDto finalizeCheckoutDto) {
         Order order = orderRepository.findByIdForUpdate(finalizeCheckoutDto.orderId())
                 .orElseThrow(()-> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         order.setStripeSessionId(finalizeCheckoutDto.sessionId());
         order.setCheckoutUrl(finalizeCheckoutDto.sessionUrl());
+        return order;
     }
 
 
-
-
+    @Transactional
     public User lockUserOrThrow(Long userId) {
         return userRepository.findByIdForUpdate(userId)
                 .orElseThrow(
@@ -156,7 +156,7 @@ public class CheckoutTransactions {
         return locked;
 
     }
-
+    @Transactional
     public Order lockOrderOrThrow(Long orderId){
         return orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
