@@ -27,7 +27,7 @@ import java.util.*;
 @Service
 public class CheckoutTransactions {
 
-    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(31);
+    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(36);
     private static final int MAX_UNPAID_CHECKOUTS_PER_DAY = 5;
 
     private final OrderRepository orderRepository;

@@ -25,12 +25,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 @Service
 public class PaymentService {
 
-    private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(31);
+    private static final Duration CREATION_RETRY_LIMIT = Duration.ofMinutes(5);
+    private static final Duration MINIMUM_EXPIRY_REMAINING =Duration.ofMinutes(31);
     private static final int MAX_UNPAID_CHECKOUTS_PER_DAY = 5;
 
     private final UserRepository userRepository;
@@ -144,6 +146,20 @@ public class PaymentService {
     private Session ensureStripeSession(Order order, Long userId) {
         if (order.getStripeSessionId() != null) {
             return retrieveStripeSession(order);
+        }
+
+        Instant now = Instant.now();
+
+        // Stop creation attempts five minutes after saving the order.
+        Instant retryUntil = order.getCreatedAt().plus(CREATION_RETRY_LIMIT);
+
+        boolean retryTimeOver = !now.isBefore(retryUntil);
+
+        if (retryTimeOver) {
+            throw new BusinessException(
+                    ErrorCode.CHECKOUT_NEEDS_REVIEW,
+                    Map.of("orderId", order.getId())
+            );
         }
 
         Session session = createStripeSession(order, userId);
