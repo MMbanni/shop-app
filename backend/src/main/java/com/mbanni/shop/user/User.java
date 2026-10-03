@@ -103,17 +103,21 @@ public class User {
     }
 
     public void suspend(int days) {
-        this.status=UserStatus.SUSPENDED;
-        if(this.suspendedUntil!=null){
-            this.suspendedUntil=this.suspendedUntil.plus(days, ChronoUnit.DAYS);
+        Instant now = Instant.now();
+
+
+        if(suspendedUntil!=null && suspendedUntil.isAfter(now)){
+            suspendedUntil= suspendedUntil.plus(days, ChronoUnit.DAYS);
+
         } else {
-            this.suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
+            suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
         }
 
-        if (this.suspendedUntil.isBefore(Instant.now())) {
-            activate();
-        }
-                    }
+        status=UserStatus.SUSPENDED;
+        checkSuspension();
+
+
+    }
     public void ban () {
         this.status=UserStatus.BANNED;
         this.suspendedUntil = null;
@@ -123,5 +127,11 @@ public class User {
     public void activate() {
         this.status=UserStatus.ACTIVE;
         this.suspendedUntil = null;
+    }
+
+    public void checkSuspension(){
+        if (suspendedUntil != null && !suspendedUntil.isAfter(Instant.now())) {
+            activate();
+        }
     }
 }
