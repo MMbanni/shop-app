@@ -46,11 +46,26 @@ public class Order {
 
     private Instant paidAt;
 
+    @Column(length = 2048)
+    private String checkoutSuccessUrl;
+    @Column(length = 2048)
+    private String checkoutCancelUrl;
+
+    private Instant reviewNeededAt;
+    @Column(length = 500)
+    private String reviewReason;
+    private Instant reviewResolvedAt;
+    private Long reviewedBy;
+    @Column(length = 1000)
+    private String reviewResolution;
+
+
     protected Order() {
     }
 
-    public Order(User user, Instant expiresAt) {
+    public Order(User user, Instant createdAt,Instant expiresAt) {
         this.user = user;
+        this.createdAt=createdAt;
         this.expiresAt = expiresAt;
     }
 
@@ -146,9 +161,7 @@ public class Order {
 
     public void setStatus(OrderStatus orderStatus){ this.status = orderStatus;}
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public Instant getCreatedAt() { return createdAt; }
 
     public Instant getExpiresAt() {
         return expiresAt;
@@ -156,5 +169,43 @@ public class Order {
 
     public Instant getPaidAt() {
         return paidAt;
+    }
+
+    public String getCheckoutSuccessUrl() { return checkoutSuccessUrl; }
+
+    public String getCheckoutCancelUrl() { return checkoutCancelUrl; }
+
+    public Instant getReviewNeededAt() { return reviewNeededAt; }
+
+    public String getReviewReason() { return reviewReason; }
+
+    public Instant getReviewResolvedAt() { return reviewResolvedAt; }
+
+    public Long getReviewedBy() { return reviewedBy; }
+
+    public String getReviewResolution() { return reviewResolution; }
+
+    public void configureCheckout(String successUrl, String cancelUrl) {
+        if (checkoutSuccessUrl != null || checkoutCancelUrl != null) {
+            throw new IllegalStateException("Checkout request settings are immutable");
+        }
+        checkoutSuccessUrl = successUrl;
+        checkoutCancelUrl = cancelUrl;
+    }
+
+    public void requireReview(Instant now, String reason) {
+        if (reviewNeededAt == null) reviewNeededAt = now;
+        reviewReason = reason;
+    }
+
+    public void clearReview() {
+        reviewNeededAt = null;
+        reviewReason = null;
+    }
+
+    public void recordReviewResolution(Long adminId, Instant now, String resolution) {
+        reviewedBy = adminId;
+        reviewResolvedAt = now;
+        reviewResolution = resolution;
     }
 }
