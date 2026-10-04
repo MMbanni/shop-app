@@ -31,7 +31,6 @@ import java.util.*;
 
 @Service
 public class CheckoutTransactions {
-
     private static final Duration CHECKOUT_EXPIRY = Duration.ofMinutes(36);
     private static final int MAX_UNPAID_CHECKOUTS_PER_DAY = 5;
 
@@ -55,7 +54,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public BeginCheckoutDto prepareOrResumeCheckout(Long userId){
-        User user = lockUserOrThrow(userId);
+        User user = lockUser(userId);
         Cart cart = getValidCartOrThrow(user);
 
         // Product Ids of items in cart
@@ -111,11 +110,11 @@ public class CheckoutTransactions {
 
 
     @Transactional
-    public User lockUserOrThrow(Long userId) {
-        return userRepository.findByIdForUpdate(userId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
-                );
+    public User lockUser(Long userId) {
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        entityManager.refresh(user);
+        return user;
     }
 
     private Cart getValidCartOrThrow(User user) {
@@ -132,7 +131,7 @@ public class CheckoutTransactions {
         Instant since = now.minus(Duration.ofHours(24));
 
         long expiredCheckouts =
-                orderRepository.countByUser_IdAndStatusInAndCreatedAtAfter(
+                orderRepository.countByUser_IdAndStatusInAndCreatedAtAfter(+
                         userId,
                         List.of(OrderStatus.EXPIRED, OrderStatus.CANCELLED, OrderStatus.SUPERSEDED),
                         since
@@ -207,7 +206,7 @@ public class CheckoutTransactions {
                         () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
                 );
 
-        lockUserOrThrow(userId);
+        lockUser(userId);
 
         return orderRepository
                 .findByStripeSessionIdForUpdate(sessionId)
@@ -219,7 +218,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public Order supersedeOrder(Long userId, Long orderId, List<Long> productIds) {
-        lockUserOrThrow(userId);
+        lockUser(userId);
         Order lockedOrder = lockOrderOrThrow(orderId);
         entityManager.refresh(lockedOrder);
 
@@ -236,7 +235,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public void expirePendingOrderAndReleaseStock(Order order, List<Long> productIds) {
-        lockUserOrThrow(order.getUser().getId());
+        lockUser(order.getUser().getId());
         Order lockedOrder = lockOrderOrThrow(order.getId());
         entityManager.refresh(lockedOrder);
 
@@ -264,7 +263,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public Order lockOrderForRefresh(Long userId, Long orderId) {
-        lockUserOrThrow(userId);
+        lockUser(userId);
         Order lockedOrder = orderRepository
                 .findByIdForUpdate(orderId)
                 .orElseThrow(() ->
@@ -282,7 +281,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public Order lockOrderForRefresh(Long userId, String sessionId) {
-        lockUserOrThrow(userId);
+        lockUser(userId);
         Order lockedOrder = orderRepository
                 .findByUserIdAndStripeSessionId(userId, sessionId)
                 .orElseThrow(() ->
@@ -297,7 +296,7 @@ public class CheckoutTransactions {
     @Transactional
     public Order handleOrderExpired(Long userId, Long orderId, List<Long> productIds) {
 
-        lockUserOrThrow(userId);
+        lockUser(userId);
         Order lockedOrder = lockOrderOrThrow(orderId);
         entityManager.refresh(lockedOrder);
 
@@ -315,7 +314,7 @@ public class CheckoutTransactions {
 
     @Transactional
     public void handleOrderCancelled(Long userId, Order order, List<Long> productIds) {
-        lockUserOrThrow(userId);
+        lockUser(userId);
         Order lockedOrder = lockOrderOrThrow(order.getId());
         entityManager.refresh(lockedOrder);
         if(lockedOrder.getStatus() != OrderStatus.PENDING){
