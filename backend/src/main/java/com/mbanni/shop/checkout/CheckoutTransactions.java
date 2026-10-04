@@ -278,6 +278,12 @@ public class CheckoutTransactions {
     }
 
     public List<ProductReservation> validateCart(Cart cart, Map<Long, Product> lockedProducts, Order pendingOrder) {
+        if (cart.getItems().size() > 100) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "Checkout supports at most 100 different products."
+            );
+        }
         List<CartItemProblem> errors = new ArrayList<>();
         List<ProductReservation> validatedItems = new ArrayList<>();
 
