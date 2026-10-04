@@ -4,6 +4,7 @@ import com.mbanni.shop.cart.Cart;
 import com.mbanni.shop.cart.CartItem;
 import com.mbanni.shop.cart.dto.CartItemProblem;
 import com.mbanni.shop.checkout.dto.BeginCheckoutDto;
+import com.mbanni.shop.checkout.dto.CheckoutReviewDto;
 import com.mbanni.shop.checkout.dto.FinalizeCheckoutDto;
 import com.mbanni.shop.checkout.dto.ProductReservation;
 import com.mbanni.shop.common.exception.BusinessException;
@@ -21,6 +22,7 @@ import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,6 +174,29 @@ public class CheckoutTransactions {
         lockUser(userId);
         applySessionLocked(lockOrder(orderId, userId), session, false);
     }
+
+    @Transactional(readOnly = true)
+    public List<CheckoutReviewDto> reviews(int page) {
+        return orderRepository.findByReviewNeededAtIsNotNullOrderByReviewNeededAtAsc(PageRequest.of(page, 50))
+                .stream().map(this::toReviewDto).toList();
+    }
+    private CheckoutReviewDto toReviewDto(Order order) {
+        return new CheckoutReviewDto(order.getId(), order.getUser().getId(), order.getStatus(), order.getStripeSessionId(),
+                order.getTotal(), order.getExpiresAt(), order.getReviewNeededAt(), order.getReviewReason(),
+                order.getReviewResolvedAt(), order.getReviewedBy(), order.getReviewResolution());
+    }
+
+    @Transactional
+    public CheckoutReviewDto reconcile(Long adminId, Long userId, Long orderId,
+                                       StripeSessionSnapshot session) {
+        lockUser(userId);
+        Order order = lockOrder(orderId, userId);
+        applySessionLocked(order, session, false);
+        order.recordReviewResolution(adminId, clock.instant(), "Verified Stripe session " + session.id());
+        return toReviewDto(order);
+    }
+
+
 
     public User lockUser(Long userId) {
         User user = userRepository.findByIdForUpdate(userId)
@@ -363,6 +388,11 @@ public class CheckoutTransactions {
     @Transactional(readOnly = true)
     public OrderSnapshot loadSnapshotBySession(Long userId, String sessionId) {
         return snapshot(orderRepository.findByUserIdAndStripeSessionId(userId, sessionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
+    }
+
+    public OrderSnapshot loadAdminSnapshot(Long orderId) {
+        return snapshot(orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
     }
 

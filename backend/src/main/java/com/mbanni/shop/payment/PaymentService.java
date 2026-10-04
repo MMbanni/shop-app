@@ -3,6 +3,7 @@ package com.mbanni.shop.payment;
 import com.mbanni.shop.cart.Cart;
 import com.mbanni.shop.checkout.*;
 import com.mbanni.shop.checkout.dto.BeginCheckoutDto;
+import com.mbanni.shop.checkout.dto.CheckoutReviewDto;
 import com.mbanni.shop.checkout.dto.FinalizeCheckoutDto;
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
@@ -25,6 +26,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,6 +146,19 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.CHECKOUT_NEEDS_REVIEW, Map.of("orderId", order.orderId()));
         }
         return stripe.create(order);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<CheckoutReviewDto> reviews(int page) {
+        if (page < 0) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        return checkoutTransactions.reviews(page);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public CheckoutReviewDto reconcileCheckout(Long adminId, Long orderId, String sessionId) {
+        OrderSnapshot order = checkoutTransactions.loadAdminSnapshot(orderId);
+        StripeSessionSnapshot session = stripe.retrieve(sessionId);
+        return checkoutTransactions.reconcile(adminId, order.userId(), orderId, session);
     }
 
 
