@@ -3,6 +3,9 @@ package com.mbanni.shop.checkout;
 import com.mbanni.shop.cart.Cart;
 import com.mbanni.shop.cart.CartItem;
 import com.mbanni.shop.cart.dto.CartItemProblem;
+import com.mbanni.shop.checkout.dto.BeginCheckoutDto;
+import com.mbanni.shop.checkout.dto.FinalizeCheckoutDto;
+import com.mbanni.shop.checkout.dto.ProductReservation;
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.order.Order;
@@ -15,9 +18,11 @@ import com.mbanni.shop.product.ProductStatus;
 import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -34,17 +39,18 @@ public class CheckoutTransactions {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final EntityManager entityManager;
+    private final Clock clock;
+    private final String frontendUrl;
 
-    public CheckoutTransactions(
-            OrderRepository orderRepository,
-            UserRepository userRepository,
-            ProductRepository productRepository,
-            EntityManager entityManager)
-    {
+    public CheckoutTransactions(OrderRepository orderRepository, UserRepository userRepository,
+                                ProductRepository productRepository, EntityManager entityManager,
+                                Clock clock, @Value("${app.frontend-url}") String frontendUrl) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.entityManager = entityManager;
+        this.clock = clock;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
     }
 
     @Transactional
