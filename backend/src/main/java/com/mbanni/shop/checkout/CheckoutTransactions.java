@@ -70,7 +70,7 @@ public class CheckoutTransactions {
         preexisting.ifPresent(order -> productIds.addAll(getOrderProductIds(order)));
         Map<Long, Product> lockedProducts = lockProducts(productIds);
 
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         checkForCheckoutAbuse(userId, now);
 
         List<ProductReservation> reservedProducts = validateCart(cart, lockedProducts, preexisting.orElse(null));
@@ -251,7 +251,7 @@ public class CheckoutTransactions {
 
     public Order replaceOrder(Order previousOrder, List<Long> productIds){
 
-        Order order = new Order(previousOrder.getUser(), Instant.now().plus(CHECKOUT_EXPIRY));
+        Order order = new Order(previousOrder.getUser(), clock.instant().plus(CHECKOUT_EXPIRY));
         Map<Long, Product> lockedProducts = lockProducts(productIds);
         List<ProductReservation> reservedProducts =
                 validateCart(order.getUser().getCart(), lockedProducts, null);
