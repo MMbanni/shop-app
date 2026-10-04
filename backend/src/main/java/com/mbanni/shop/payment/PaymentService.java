@@ -9,7 +9,7 @@ import com.mbanni.shop.order.OrderItem;
 import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.ProductRepository;
-import com.mbanni.shop.user.User;
+
 import com.mbanni.shop.user.UserRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -18,9 +18,11 @@ import com.stripe.net.RequestOptions;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,6 +31,7 @@ import java.time.Instant;
 import java.util.*;
 
 @Service
+@Transactional(propagation = Propagation.NEVER)
 public class PaymentService {
 
     private static final Duration CREATION_RETRY_LIMIT = Duration.ofMinutes(5);
