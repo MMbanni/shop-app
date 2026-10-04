@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 
@@ -20,11 +21,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final UserMapper userMapper;
+    private final Clock clock;
 
-    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper, Clock clock) {
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
         this.userMapper = userMapper;
+        this.clock = clock;
     }
 
 
@@ -98,7 +101,7 @@ public class UserService {
                         "Duration required when suspending a user"
                 );
             }
-            user.suspend(command.duration());
+            user.suspend(command.duration(), clock.instant());
         }
         if (status.equals("ACTIVE")) {
             user.activate();
