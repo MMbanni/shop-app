@@ -39,7 +39,7 @@ public class Order {
     private String checkoutUrl;
 
     @Column(nullable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(nullable = false)
     private Instant expiresAt;
@@ -72,14 +72,14 @@ public class Order {
         return expiresAt != null && now.isAfter(expiresAt);
     }
 
-    public void markPaid(String stripeSessionId) {
+    public void markPaid(String stripeSessionId, Instant now) {
         if (status != OrderStatus.PENDING) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
         this.status = OrderStatus.PAID;
         this.stripeSessionId = stripeSessionId;
-        this.paidAt = Instant.now();
+        this.paidAt = now;
     }
 
     public void markExpired() {

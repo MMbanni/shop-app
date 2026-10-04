@@ -15,8 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Locale;
 
 @Service
@@ -25,12 +24,14 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Clock clock;
 
     // Inject repository, Jwt service and password encoder
-    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, Clock clock) {
         this.userRepository=userRepository;
         this.jwtService=jwtService;
         this.passwordEncoder=passwordEncoder;
+        this.clock=clock;
     }
 
     @Transactional
@@ -78,7 +79,7 @@ public class AuthService {
         }
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
-            if(user.getSuspendedUntil().isBefore(Instant.now())){
+            if(user.getSuspendedUntil().isBefore(clock.instant())){
                 user.activate();
             } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
