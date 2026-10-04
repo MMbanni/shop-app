@@ -41,6 +41,10 @@ public enum ErrorCode {
             "Product is not in cart"
     ),
 
+    VERSION_MISMATCH(
+            "Request does not match expected version"
+    ),
+
     CART_ERROR(
             "One or more items in your cart need attention"
     ),

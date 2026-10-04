@@ -37,6 +37,9 @@ public class Product {
     @Column(length = 500)
     private String description;
 
+    @Version
+    private Long version;
+
     public Product() {}
 
     public Product(String name, BigDecimal price, String description) {
@@ -88,6 +91,8 @@ public class Product {
     public String getDescription() {
         return description;
     }
+
+    public Long getVersion() { return version; }
 
     // Setters
     public void setName(String name) {

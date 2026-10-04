@@ -6,5 +6,6 @@ public record UpdateProductCommand(
         String name,
         Integer stock,
         BigDecimal price,
-        String description
+        String description,
+        Long expectedVersion
 ) {}

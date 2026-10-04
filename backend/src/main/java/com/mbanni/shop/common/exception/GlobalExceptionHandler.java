@@ -89,6 +89,7 @@ public class GlobalExceptionHandler {
             case EMAIL_ALREADY_USED,
                  PRICE_CHANGED,
                  PRODUCT_ALREADY_EXISTS,
+                 VERSION_MISMATCH,
                  CHECKOUT_NEEDS_REVIEW,
                  PROCESSING-> HttpStatus.CONFLICT;
 

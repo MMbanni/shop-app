@@ -29,7 +29,8 @@ public class ProductMapper {
                 product.getStock(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getProductStatus()
+                product.getProductStatus(),
+                product.getVersion()
         );
     }
 

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -73,6 +74,13 @@ public class ProductService {
         Product product = productRepository.findByIdForUpdate(id).
                 orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        if (!Objects.equals(request.expectedVersion(), product.getVersion())) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "This product changed while you were editing it. Reload and try again."
+            );
+        }
+
 
         if(request.name()!= null) {
             String name = Product.validateName(request.name());
@@ -105,6 +113,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
         if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, id)) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
                     "This product is reserved by a pending checkout. Archive it instead of deleting it.");
