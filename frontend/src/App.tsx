@@ -5,7 +5,6 @@ import { AdminRoute } from "./components/routes/AdminRoute";
 import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { CartPage } from "./pages/CartPage";
-import { CheckoutCancelPage } from "./pages/CheckoutCancelPage";
 import { CheckoutSuccessPage } from "./pages/CheckoutSuccessPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
@@ -26,7 +25,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-        <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+        <Route path="/checkout/cancel" element={<CheckoutSuccessPage />} />
         <Route
           path="/cart"
           element={

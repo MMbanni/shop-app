@@ -59,13 +59,13 @@ public class AuthService {
 
 
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponseDto login (LoginRequestDto request ) {
 
         String email = request.email().trim().toLowerCase(Locale.ROOT);
-        System.out.println(email);
 
-        User user = userRepository.findByEmail(email)
+        // Using method with pessimistic write because login may change user status
+        User user = userRepository.findByEmailForUpdate(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         boolean match = passwordEncoder.matches(request.password(), user.getPassword());
@@ -79,7 +79,7 @@ public class AuthService {
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
             if(user.getSuspendedUntil().isBefore(Instant.now())){
-                user.setStatus(UserStatus.ACTIVE);
+                user.activate();
             } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
             }

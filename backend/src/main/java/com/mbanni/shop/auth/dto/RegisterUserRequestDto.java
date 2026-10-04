@@ -1,6 +1,7 @@
 package com.mbanni.shop.auth.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterUserRequestDto(
@@ -16,6 +17,10 @@ public record RegisterUserRequestDto(
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters")
+    @Pattern(
+            regexp = "[\\x20-\\x7E]+",
+            message = "Use English letters, numbers, spaces, or basic punctuation"
+    )
     String password
 
 ) {}

@@ -96,15 +96,15 @@ export const api = {
   },
 
   addToCart(productId: number, quantity = 1) {
-    return request<Cart>("/cart", {
+    return request<void>("/cart", {
       method: "POST",
       body: JSON.stringify({ productId, quantity })
     });
   },
 
   updateCartItem(itemId: number, quantity: number) {
-    return request<Cart>(`/cart/items/${itemId}`, {
-      method: "PUT",
+    return request<void>(`/cart/items/${itemId}`, {
+      method: "POST",
       body: JSON.stringify(quantity)
     });
   },
@@ -127,9 +127,10 @@ export const api = {
     });
   },
 
-  confirmPrice(cartItemId:number) {
+  confirmPrice(cartItemId:number, agreedPrice:number) {
     return request<void>(`/cart/items/${cartItemId}/confirm`, {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify({agreedPrice})
     });
   },
 

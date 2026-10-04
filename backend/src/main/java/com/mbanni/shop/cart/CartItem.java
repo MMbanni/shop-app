@@ -6,6 +6,7 @@ import com.mbanni.shop.product.Product;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 public class CartItem {
@@ -39,7 +40,7 @@ public class CartItem {
 
         this.cart = cart;
         this.product = product;
-        setPriceWhenAdded(product.getPrice());
+        this.priceWhenAdded=(product.getPrice());
         setQuantity(quantity);
 
     }
@@ -77,9 +78,6 @@ public class CartItem {
         this.discount = discount;
     }
 
-    public void setPriceWhenAdded(BigDecimal price ) {
-        this.priceWhenAdded = price;
-    }
 
     public boolean hasPriceChanged() {
         return priceWhenAdded.compareTo(product.getPrice()) != 0;
@@ -97,13 +95,15 @@ public class CartItem {
         this.quantity = value;
     }
 
-    public BigDecimal calculateLineTotal() {
-        BigDecimal price = product.getPrice();
-        BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discount);
+    public BigDecimal calculateUnitPrice(){
+        return product.getPrice()
+                .multiply(BigDecimal.ONE.subtract(discount))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
 
-        return price
-                .multiply(discountMultiplier)
-                .multiply(BigDecimal.valueOf(quantity));
+    public BigDecimal calculateLineTotal() {
+
+        return calculateUnitPrice().multiply(BigDecimal.valueOf(quantity));
     }
 
 }

@@ -5,6 +5,7 @@ import com.mbanni.shop.product.command.UpdateProductCommand;
 import com.mbanni.shop.product.dto.AdminProductResponseDto;
 import com.mbanni.shop.product.dto.ProductRequestDto;
 import com.mbanni.shop.product.dto.ProductResponseDto;
+import com.mbanni.shop.product.dto.UpdateProductRequestDto;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -57,11 +58,12 @@ public class ProductMapper {
         );
     }
 
-    public UpdateProductCommand toUpdateCommand(ProductRequestDto request) {
+    public UpdateProductCommand toUpdateCommand(UpdateProductRequestDto request) {
         return new UpdateProductCommand(
                 request.name(),
                 request.stock(),
-                request.price()
+                request.price(),
+                request.description()
 
         );
     }

@@ -55,6 +55,10 @@ public class Order {
     }
 
     public void addItem(OrderItem item) {
+        if (!isPending()) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "Items can only be added to pending orders");
+        }
         item.setOrder(this);
         items.add(item);
         total = total.add(item.getLineTotal());

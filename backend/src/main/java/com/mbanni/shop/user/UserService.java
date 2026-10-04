@@ -2,6 +2,7 @@ package com.mbanni.shop.user;
 
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.user.command.UpdateUserCommand;
 import com.mbanni.shop.user.command.UpdateUserStatusCommand;
 import com.mbanni.shop.user.dto.UserResponseDto;
@@ -17,10 +18,12 @@ import java.util.Locale;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
     private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
         this.userMapper = userMapper;
     }
 
@@ -29,11 +32,19 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserResponseDto> searchUsers(String status) {
 
-        List<User> list =
-                status.equals("ALL")? userRepository.findAll():
-                userRepository.findByStatus(status);
+        if (status.equalsIgnoreCase("ALL")) {
+            return userMapper.toResponseList(userRepository.findAll());
+        }
+        UserStatus userStatus;
 
-        return userMapper.toResponseList(list);
+        try {
+            userStatus = UserStatus.valueOf(status.toUpperCase());
+
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        }
+
+        return userMapper.toResponseList(userRepository.findByStatus(userStatus));
     }
 
     @Transactional(readOnly = true)
@@ -45,11 +56,11 @@ public class UserService {
 
     @Transactional
     public UserResponseDto updateUserInfo(Long userId, UpdateUserCommand command) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
-        if(command.name() != null) {
+        if (command.name() != null) {
             String name = command.name().trim();
-            if(name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+            if (name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
             user.setName(name);
         }
         if (command.email() != null) {
@@ -72,18 +83,28 @@ public class UserService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public void updateUserStatus(Long userId, UpdateUserStatusCommand command){
-        User user = findUserOrThrow(userId);
+    public void updateUserStatus(Long userId, UpdateUserStatusCommand command) {
+        User user = findUserForUpdateOrThrow(userId);
         String status = command.status().toString();
 
-        if(status.equals("BANNED")) {
+        if (status.equals("BANNED")) {
             user.ban();
         }
-        if(status.equals("SUSPENDED")) {
+        if (status.equals("SUSPENDED")) {
+            if (command.duration() == null) {
+                throw BusinessException.forField(
+                        ErrorCode.ILLEGAL_OPERATION,
+                        "duration",
+                        "Duration required when suspending a user"
+                );
+            }
             user.suspend(command.duration());
         }
-        if(status.equals("ACTIVE")) {
+        if (status.equals("ACTIVE")) {
             user.activate();
+        }
+        if (status.equals("INACTIVE")) {
+            user.setStatus(UserStatus.INACTIVE);
         }
 
     }
@@ -92,14 +113,26 @@ public class UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long userId) {
-        User user = findUserOrThrow(userId);
+        User user = userRepository.findByIdForUpdate(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+        if (orderRepository.existsByUser_Id(userId)) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "This user has orders and cannot be deleted.");
+        }
         userRepository.delete(user);
     }
 
 
     private User findUserOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private User findUserForUpdateOrThrow(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
 }

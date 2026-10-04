@@ -1,16 +1,17 @@
 package com.mbanni.shop.cart;
 
-import com.mbanni.shop.cart.dto.AddToCartRequestDto;
-import com.mbanni.shop.cart.dto.CartResponseDto;
-import com.mbanni.shop.cart.dto.RemoveFromCartRequestDto;
+import com.mbanni.shop.cart.dto.*;
 import com.mbanni.shop.cart.mapper.CartMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.hibernate.sql.Update;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @Validated
 @RestController
@@ -41,16 +42,16 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/items/{cartItemId}")
+    @PostMapping("/items/{cartItemId}")
     public ResponseEntity<Void> updateCartItem(
             Authentication authentication,
             @PathVariable Long cartItemId,
-            @RequestBody @Min(-1) @Max(1) int quantity
-    ) {
+            @Valid @RequestBody UpdateCartItemRequestDto request
+            ) {
 
         Long userId = Long.valueOf(authentication.getName());
 
-        cartService.updateCart(userId, cartItemId, quantity);
+        cartService.updateCart(userId, cartItemId, request.quantity());
 
         return ResponseEntity.noContent().build();
 
@@ -72,11 +73,11 @@ public class CartController {
     @PostMapping("/items/{cartItemId}/confirm")
     public ResponseEntity<Void> confirmPrice(
             Authentication authentication,
-            @PathVariable Long cartItemId
-    ) {
+            @Valid @PathVariable Long cartItemId, @Valid @RequestBody ConfirmPriceRequestDto request
+            ) {
         Long userId = Long.valueOf(authentication.getName());
-
-        cartService.acceptNewPrice(userId, cartItemId);
+        BigDecimal agreedPrice = request.agreedPrice();
+        cartService.acceptNewPrice(userId, cartItemId, agreedPrice);
 
         return ResponseEntity.noContent().build();
 

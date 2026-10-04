@@ -1,5 +1,7 @@
 package com.mbanni.shop.order;
 
+import com.mbanni.shop.common.exception.BusinessException;
+import com.mbanni.shop.common.exception.ErrorCode;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -28,6 +30,9 @@ public class OrderItem {
     }
 
     public OrderItem(Long sourceCartItemId,Long productIdSnapshot, String productNameSnapshot, int quantity, BigDecimal price) {
+        if (quantity < 1) {
+            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+        }
         this.sourceCartItemId=sourceCartItemId;
         this.productIdSnapshot = productIdSnapshot;
         this.productNameSnapshot = productNameSnapshot;

@@ -5,27 +5,40 @@ import com.mbanni.shop.cart.dto.CartResponseDto;
 import com.mbanni.shop.cart.mapper.CartMapper;
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.Order;
+import com.mbanni.shop.order.OrderItem;
+import com.mbanni.shop.order.OrderRepository;
+import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
+import com.mbanni.shop.product.ProductStatus;
 import com.mbanni.shop.user.User;
 import com.mbanni.shop.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CartService {
 
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CartMapper cartMapper;
 
 
     // Inject dependencies
-    public CartService(ProductRepository productRepository, UserRepository userRepository, CartMapper cartMapper) {
+    public CartService(
+            ProductRepository productRepository,
+            UserRepository userRepository,
+            OrderRepository orderRepository,
+            CartMapper cartMapper) {
         this.productRepository = productRepository;
+        this.orderRepository=orderRepository;
         this.userRepository = userRepository;
         this.cartMapper = cartMapper;
     }
@@ -38,21 +51,25 @@ public class CartService {
 
     @Transactional
     public void addToCart(Long userId, Long productId, int quantity) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
         Cart cart = user.getCart();
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        if(product.getProductStatus() != ProductStatus.ACTIVE){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_AVAILABLE);
+        }
         CartItem existingItem = cart.findItemByProductId(productId);
 
         int existingQuantity = existingItem == null ? 0 : existingItem.getQuantity();
         int requestedQuantity = existingQuantity + quantity;
+        long availableStock = stockAvailableForUser(userId,product);
 
 
-        if(requestedQuantity > product.getStock()){
-            throw insufficientStock(existingItem, product, requestedQuantity);
+        if(requestedQuantity > availableStock){
+            throw insufficientStock(existingItem, product, requestedQuantity, availableStock);
         }
 
         cart.addItem(product, quantity);
@@ -60,7 +77,7 @@ public class CartService {
 
     @Transactional
     public void removeFromCart(Long userId, Long cartItemId) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
 
         Cart cart = user.getCart();
         cart.removeAll(cartItemId);
@@ -68,7 +85,7 @@ public class CartService {
 
     @Transactional
     public void updateCart(Long userId, Long cartItemId, int quantity) {
-        User user = findUserOrThrow(userId);
+        User user = findUserForUpdateOrThrow(userId);
         Cart cart = user.getCart();
 
         if (quantity == 0) {
@@ -85,33 +102,50 @@ public class CartService {
             return;
         }
 
-
         Product product = cartItem.getProduct();
+        if(product.getProductStatus() != ProductStatus.ACTIVE){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_AVAILABLE);
+        }
 
         int requestedQuantity =
                 cartItem.getQuantity() + quantity;
+        long availableStock = stockAvailableForUser(userId, product);
 
-        if (requestedQuantity > product.getStock()) {
+        if (requestedQuantity > availableStock) {
             throw insufficientStock(
                     cartItem,
                     product,
-                    requestedQuantity
+                    requestedQuantity,
+                    availableStock
+
             );
         }
 
-        addToCart(
-                userId,
-                product.getId(),
-                quantity
-        );
+        cart.addItem( product, quantity );
     }
 
     @Transactional
-    public void acceptNewPrice(Long userId, Long cartItemId) {
-        User user = findUserOrThrow(userId);
+    public void acceptNewPrice(Long userId, Long cartItemId, BigDecimal agreedPrice) {
+        if (agreedPrice == null || agreedPrice.signum() < 0) {
+            throw BusinessException.forField(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "agreedPrice",
+                    "Agreed price must be zero or greater"
+            );
+        }
+
+        User user = findUserForUpdateOrThrow(userId);
         CartItem cartItem = user.getCart().findItemById(cartItemId);
 
-        cartItem.setPriceWhenAdded(cartItem.getProduct().getPrice());
+        if (cartItem == null) {
+            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
+        }
+        BigDecimal currentPrice = cartItem.getProduct().getPrice();
+        if(currentPrice.compareTo(agreedPrice)!= 0) {
+            throw new BusinessException(ErrorCode.PRICE_CHANGED, "Price has changed again, please review the latest price");
+        }
+
+        cartItem.acceptCurrentPrice();
     }
 
 
@@ -121,15 +155,45 @@ public class CartService {
 
     }
 
-    private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity){
+    private User findUserForUpdateOrThrow(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
+    }
+
+    private long stockAvailableForUser(Long userId, Product product) {
+        Optional<Order> pendingOrder = orderRepository.findByUserIdAndStatusForUpdate(
+                userId, OrderStatus.PENDING);
+
+        int reserved = 0;
+
+        if(pendingOrder.isPresent()) {
+
+            List<OrderItem> items = pendingOrder.get().getItems();
+
+            Optional <OrderItem> matchingItem = items.stream()
+                    .filter(item -> product.getId().
+                            equals(item.getProductIdSnapshot())
+                    )
+                    .findFirst();
+
+            reserved = matchingItem.map(OrderItem::getQuantity).orElse(0);
+
+        }
+        return (long) product.getStock() + reserved;
+
+    }
+
+    private BusinessException insufficientStock( CartItem existingItem, Product product, int requestedQuantity, long availableStock){
         CartItemProblem itemProblem = new CartItemProblem(
                 ErrorCode.INSUFFICIENT_STOCK,
                 existingItem == null? null : existingItem.getId(),
                 product.getId(),
-                product.getStock(),
+                Math.toIntExact(availableStock),
                 requestedQuantity,
                 null,
-                "Only " + product.getStock() + " units are available"
+                "Only " + availableStock + " units are available"
         );
         return new BusinessException(
                 ErrorCode.CART_ERROR,

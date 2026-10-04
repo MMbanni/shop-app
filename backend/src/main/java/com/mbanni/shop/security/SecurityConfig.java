@@ -23,8 +23,12 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    private final SecurityErrorResponseWriter securityErrorResponseWriter;
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          SecurityErrorResponseWriter securityErrorResponseWriter
+    ) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.securityErrorResponseWriter = securityErrorResponseWriter;
     }
 
     @Bean
@@ -45,6 +49,7 @@ public class SecurityConfig {
 
                                 .requestMatchers("/",
                                         "/products",
+                                        "/products/{id}",
                                         "/auth/register",
                                         "/auth/login").permitAll()
 
@@ -52,6 +57,14 @@ public class SecurityConfig {
 
                                 .anyRequest().authenticated()
 
+                        )
+                        .exceptionHandling(errors -> errors
+                                .authenticationEntryPoint((request, response, exception) ->
+                                        securityErrorResponseWriter.writeUnauthorized(response)
+                                )
+                                .accessDeniedHandler((request, response, exception) ->
+                                        securityErrorResponseWriter.writeAccessDenied(response)
+                                )
                         )
                         .sessionManagement(session -> session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

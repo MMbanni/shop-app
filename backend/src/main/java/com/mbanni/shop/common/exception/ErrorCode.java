@@ -76,6 +76,9 @@ public enum ErrorCode {
     TOO_MANY_ATTEMPTS(
             "Too many attempts"
     ),
+    CHECKOUT_NEEDS_REVIEW(
+            "Checkout could not be confirmed. Please contact support."
+    ),
 
     PROCESSING (
             "You have a pending order being processed. Please wait..."
