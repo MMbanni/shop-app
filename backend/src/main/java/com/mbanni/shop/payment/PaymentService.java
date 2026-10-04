@@ -96,7 +96,6 @@ public class PaymentService {
 
     }
 
-    @Transactional
     public void handleCheckoutCompleted(Session session) {
         StripeSessionSnapshot verified = StripeSessionSnapshot.from(session);
         if (verified.isComplete()) checkoutTransactions.applyWebhook(verified);

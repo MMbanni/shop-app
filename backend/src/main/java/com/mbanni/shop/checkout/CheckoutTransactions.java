@@ -311,7 +311,7 @@ public class CheckoutTransactions {
             throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
         }
     }
-    @Transactional
+
     private void releaseStock(Order order, Map<Long, Product> products) {
         for (OrderItem item : order.getItems()) products.get(item.getProductIdSnapshot()).increaseStock(item.getQuantity());
     }
