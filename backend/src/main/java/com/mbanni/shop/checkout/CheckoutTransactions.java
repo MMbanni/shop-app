@@ -72,7 +72,7 @@ public class CheckoutTransactions {
         return new BeginCheckoutDto(snapshot(order), false, false, true);
     }
 
-    @Transactional
+   /* @Transactional
     public BeginCheckoutDto replaceAfterExpiry(Long userId, Long orderId,
                                                StripeSessionSnapshot session, boolean superseded) {
         if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
@@ -102,6 +102,38 @@ public class CheckoutTransactions {
         previous.clearReview();
         Order replacement = createOrder(user, validateCart(cart, products, null));
         return new BeginCheckoutDto(snapshot(replacement), false, false, true);
+    }*/
+
+    @Transactional
+    public void closeExpiredCheckout(
+            Long userId,
+            Long orderId,
+            StripeSessionSnapshot session,
+            boolean superseded
+    ) {
+        if (!session.isExpired()) {
+            throw new BusinessException(ErrorCode.PROCESSING);
+        }
+
+        lockUser(userId);
+        Order order = lockOrder(orderId, userId);
+        bindVerifiedSession(order, session);
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            throw new BusinessException(ErrorCode.PROCESSING);
+        }
+
+        if (order.isPending()) {
+            releaseStock(order, lockProducts(orderProductIds(order)));
+
+            if (superseded) {
+                order.markSuperseded();
+            } else {
+                order.markExpired();
+            }
+        }
+
+        order.clearReview();
     }
 
     @Transactional
@@ -154,7 +186,6 @@ public class CheckoutTransactions {
         order.setCheckoutUrl(session.url());
     }
 
-
     @Transactional
     public void applyWebhook(StripeSessionSnapshot session) {
         Optional<Order> found = orderRepository.findByStripeSessionId(session.id());
@@ -195,8 +226,6 @@ public class CheckoutTransactions {
         order.recordReviewResolution(adminId, clock.instant(), "Verified Stripe session " + session.id());
         return toReviewDto(order);
     }
-
-
 
     public User lockUser(Long userId) {
         User user = userRepository.findByIdForUpdate(userId)

@@ -81,7 +81,12 @@ public class PaymentService {
                 throw new BusinessException(ErrorCode.PROCESSING);
             }
             if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
-            incomingOrder = checkoutTransactions.replaceAfterExpiry(userId, order.orderId(), session, superseded);
+
+            checkoutTransactions.closeExpiredCheckout(
+                    userId, order.orderId(), session, superseded
+            );
+
+            incomingOrder = checkoutTransactions.prepareOrResumeCheckout(userId);
         }
         throw new BusinessException(ErrorCode.PROCESSING);
 
