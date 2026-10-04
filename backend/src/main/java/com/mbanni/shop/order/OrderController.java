@@ -40,13 +40,8 @@ public class OrderController {
     ) {
         Long userId = Long.valueOf(authentication.getName());
 
-        Order order = paymentService.refreshOrderStatus(userId, sessionId);
+        return paymentService.refreshOrderStatus(userId, sessionId);
 
-        return new OrderResponseDto(
-                order.getId(),
-                order.getStatus(),
-                order.getPaidAt()
-        );
     }
 
 }
