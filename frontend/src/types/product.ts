@@ -5,7 +5,8 @@ export type Product = {
   price: number;
   imageUrl?: string;
   stock: number;
-  status: string
+  status: string;
+  version: number
 };
 
 export type ProductStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";

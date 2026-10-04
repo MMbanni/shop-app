@@ -73,6 +73,8 @@ export function AdminProductsPage() {
 
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
+
   const [editProduct, setEditProduct] = useState<ProductForm>(emptyProductForm);
 
   function handleAddProduct() {
@@ -96,6 +98,7 @@ export function AdminProductsPage() {
     updateProduct.reset();
 
     setEditingProductId(product.id);
+    setEditingVersion(product.version);
 
     setEditProduct({
       name: product.name,
@@ -142,8 +145,10 @@ export function AdminProductsPage() {
   }
 
   function handleSaveEdit(productId: number) {
+    if(editingVersion === null) return;
     updateProduct.mutate({
       id: productId,
+      expectedVersion:editingVersion,
       name: editProduct.name,
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),

@@ -15,6 +15,7 @@ type ProductInput = {
 
 type UpdateProductInput = ProductInput & {
   id: number;
+  expectedVersion:number
 };
 
 type ChangeStatusInput = {
