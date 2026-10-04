@@ -76,7 +76,7 @@ public class CheckoutTransactions {
         if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
         User user = lockUser(userId);
         Order previous = lockOrder(orderId, userId);
-        attachStripeSession(userId, orderId, session, false);
+        bindVerifiedSession(previous, session);
         if (previous.getStatus() == OrderStatus.PAID) throw new BusinessException(ErrorCode.PROCESSING);
 
         Optional<Order> current = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING);
@@ -103,14 +103,55 @@ public class CheckoutTransactions {
     }
 
     @Transactional
-    public OrderSnapshot attachStripeSession(Long userId, Long orderId, StripeSessionSnapshot session, boolean cancelled) {
+    public OrderSnapshot applySession(Long userId, Long orderId, StripeSessionSnapshot session,
+                                         boolean cancelled) {
         lockUser(userId);
         Order order = lockOrder(orderId, userId);
-
-        order.setStripeSessionId(session.id());
-        order.setCheckoutUrl(session.url());
+        applySessionLocked(order, session, cancelled);
         return snapshot(order);
     }
+
+    private void applySessionLocked(Order order, StripeSessionSnapshot session, boolean cancelled) {
+        bindVerifiedSession(order, session);
+        if (!order.isPending()) {
+            if (session.isPaid() && order.getStatus() != OrderStatus.PAID) {
+                order.requireReview(clock.instant(), "Payment confirmed after the order was closed; review payment and inventory");
+            }
+            return;
+        }
+        if (session.isPaid()) {
+            order.markPaid(session.id(), clock.instant());
+            Cart cart = order.getUser().getCart();
+            for (OrderItem item : order.getItems()) {
+                cart.removePurchasedQuantity(item.getSourceCartItemId(), item.getQuantity());
+            }
+        } else if (session.isExpired()) {
+            releaseStock(order, lockProducts(orderProductIds(order)));
+            if (cancelled) order.markCancelled();
+            else order.markExpired();
+        }
+        // A saved, verified session can now be polled safely even if it is still open.
+        order.clearReview();
+    }
+
+    private void bindVerifiedSession(Order order, StripeSessionSnapshot session) {
+        boolean matches = session.id() != null
+                && "payment".equals(session.mode())
+                && "sek".equalsIgnoreCase(session.currency())
+                && order.getId().toString().equals(session.clientReferenceId())
+                && order.getId().toString().equals(session.metadata().get("orderId"))
+                && order.getUser().getId().toString().equals(session.metadata().get("userId"))
+                && session.amountTotal() != null
+                && order.getTotal().movePointRight(2).longValueExact() == session.amountTotal()
+                && (order.getStripeSessionId() == null || order.getStripeSessionId().equals(session.id()))
+                && (session.isOpen() || session.isComplete() || session.isExpired());
+        if (!matches) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Stripe session does not match this order");
+        }
+        order.setStripeSessionId(session.id());
+        order.setCheckoutUrl(session.url());
+    }
+
 
     @Transactional
     public void applyWebhook(StripeSessionSnapshot session) {
@@ -129,7 +170,7 @@ public class CheckoutTransactions {
         Long userId = found.get().getUser().getId();
         Long orderId = found.get().getId();
         lockUser(userId);
-        attachStripeSession(userId, orderId, session, false);
+        applySessionLocked(lockOrder(orderId, userId), session, false);
     }
 
     public User lockUser(Long userId) {

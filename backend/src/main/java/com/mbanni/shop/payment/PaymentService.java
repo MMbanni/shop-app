@@ -60,20 +60,22 @@ public class PaymentService {
             StripeSessionSnapshot session = obtainSession(order);
 
             if (session.isComplete()) {
-                checkoutTransactions.attachStripeSession(userId, order.orderId(), session, false);
+                checkoutTransactions.applySession(userId, order.orderId(), session, false);
+
                 throw new BusinessException(ErrorCode.PROCESSING);
             }
 
             if (session.isOpen() && !incomingOrder.hasExpired()
                     && (!incomingOrder.isPreexisting() || incomingOrder.hasSameCart())) {
-                OrderSnapshot current = checkoutTransactions.attachStripeSession(userId, order.orderId(), session, false);
+                OrderSnapshot current = checkoutTransactions.applySession(userId, order.orderId(), session, false);
                 if (!current.isPending()) throw new BusinessException(ErrorCode.PROCESSING);
                 return checkoutResponseFor(session);
             }
             boolean superseded = session.isOpen() && !incomingOrder.hasExpired() && !incomingOrder.hasSameCart();
             if (session.isOpen()) session = stripe.expire(session.id());
             if (session.isComplete()) {
-                checkoutTransactions.attachStripeSession(userId, order.orderId(), session, false);
+                checkoutTransactions.applySession(userId, order.orderId(), session, false);
+
                 throw new BusinessException(ErrorCode.PROCESSING);
             }
             if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
@@ -89,7 +91,7 @@ public class PaymentService {
         boolean cancelled = session.isOpen();
 
         if (session.isOpen()) session = stripe.expire(session.id());
-        checkoutTransactions.attachStripeSession(userId, order.orderId(), session, cancelled);
+        checkoutTransactions.applySession(userId, order.orderId(), session, cancelled);
         if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
 
     }
@@ -117,7 +119,7 @@ public class PaymentService {
     private OrderResponseDto refresh(OrderSnapshot order) {
         if (!order.isPending()) return order.toResponse();
         StripeSessionSnapshot session = obtainSession(order);
-        return checkoutTransactions.attachStripeSession(order.userId(), order.orderId(), session, false).toResponse();
+        return checkoutTransactions.applySession(order.userId(), order.orderId(), session, false).toResponse();
     }
 
 
