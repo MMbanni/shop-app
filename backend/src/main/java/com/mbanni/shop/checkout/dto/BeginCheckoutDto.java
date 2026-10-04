@@ -1,11 +1,12 @@
 package com.mbanni.shop.checkout.dto;
 import com.mbanni.shop.order.Order;
+import com.mbanni.shop.order.dto.OrderSnapshot;
+
 import java.util.List;
 
 
 public record BeginCheckoutDto(
-        Order order,
-        List<Long> productIds,
+        OrderSnapshot order,
         boolean isPreexisting,
         boolean hasExpired,
         boolean hasSameCart

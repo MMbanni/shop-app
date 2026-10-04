@@ -12,6 +12,8 @@ import com.mbanni.shop.order.Order;
 import com.mbanni.shop.order.OrderItem;
 import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
+import com.mbanni.shop.order.dto.OrderSnapshot;
+import com.mbanni.shop.payment.dto.StripeSessionSnapshot;
 import com.mbanni.shop.product.Product;
 import com.mbanni.shop.product.ProductRepository;
 import com.mbanni.shop.product.ProductStatus;
@@ -55,96 +57,86 @@ public class CheckoutTransactions {
     @Transactional
     public BeginCheckoutDto prepareOrResumeCheckout(Long userId){
         User user = lockUser(userId);
+
+        Optional<Order> pending = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING);
+        if(pending.isPresent()) return existingCheckout(pending.get(), user.getCart());
+
         Cart cart = getValidCartOrThrow(user);
+        checkForCheckoutAbuse(userId, 0);
 
-        // Product Ids of items in cart
-        List<Long> productIds = new ArrayList<>(cart.getItems().stream()
-                .map(item -> item.getProduct().getId())
-                .toList());
+        Map<Long, Product> products = lockProducts(cartProductIds(cart));
+        Order order = createOrder(user, validateCart(cart, products, null));
 
-        // Possible existing order
-        Optional<Order> preexisting = orderRepository.findByUserIdAndStatusForUpdate(
-                userId, OrderStatus.PENDING);
+        return new BeginCheckoutDto(snapshot(order), false, false, true);
+    }
 
-        preexisting.ifPresent(order -> productIds.addAll(getOrderProductIds(order)));
-        Map<Long, Product> lockedProducts = lockProducts(productIds);
+    @Transactional
+    public BeginCheckoutDto replaceAfterExpiry(Long userId, Long orderId,
+                                               StripeSessionSnapshot session, boolean superseded) {
+        if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
+        User user = lockUser(userId);
+        Order previous = lockOrder(orderId, userId);
+        attachStripeSession(userId, orderId, session, false);
+        if (previous.getStatus() == OrderStatus.PAID) throw new BusinessException(ErrorCode.PROCESSING);
 
-        Instant now = clock.instant();
-        checkForCheckoutAbuse(userId, now);
-
-        List<ProductReservation> reservedProducts = validateCart(cart, lockedProducts, preexisting.orElse(null));
-
-
-        if (preexisting.isPresent()) {
-            Order pendingOrder = preexisting.get();
-            return new BeginCheckoutDto(
-                    pendingOrder,
-                    productIds,
-                    true,
-                    pendingOrder.hasExpired(now),
-                    checkoutMatchesCart(pendingOrder, cart));
-
+        Optional<Order> current = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING);
+        if (current.isPresent() && !current.get().getId().equals(orderId)) {
+            // Another request already replaced this checkout while Stripe was responding.
+            return existingCheckout(current.get(), user.getCart());
         }
 
+        Cart cart = getValidCartOrThrow(user);
+        checkForCheckoutAbuse(userId, previous.isPending() ? 1 : 0);
+        List<Long> ids = new ArrayList<>(cartProductIds(cart));
+        if (previous.isPending()) ids.addAll(orderProductIds(previous));
+        Map<Long, Product> products = lockProducts(ids);
 
-        Instant expiresAt = now.plus(CHECKOUT_EXPIRY);
-
-        Order order = new Order(user, expiresAt);
-
-        reserveStockAndCopyCartItemsToOrder(order, reservedProducts);
-
-        orderRepository.save(order);
-
-        return new BeginCheckoutDto(order, productIds,false, false, false);
+        // Lock the complete union once, in ID order. Reuse the same managed products.
+        if (previous.isPending()) {
+            releaseStock(previous, products);
+            if (superseded) previous.markSuperseded();
+            else previous.markExpired();
+        }
+        previous.clearReview();
+        Order replacement = createOrder(user, validateCart(cart, products, null));
+        return new BeginCheckoutDto(snapshot(replacement), false, false, true);
     }
 
     @Transactional
-    public Order attachStripeSession(FinalizeCheckoutDto finalizeCheckoutDto) {
-        Order order = orderRepository.findByIdForUpdate(finalizeCheckoutDto.orderId())
-                .orElseThrow(()-> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    public OrderSnapshot attachStripeSession(Long userId, Long orderId, StripeSessionSnapshot session, boolean cancelled) {
+        lockUser(userId);
+        Order order = lockOrder(orderId, userId);
 
-        order.setStripeSessionId(finalizeCheckoutDto.sessionId());
-        order.setCheckoutUrl(finalizeCheckoutDto.sessionUrl());
-        return order;
+        order.setStripeSessionId(session.id());
+        order.setCheckoutUrl(session.url());
+        return snapshot(order);
     }
 
-
     @Transactional
+    public void applyWebhook(StripeSessionSnapshot session) {
+        Optional<Order> found = orderRepository.findByStripeSessionId(session.id());
+        if (found.isEmpty()) {
+            // A signed webhook can arrive before the session ID has been saved.
+            Long orderId;
+            try {
+                orderId = Long.valueOf(session.clientReferenceId());
+            } catch (NumberFormatException exception) {
+                return; // A Checkout Session unrelated to this shop's order references.
+            }
+            found = orderRepository.findById(orderId);
+        }
+        if (found.isEmpty()) return;
+        Long userId = found.get().getUser().getId();
+        Long orderId = found.get().getId();
+        lockUser(userId);
+        attachStripeSession(userId, orderId, session, false);
+    }
+
     public User lockUser(Long userId) {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         entityManager.refresh(user);
         return user;
-    }
-
-    private Cart getValidCartOrThrow(User user) {
-        Cart cart = user.getCart();
-
-        if (cart == null || cart.getItems().isEmpty()) {
-            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
-        }
-
-        return cart;
-    }
-
-    private void checkForCheckoutAbuse(Long userId, Instant now) {
-        Instant since = now.minus(Duration.ofHours(24));
-
-        long expiredCheckouts =
-                orderRepository.countByUser_IdAndStatusInAndCreatedAtAfter(+
-                        userId,
-                        List.of(OrderStatus.EXPIRED, OrderStatus.CANCELLED, OrderStatus.SUPERSEDED),
-                        since
-                );
-
-        if (expiredCheckouts >= MAX_UNPAID_CHECKOUTS_PER_DAY) {
-            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
-        }
-    }
-
-    private List<Long> getOrderProductIds(Order order) {
-        return order.getItems().stream()
-                .map(OrderItem::getProductIdSnapshot).toList();
     }
 
     public Map<Long, Product> lockProducts(Collection<Long> productIds) {
@@ -161,168 +153,33 @@ public class CheckoutTransactions {
         return locked;
 
     }
-    @Transactional
-    public Order lockOrderOrThrow(Long orderId){
-        return orderRepository.findByIdForUpdate(orderId)
+
+    public Order lockOrder(Long orderId, Long userId){
+        Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        entityManager.refresh(order);
+        if (!order.getUser().getId().equals(userId)) throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        return order;
     }
 
-    private void reserveStockAndCopyCartItemsToOrder(Order order, List<ProductReservation> reservations) {
-
-        // Second pass: reserve stock only when the whole cart is valid
-        for (ProductReservation reservation : reservations) {
-            Product product = reservation.product();
-            int quantity = reservation.quantity();
-
-            product.decreaseStock(quantity);
-
-            OrderItem orderItem = new OrderItem(
-                    reservation.sourceCartItemId(),
-                    product.getId(),
-                    product.getName(),
-                    quantity,
-                    reservation.unitPrice()
-            );
-
-            order.addItem(orderItem);
-        }
+    public List<Long> cartProductIds(Cart cart) {
+        return cart.getItems().stream()
+                .map(item -> item.getProduct().getId()).toList();
     }
 
-    @Transactional
-    public void releaseStock(Order order, List<Long> productIds) {
-        Map<Long, Product> lockedProducts = lockProducts(productIds);
-        for (OrderItem item : order.getItems()) {
-            Product product = lockedProducts.get(item.getProductIdSnapshot());
-
-            product.increaseStock(item.getQuantity());
-        }
+    private List<Long> orderProductIds(Order order) {
+        return order.getItems().stream()
+                .map(OrderItem::getProductIdSnapshot).toList();
     }
 
-    @Transactional
-    public Order lockUserAndOrderBySession(String sessionId) {
-        Long userId = orderRepository
-                .findUserIdByStripeSessionId(sessionId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
+    private Cart getValidCartOrThrow(User user) {
+        Cart cart = user.getCart();
 
-        lockUser(userId);
-
-        return orderRepository
-                .findByStripeSessionIdForUpdate(sessionId)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
-    }
-
-
-    @Transactional
-    public Order supersedeOrder(Long userId, Long orderId, List<Long> productIds) {
-        lockUser(userId);
-        Order lockedOrder = lockOrderOrThrow(orderId);
-        entityManager.refresh(lockedOrder);
-
-        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.PROCESSING);
+        if (cart == null || cart.getItems().isEmpty()) {
+            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
         }
 
-        releaseStock(lockedOrder, productIds);
-
-        lockedOrder.markSuperseded();
-
-        return replaceOrder(lockedOrder, productIds);
-    }
-
-    @Transactional
-    public void expirePendingOrderAndReleaseStock(Order order, List<Long> productIds) {
-        lockUser(order.getUser().getId());
-        Order lockedOrder = lockOrderOrThrow(order.getId());
-        entityManager.refresh(lockedOrder);
-
-        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
-            return;
-        }
-
-        releaseStock(lockedOrder, productIds);
-        lockedOrder.markExpired();
-    }
-
-
-    public Order replaceOrder(Order previousOrder, List<Long> productIds){
-
-        Order order = new Order(previousOrder.getUser(), clock.instant().plus(CHECKOUT_EXPIRY));
-        Map<Long, Product> lockedProducts = lockProducts(productIds);
-        List<ProductReservation> reservedProducts =
-                validateCart(order.getUser().getCart(), lockedProducts, null);
-
-        reserveStockAndCopyCartItemsToOrder(order, reservedProducts);
-
-        return orderRepository.save(order);
-
-    }
-
-    @Transactional
-    public Order lockOrderForRefresh(Long userId, Long orderId) {
-        lockUser(userId);
-        Order lockedOrder = orderRepository
-                .findByIdForUpdate(orderId)
-                .orElseThrow(() ->
-                        new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
-
-        if (!lockedOrder.getUser().getId().equals(userId)) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
-
-        entityManager.refresh(lockedOrder);
-
-        return lockedOrder;
-    }
-
-    @Transactional
-    public Order lockOrderForRefresh(Long userId, String sessionId) {
-        lockUser(userId);
-        Order lockedOrder = orderRepository
-                .findByUserIdAndStripeSessionId(userId, sessionId)
-                .orElseThrow(() ->
-                        new BusinessException(ErrorCode.ORDER_NOT_FOUND)
-                );
-
-        entityManager.refresh(lockedOrder);
-
-        return lockedOrder;
-    }
-
-    @Transactional
-    public Order handleOrderExpired(Long userId, Long orderId, List<Long> productIds) {
-
-        lockUser(userId);
-        Order lockedOrder = lockOrderOrThrow(orderId);
-        entityManager.refresh(lockedOrder);
-
-        if (lockedOrder.getStatus() != OrderStatus.PENDING) {
-            throw new BusinessException(ErrorCode.PROCESSING);
-        }
-
-        releaseStock(lockedOrder, productIds);
-        lockedOrder.markExpired();
-
-        return replaceOrder(lockedOrder, productIds);
-
-    }
-
-
-    @Transactional
-    public void handleOrderCancelled(Long userId, Order order, List<Long> productIds) {
-        lockUser(userId);
-        Order lockedOrder = lockOrderOrThrow(order.getId());
-        entityManager.refresh(lockedOrder);
-        if(lockedOrder.getStatus() != OrderStatus.PENDING){
-            return;
-        }
-        releaseStock(lockedOrder, productIds);
-        lockedOrder.markCancelled();
-
+        return cart;
     }
 
     public List<ProductReservation> validateCart(Cart cart, Map<Long, Product> lockedProducts, Order pendingOrder) {
@@ -405,6 +262,80 @@ public class CheckoutTransactions {
 
     }
 
+    private void checkForCheckoutAbuse(Long userId, int newlyClosed) {
+        long count = orderRepository.countByUser_IdAndStatusInAndCreatedAtAfter(userId,
+                List.of(OrderStatus.EXPIRED, OrderStatus.CANCELLED, OrderStatus.SUPERSEDED),
+                clock.instant().minus(Duration.ofHours(24)));
+        if (count + newlyClosed >= MAX_UNPAID_CHECKOUTS_PER_DAY) {
+            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
+        }
+    }
+    @Transactional
+    private void releaseStock(Order order, Map<Long, Product> products) {
+        for (OrderItem item : order.getItems()) products.get(item.getProductIdSnapshot()).increaseStock(item.getQuantity());
+    }
+
+    private BeginCheckoutDto existingCheckout(Order order, Cart cart) {
+        List<Long> productIds = cart == null ? List.of() : cartProductIds(cart);
+        lockProducts(productIds);
+        return new BeginCheckoutDto(snapshot(order), true, order.hasExpired(clock.instant()),
+                cart != null && checkoutMatchesCart(order, cart));
+    }
+
+    private Order createOrder(User user, List<ProductReservation> reservations) {
+        Instant now = clock.instant();
+        Order order = new Order(user, now, now.plus(CHECKOUT_EXPIRY));
+        order.configureCheckout(frontendUrl + "/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+                frontendUrl + "/checkout/cancel");
+        for (ProductReservation reservation : reservations) {
+            Product product = reservation.product();
+            product.decreaseStock(reservation.quantity());
+            order.addItem(new OrderItem(reservation.sourceCartItemId(), product.getId(), product.getName(),
+                    reservation.quantity(), reservation.unitPrice()));
+        }
+        return orderRepository.save(order);
+    }
+
+    private OrderSnapshot snapshot(Order order) {
+        return new OrderSnapshot(order.getId(), order.getUser().getId(), order.getStatus(),
+                order.getStripeSessionId(), order.getCheckoutUrl(), order.getCreatedAt(), order.getExpiresAt(),
+                order.getPaidAt(), order.getTotal(), order.getCheckoutSuccessUrl(), order.getCheckoutCancelUrl(),
+                order.getReviewNeededAt(), order.getItems().stream().sorted(Comparator.comparing(OrderItem::getId))
+                .map(item -> new OrderSnapshot.Line(item.getId(), item.getProductNameSnapshot(), item.getQuantity(), item.getPrice()))
+                .toList());
+    }
+
+    @Transactional(readOnly = true)
+    public OrderSnapshot loadPendingSnapshot(Long userId) {
+        return snapshot(orderRepository.findFirstByUser_IdAndStatus(userId, OrderStatus.PENDING)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
+    }
+
+    @Transactional(readOnly = true)
+    public OrderSnapshot loadSnapshot(Long userId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .filter(found -> found.getUser().getId().equals(userId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        return snapshot(order);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderSnapshot loadSnapshotBySession(Long userId, String sessionId) {
+        return snapshot(orderRepository.findByUserIdAndStripeSessionId(userId, sessionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
+    }
+
+    @Transactional
+    public OrderSnapshot markNeedsReview(Long userId, Long orderId, String reason) {
+        lockUser(userId);
+        Order order = lockOrder(orderId, userId);
+        if (order.isPending() && order.getStripeSessionId() == null) {
+            order.requireReview(clock.instant(), reason);
+        }
+        // The caller throws the API error AFTER this transaction has committed.
+        return snapshot(order);
+    }
+
     private boolean checkoutMatchesCart(Order order, Cart cart) {
         List<CartItem> cartItems = cart.getItems();
         List<OrderItem> orderItems = order.getItems();
@@ -440,6 +371,8 @@ public class CheckoutTransactions {
         return true;
 
     }
+
+
 
 
 
