@@ -1,4 +1,4 @@
-package com.mbanni.shop.checkout;
+package com.mbanni.shop.checkout.dto;
 import com.mbanni.shop.order.Order;
 import java.util.List;
 
