@@ -1,5 +1,5 @@
 import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest, Order } from "../types";
-import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse,  LoginResponse} from "../dto/";
+import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, LoginResponse } from "../dto/";
 
 import { getToken } from "./token";
 import { ApiError } from "./ApiError";
@@ -23,19 +23,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
     headers
   });
-  
+
   // No content
   if (response.status === 204) {
     return undefined as T;
   }
-  
+
   // Fallback
   if (!response.ok) {
     let errorResponse: ApiErrorResponse = {
-    title: "REQUEST_FAILED",
-    detail: `Request failed with status ${response.status}`,
-    status: response.status
-  };
+      title: "REQUEST_FAILED",
+      detail: `Request failed with status ${response.status}`,
+      status: response.status
+    };
 
     try {
       const data = (await response.json()) as ApiErrorResponse;
@@ -47,12 +47,23 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       // fallback if backend did not return JSON.
     }
 
-    if (errorResponse.title === "USER_BANNED") {
-    window.dispatchEvent(
-      new Event("auth:forced-logout")
-    );
-  }
-        
+    const accountBlocked = [
+      "ACCOUNT_BANNED",
+      "ACCOUNT_SUSPENDED",
+      "ACCOUNT_INACTIVE",
+    ].includes(errorResponse.title);
+
+    if (token &&
+      token === getToken() &&
+      (response.status === 401 || 
+        response.status === 403 && accountBlocked
+      )
+    ) {
+      window.dispatchEvent(
+        new Event("auth:forced-logout")
+      );
+    }
+
     throw new ApiError(errorResponse);
   }
 
@@ -105,7 +116,7 @@ export const api = {
   updateCartItem(itemId: number, quantity: number) {
     return request<void>(`/cart/items/${itemId}`, {
       method: "POST",
-      body: JSON.stringify({quantity})
+      body: JSON.stringify({ quantity })
     });
   },
 
@@ -127,10 +138,10 @@ export const api = {
     });
   },
 
-  confirmPrice(cartItemId:number, agreedPrice:number) {
+  confirmPrice(cartItemId: number, agreedPrice: number) {
     return request<void>(`/cart/items/${cartItemId}/confirm`, {
       method: "POST",
-      body: JSON.stringify({agreedPrice})
+      body: JSON.stringify({ agreedPrice })
     });
   },
 
@@ -169,18 +180,18 @@ export const api = {
   },
 
   adminGetUsers(status: AdminUserTab) {
-    if(status=== "ALL") return request<User[]>(`/users`);
+    if (status === "ALL") return request<User[]>(`/users`);
     else return request<User[]>(`/users/${status}`);
   },
 
   changeUserStatus(updateRequest: UpdateUserStatusRequest) {
-    const {id,status,duration} = updateRequest;
+    const { id, status, duration } = updateRequest;
     return request<void>(`/users/${id}/status`, {
       method: "PATCH",
-      body: JSON.stringify({status,duration})
+      body: JSON.stringify({ status, duration })
     });
   },
 
-  
+
 };
 
