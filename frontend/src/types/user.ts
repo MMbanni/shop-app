@@ -4,8 +4,8 @@ export type User = {
   id: number;
   email: string;
   name: string;
-  role?: Role;
-  status: string,
+  role: Role;
+  status: UserStatus,
   suspendedUntil: string | null
 };
 
