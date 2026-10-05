@@ -48,7 +48,7 @@ public class AuthService {
 
         user.setEmail(email);
         user.setName(command.name().trim());
-        user.setStatus(UserStatus.INACTIVE);
+        user.setStatus(UserStatus.ACTIVE);
 
         String hashedPassword = passwordEncoder.encode(command.password());
         user.setPassword(hashedPassword);
