@@ -15,6 +15,8 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 
+import static com.mbanni.shop.common.Constants.MIN_NAME_LENGTH;
+
 @Service
 public class UserService {
 
@@ -63,7 +65,7 @@ public class UserService {
 
         if (command.name() != null) {
             String name = command.name().trim();
-            if (name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+            if (name.length()<MIN_NAME_LENGTH) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
             user.setName(name);
         }
         if (command.email() != null) {

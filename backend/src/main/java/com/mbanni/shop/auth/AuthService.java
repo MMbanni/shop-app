@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.util.Locale;
 
+import static com.mbanni.shop.common.Constants.MIN_NAME_LENGTH;
+
 @Service
 public class AuthService {
 
@@ -39,15 +41,20 @@ public class AuthService {
 
         // Keep letters English for email
         String email = command.email().trim().toLowerCase(Locale.ROOT);
+        String name = command.name().trim();
 
         if(userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_USED);
         }
 
+        if(name.length() < MIN_NAME_LENGTH) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        }
+
         User user = new User();
 
         user.setEmail(email);
-        user.setName(command.name().trim());
+        user.setName(name);
         user.setStatus(UserStatus.ACTIVE);
 
         String hashedPassword = passwordEncoder.encode(command.password());
