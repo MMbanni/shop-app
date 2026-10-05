@@ -50,17 +50,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Extract token from header
         String jwt = authHeader.substring(7);
         JwtClaimsDTO userData;
+        String userIdFromToken;
+        Long userId;
 
         // Validate token
         try {
             userData = jwtService.extractUserData(jwt);
+            userIdFromToken = userData.id();
+            userId = Long.valueOf(userIdFromToken);
+
         } catch (IllegalArgumentException | JwtException e) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String userIdFromToken = userData.id();
-        Long userId = Long.valueOf(userIdFromToken);
+
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
