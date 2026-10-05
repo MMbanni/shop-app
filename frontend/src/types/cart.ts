@@ -5,6 +5,7 @@ export type CartItem = {
   quantity: number;
   priceWhenAdded: number
   price: number;
+  priceChanged: boolean;
   lineTotal: number;
 };
 

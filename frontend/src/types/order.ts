@@ -9,5 +9,6 @@ export type OrderStatus =
   | "PAID"
   | "CANCELLED"
   | "EXPIRED"
+  | "SUPERSEDED"
   | "NEEDS_REVIEW";
  

@@ -6,9 +6,9 @@ export type ValidationFieldError = {
 
 export type CartItemProblem = {
   code: string;
-  cartItemId: number;
+  cartItemId: number | null;
   productId?: number;
-  stock?: number;
+  stock?: number | null;
   title?: string;
   detail?: string;
   priceChanged?:boolean
