@@ -64,7 +64,8 @@ public class ProductMapper {
                 request.name(),
                 request.stock(),
                 request.price(),
-                request.description()
+                request.description(),
+                request.expectedVersion()
 
         );
     }
