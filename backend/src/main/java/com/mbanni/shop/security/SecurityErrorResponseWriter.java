@@ -21,7 +21,7 @@ public class SecurityErrorResponseWriter {
     public void writeSuspended(HttpServletResponse response, Instant suspendedUntil) throws IOException {
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        problem.setTitle("USER_SUSPENDED");
+        problem.setTitle("ACCOUNT_SUSPENDED");
         problem.setDetail("Account suspended until "+suspendedUntil);
         problem.setProperty("suspendedUntil", suspendedUntil);
 
@@ -38,7 +38,7 @@ public class SecurityErrorResponseWriter {
     public void writeBanned(HttpServletResponse response) throws IOException {
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        problem.setTitle("USER_BANNED");
+        problem.setTitle("ACCOUNT_BANNED");
         problem.setDetail("Account is Banned");
 
 
