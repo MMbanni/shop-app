@@ -227,6 +227,36 @@ public class CheckoutTransactions {
         return toReviewDto(order);
     }
 
+    @Transactional
+    public CheckoutReviewDto resolveWithoutSession(Long adminId, Long orderId,
+                                                   boolean confirmedNoSession, String reason) {
+        if (!confirmedNoSession || reason == null || reason.isBlank() || reason.length() > 800) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "Confirm that no Stripe session or payment exists, and give a review reason");
+        }
+        Long userId = orderRepository.findById(orderId)
+                .map(order -> order.getUser().getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        lockUser(userId);
+        Order order = lockOrder(orderId, userId);
+        if (order.getStatus() == OrderStatus.CANCELLED && order.getStripeSessionId() == null
+                && order.getReviewResolvedAt() != null) return toReviewDto(order);
+
+        if (!order.isPending() || order.getStripeSessionId() != null || order.getReviewNeededAt() == null) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "This order is not an unresolved missing-session checkout");
+        }
+        if (!order.hasExpired(clock.instant())) {
+            throw new BusinessException(ErrorCode.PROCESSING,
+                    "Wait until the original checkout deadline before resolving a missing session");
+        }
+        // Deliberate administrator reconciliation, never an automatic timeout rule.
+        releaseStock(order, lockProducts(orderProductIds(order)));
+        order.markCancelled();
+        order.clearReview();
+        order.recordReviewResolution(adminId, clock.instant(), "Confirmed no Stripe session/payment: " + reason.trim());
+        return toReviewDto(order);
+    }
+
     public User lockUser(Long userId) {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -426,6 +456,7 @@ public class CheckoutTransactions {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
     }
 
+    @Transactional(readOnly = true)
     public OrderSnapshot loadAdminSnapshot(Long orderId) {
         return snapshot(orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)));
