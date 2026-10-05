@@ -223,7 +223,13 @@ public class CheckoutTransactions {
         lockUser(userId);
         Order order = lockOrder(orderId, userId);
         applySessionLocked(order, session, false);
-        order.recordReviewResolution(adminId, clock.instant(), "Verified Stripe session " + session.id());
+        if (order.getReviewNeededAt() == null) {
+            order.recordReviewResolution(
+                    adminId,
+                    clock.instant(),
+                    "Verified Stripe session " + session.id()
+            );
+        }
         return toReviewDto(order);
     }
 
