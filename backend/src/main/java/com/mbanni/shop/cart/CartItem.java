@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import static com.mbanni.shop.common.Constants.*;
+
 @Entity
 public class CartItem {
 
@@ -26,10 +28,10 @@ public class CartItem {
     @Column(nullable = false)
     private BigDecimal discount = BigDecimal.ZERO;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = PRECISION, scale = SCALE)
     private BigDecimal priceWhenAdded;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = PRECISION)
     private int quantity;
 
 
@@ -88,7 +90,7 @@ public class CartItem {
     }
 
     void setQuantity(int value) {
-        if (value < 1 || value > Cart.MAX_QUANTITY) {
+        if (value < 1 || value > CART_MAX_QUANTITY) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 

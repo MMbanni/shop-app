@@ -8,6 +8,9 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import static com.mbanni.shop.common.Constants.PRECISION;
+import static com.mbanni.shop.common.Constants.SCALE;
+
 @Entity
 public class Product {
     @Id
@@ -20,7 +23,7 @@ public class Product {
     @Column(nullable = false)
     private int stock = 0;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = PRECISION, scale = SCALE)
     private BigDecimal price;
 
     @ManyToOne

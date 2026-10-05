@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mbanni.shop.common.Constants.*;
+
 @Entity
 @Table(name = "shop_order")
 public class Order {
@@ -29,13 +31,13 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = PRECISION, scale = SCALE)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(unique = true)
     private String stripeSessionId;
 
-    @Column(length = 2048)
+    @Column(length = URL_MAX_LENGTH)
     private String checkoutUrl;
 
     @Column(nullable = false)
@@ -46,19 +48,24 @@ public class Order {
 
     private Instant paidAt;
 
-    @Column(length = 2048)
+    @Column(length = URL_MAX_LENGTH)
     private String checkoutSuccessUrl;
-    @Column(length = 2048)
+
+    @Column(length = URL_MAX_LENGTH)
     private String checkoutCancelUrl;
 
     private Instant reviewNeededAt;
+
     @Column(length = 500)
     private String reviewReason;
+
     private Instant reviewResolvedAt;
+
+    @Column(length = USER_MAX_NAME_LENGTH)
     private Long reviewedBy;
+
     @Column(length = 1000)
     private String reviewResolution;
-
 
     protected Order() {
     }
