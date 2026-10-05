@@ -31,7 +31,7 @@ public class ProductService {
 
         String name = Product.validateName(request.name());
 
-        Optional<Product> existingProduct = productRepository.findByNameIgnoreCase(name);
+        Optional<Product> existingProduct = productRepository.findByNormalizedNameIgnoreCase(Product.normalizeName(name));
         if(existingProduct.isPresent()){
             throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name",
                     "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
@@ -85,12 +85,13 @@ public class ProductService {
         if(request.name()!= null) {
             String name = Product.validateName(request.name());
 
-            if(!product.getName().equalsIgnoreCase(name)
+            if(!product.getNormalizedName().equalsIgnoreCase(name)
                     && productRepository.existsByNameIgnoreCase(name)) {
                 throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name");
             }
 
             product.setName(name);
+            product.setNormalizedName(Product.normalizeName(name));
         }
 
         if(request.price()!= null) {

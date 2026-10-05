@@ -6,6 +6,7 @@ import com.mbanni.shop.supplier.Supplier;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 import java.util.Objects;
 
 import static com.mbanni.shop.common.Constants.*;
@@ -18,6 +19,9 @@ public class Product {
 
     @Column(nullable = false, unique = true, length = MAX_NAME_LENGTH)
     private String name;
+
+    @Column(nullable = false, unique = true, length = MAX_NAME_LENGTH)
+    private String normalizedName;
 
     @Column(nullable = false)
     private int stock = 0;
@@ -46,6 +50,7 @@ public class Product {
 
     public Product(String name, BigDecimal price, String description) {
         setName(name);
+        setNormalizedName(normalizeName(name));
         setPrice(price);
         setDescription(description);
     }
@@ -74,6 +79,8 @@ public class Product {
         return this.name;
     }
 
+    public String getNormalizedName(){return this.normalizedName;}
+
     public int getStock() {
         return this.stock;
     }
@@ -100,9 +107,12 @@ public class Product {
     public void setName(String name) {
         this.name = validateName(name);
     }
+    public void setNormalizedName(String name) {
+        this.normalizedName = normalizeName(name);
+    }
 
     public void setStock(int stock) {
-        if (stock < 0) {
+        if (stock < 0 || stock > MAX_STOCK) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
         this.stock = stock;
@@ -121,7 +131,7 @@ public class Product {
     }
 
     public void increaseStock(int amount) {
-        if (amount <= 0) {
+        if (amount <= 0 || stock + amount > MAX_STOCK) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
@@ -172,6 +182,11 @@ public class Product {
         }
 
         return trimmedName;
+    }
+
+    public static String normalizeName(String name){
+        return name.trim().toLowerCase(Locale.ROOT);
+
     }
 
 }

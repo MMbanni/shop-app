@@ -13,7 +13,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     public boolean existsByNameIgnoreCase(String name);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Product> findByNameIgnoreCase(String name);
+    Optional<Product> findByNormalizedNameIgnoreCase(String name);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
