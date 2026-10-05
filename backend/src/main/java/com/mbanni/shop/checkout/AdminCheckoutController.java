@@ -3,6 +3,7 @@ package com.mbanni.shop.checkout;
 import com.mbanni.shop.checkout.dto.CheckoutReviewDto;
 import com.mbanni.shop.checkout.dto.ReconcileRequestDto;
 import com.mbanni.shop.payment.PaymentService;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class AdminCheckoutController {
 
     @PostMapping("/{orderId}/reconcile")
     public CheckoutReviewDto reconcile(@PathVariable Long orderId,
-                                       @RequestBody ReconcileRequestDto request,
+                                       @Valid @RequestBody ReconcileRequestDto request,
                                        Authentication authentication) {
         return payments.reconcileCheckout(Long.valueOf(authentication.getName()), orderId, request.sessionId());
     }
