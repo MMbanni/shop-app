@@ -8,5 +8,6 @@ export type OrderStatus =
   | "PENDING"
   | "PAID"
   | "CANCELLED"
-  | "EXPIRED";
+  | "EXPIRED"
+  | "NEEDS_REVIEW";
  

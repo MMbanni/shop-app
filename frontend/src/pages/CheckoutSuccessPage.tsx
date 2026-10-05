@@ -56,6 +56,7 @@ export function CheckoutSuccessPage() {
   const paymentConfirmed = orderStatus === "PAID";
   const cancelled = orderStatus === "CANCELLED";
   const expired = orderStatus === "EXPIRED";
+  const needsReview = orderStatus === "NEEDS_REVIEW";
 
   if (!sessionId) {
     return (
@@ -81,6 +82,11 @@ export function CheckoutSuccessPage() {
         {
           apiError ?
             (<h1> {`${apiError.detail}`} </h1>)
+            : needsReview ? (
+              <>
+                <h1>Order is under review</h1>
+                <p>Please wait, we will contact you when the review is complete </p>
+              </>)
             : cancelled ? (
               <>
                 <h1>Order has been cancelled</h1>
