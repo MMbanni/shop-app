@@ -7,8 +7,11 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
+import static com.mbanni.shop.common.Constants.MAX_NAME_LENGTH;
+
 public record ProductRequestDto (
         @NotBlank(message = "Name required")
+        @Size(max = MAX_NAME_LENGTH)
         String name,
         @Min(value = 0, message = "Min 0")
         Integer stock,

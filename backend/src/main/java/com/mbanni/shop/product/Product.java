@@ -8,8 +8,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-import static com.mbanni.shop.common.Constants.PRECISION;
-import static com.mbanni.shop.common.Constants.SCALE;
+import static com.mbanni.shop.common.Constants.*;
 
 @Entity
 public class Product {
@@ -17,7 +16,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = MAX_NAME_LENGTH)
     private String name;
 
     @Column(nullable = false)
@@ -30,7 +29,7 @@ public class Product {
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = PRECISION, scale = SCALE)
     private BigDecimal cost = BigDecimal.valueOf(0);
 
     @Column(nullable = false)

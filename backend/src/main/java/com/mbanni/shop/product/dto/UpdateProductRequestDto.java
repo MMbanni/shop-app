@@ -4,10 +4,13 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
+import static com.mbanni.shop.common.Constants.*;
+
 public record UpdateProductRequestDto(
+        @Size(max = MAX_NAME_LENGTH)
         String name,
         @Min(0) Integer stock,
-        @Min(0) @Digits(integer = 10, fraction = 2) BigDecimal price,
+        @Min(0) @Digits(integer = PRECISION-SCALE, fraction = SCALE) BigDecimal price,
         @Size(max = 500, message = "Description must be at most 500 characters")
         String description,
         @NotNull
