@@ -20,7 +20,7 @@ public class Product {
     @Column(nullable = false)
     private int stock = 0;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
     @ManyToOne
