@@ -3,9 +3,12 @@ package com.mbanni.shop.payment;
 import com.mbanni.shop.order.Order;
 import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
+import com.mbanni.shop.order.dto.OrderRecoveryDto;
 import org.aspectj.weaver.ast.Or;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -34,21 +37,42 @@ public class OrderRecovery {
             fixedDelay = 60,
             timeUnit = TimeUnit.SECONDS
     )
+
     public void runRecovery(){
-        List<Order> orders = orderRepository.findAllByStatus(OrderStatus.PENDING);
+        int maxBatches = 5;
+        int batchesProcessed = 0;
+        int batchSize = 100;
+        long lastId = 0;
 
-        for(Order order: orders){
+        while(batchesProcessed<=maxBatches){
 
-            try {
-                paymentService.refreshOrderStatus(
-                        order.getUser().getId(),
-                        order.getId()
-                );
+            while (true){
+                List<OrderRecoveryDto> orders = orderRepository.findPendingOrderIds(OrderStatus.PENDING, lastId, PageRequest.of(0,batchSize));
 
-            } catch (RuntimeException e) {
-                log.error("Could not recover order {}", order.getId(), e);
+                if (orders.isEmpty()) {
+                    break;
+                }
+
+                for(OrderRecoveryDto dto: orders){
+                    try {
+                        paymentService.refreshOrderStatus(
+                                dto.userId(),
+                                dto.orderId()
+                        );
+
+
+
+                    } catch (RuntimeException e) {
+                        log.error("Could not recover order {}", dto.orderId(), e);
+                    }
+                    lastId = dto.orderId();
+
+                }
+
             }
+            batchesProcessed++;
         }
+
 
     }
 }

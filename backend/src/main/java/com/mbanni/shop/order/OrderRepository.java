@@ -1,7 +1,9 @@
 package com.mbanni.shop.order;
 
+import com.mbanni.shop.order.dto.OrderRecoveryDto;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -29,6 +31,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findFirstByUser_IdAndStatus(Long userId, OrderStatus status);
     List<Order> findAllByStatus(OrderStatus status);
 
+    Integer countByStatus(OrderStatus status);
+
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
         select o from Order o
@@ -53,6 +58,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Long userId,
             OrderStatus status,
             Instant createdAt
+    );
+
+    @Query("""
+    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(o.id, o.user.id)
+    FROM Order o
+    WHERE o.status = :status
+      AND o.id > :lastId
+    ORDER BY o.id ASC
+    """)
+    List<OrderRecoveryDto> findPendingOrderIds(
+            @Param("status") OrderStatus status,
+            @Param("lastId") Long lastId,
+            Pageable pageable
     );
 
     long countByUser_IdAndStatusInAndCreatedAtAfter(
