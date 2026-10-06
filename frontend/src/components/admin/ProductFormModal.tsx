@@ -27,6 +27,9 @@ export function ProductFormModal({
 }: ProductFormModalProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) return;
+    
     onSubmit();
   }
 
@@ -56,6 +59,7 @@ export function ProductFormModal({
             type="button"
             className="modal-close"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Close modal"
           >
             ×
