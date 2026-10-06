@@ -1,8 +1,6 @@
 import type { ChangeEvent } from "react";
-import type { ProductForm } from "../../types";
+import type { ProductForm, ProductFormErrors } from "../../types";
 import "./FormModal.css";
-
-type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
 
 type ProductFormModalProps = {
   title: string;

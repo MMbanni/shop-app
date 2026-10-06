@@ -1,7 +1,7 @@
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import { useState, useRef } from "react";
-import type { AdminProductTab, Product, ProductStatus } from "../../types";
+import type { AdminProductTab, Product, ProductFormErrors, ProductStatus } from "../../types";
 import { ApiErrorMessage } from "../../components/messages/ApiErrorMessage";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
@@ -27,6 +27,9 @@ export function AdminProductsPage() {
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const [messageAnchor, setMessageAnchor] = useState<HTMLButtonElement | null>(null);
 
+  const [localAddErrors, setLocalAddErrors] = useState<ProductFormErrors>({});
+  const [localUpdateErrors, setLocalUpdateErrors] = useState<ProductFormErrors>({});
+
   function showCartMessage() {
     setMessageVisible(true)
 
@@ -45,17 +48,19 @@ export function AdminProductsPage() {
     removeProduct
   } = useAdminProducts(selectedTab);
 
-  const editFieldErrors = updateProduct.isError
-    ? getFieldErrors(updateProduct.error)
-    : {};
+  const editFieldErrors = {
+    ...(updateProduct.isError ? getFieldErrors(updateProduct.error) : {}),
+    ...localUpdateErrors
+  };
 
   const editSubmitError = updateProduct.isError
     ? getFormErrorMessage(updateProduct.error)
     : null;
 
-  const addFieldErrors = addProduct.isError
-    ? getFieldErrors(addProduct.error)
-    : {};
+  const addFieldErrors = {
+    ...(addProduct.isError ? getFieldErrors(addProduct.error) : {}),
+    ...localAddErrors,
+  };
 
   const addSubmitError = addProduct.isError
     ? getFormErrorMessage(addProduct.error)
@@ -78,6 +83,23 @@ export function AdminProductsPage() {
   const [editProduct, setEditProduct] = useState<ProductForm>(emptyProductForm);
 
   function handleAddProduct() {
+
+
+    const price = Number(newProduct.price);
+    const stock = Number(newProduct.stock);
+    const errors: ProductFormErrors = {};
+
+    if ( newProduct.price.trim() === "" || !Number.isFinite(price)) {
+      errors.price = "Price must be a valid number"
+    }
+    if ( newProduct.stock.trim() === "" ||!Number.isFinite(stock)) {
+      errors.stock = "Stock must be a valid number"
+    }
+
+    setLocalAddErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+
     addProduct.mutate({
       name: newProduct.name,
       price: Number(newProduct.price),
@@ -120,10 +142,10 @@ export function AdminProductsPage() {
   }
 
   function handleRemoveProduct(productId: number) {
-  changeProductStatus.reset();
+    changeProductStatus.reset();
 
-  removeProduct.mutate(productId);
-}
+    removeProduct.mutate(productId);
+  }
 
   function handleAddProductChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -132,6 +154,13 @@ export function AdminProductsPage() {
       ...current,
       [name]: value,
     }));
+
+    setLocalAddErrors(prev => ({
+      ...prev,
+      [name]: undefined
+    }));
+
+    addProduct.reset();
   }
 
 
@@ -142,13 +171,36 @@ export function AdminProductsPage() {
       ...current,
       [name]: value,
     }));
+
+    setLocalUpdateErrors(prev => ({
+      ...prev,
+      [name]: undefined
+    }));
+
+    updateProduct.reset();
   }
 
   function handleSaveEdit(productId: number) {
-    if(editingVersion === null) return;
+    if (editingVersion === null) return;
+
+    const price = Number(editProduct.price);
+    const stock = Number(editProduct.stock);
+    const errors: ProductFormErrors = {};
+
+    if ( editProduct.price.trim() === "" || !Number.isFinite(price)) {
+      errors.price = "Price must be a valid number"
+    }
+    if ( editProduct.stock.trim() === "" ||!Number.isFinite(stock)) {
+      errors.stock = "Stock must be a valid number"
+    }
+    
+    setLocalUpdateErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+
     updateProduct.mutate({
       id: productId,
-      expectedVersion:editingVersion,
+      expectedVersion: editingVersion,
       name: editProduct.name,
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),

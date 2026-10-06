@@ -16,3 +16,5 @@ export type ProductForm = {
   price: string;
   stock: string;
 };
+
+export type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
