@@ -133,6 +133,11 @@ export function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+      {!suspending && changeUserStatus.isError && (
+        <p className="error" role="alert">
+          {getErrorMessage(changeUserStatus.error)}
+        </p>
+      )}
       {suspending && suspendingUserId && (
         <UserFormModal
           duration={suspendingDuration}
@@ -143,8 +148,8 @@ export function AdminUsersPage() {
           }
           onChange={handleChange}
           isSubmitting={changeUserStatus.isPending}
-          onSubmit={() => 
-             suspend(suspendingUserId, suspendingDuration)
+          onSubmit={() =>
+            suspend(suspendingUserId, suspendingDuration)
           }
           onClose={handleClose}
         />
