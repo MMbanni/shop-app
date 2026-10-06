@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,10 +28,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByStripeSessionId(String stripeSessionId);
 
     Optional<Order> findFirstByUser_IdAndStatus(Long userId, OrderStatus status);
-    List<Order> findAllByStatus(OrderStatus status);
-
-    Integer countByStatus(OrderStatus status);
-
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -54,12 +49,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("sessionId") String sessionId
     );
 
-    long countByUser_IdAndStatusAndCreatedAtAfter(
-            Long userId,
-            OrderStatus status,
-            Instant createdAt
-    );
-
     @Query("""
     SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(o.id, o.user.id)
     FROM Order o
@@ -68,6 +57,56 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     ORDER BY o.id ASC
     """)
     List<OrderRecoveryDto> findPendingOrderIds(
+            @Param("status") OrderStatus status,
+            @Param("lastId") Long lastId,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
+        o.id, o.user.id
+    )
+    FROM Order o
+    WHERE o.status = :status
+      AND o.stripeSessionId IS NULL
+      AND o.reviewNeededAt IS NULL
+      AND o.createdAt > :cutoff
+    ORDER BY o.createdAt ASC, o.id ASC
+    """)
+    List<OrderRecoveryDto> findOrdersMissingSession(
+            @Param("status") OrderStatus status,
+            @Param("cutoff") Instant cutoff,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
+        o.id, o.user.id
+    )
+    FROM Order o
+    WHERE o.status = :status
+      AND o.stripeSessionId IS NULL
+      AND o.reviewNeededAt IS NULL
+      AND o.createdAt <= :cutoff
+    ORDER BY o.createdAt ASC, o.id ASC
+    """)
+    List<OrderRecoveryDto> findOverdueRecoveryOrders(
+            @Param("status") OrderStatus status,
+            @Param("cutoff") Instant cutoff,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
+        o.id, o.user.id
+    )
+    FROM Order o
+    WHERE o.status = :status
+      AND o.stripeSessionId IS NOT NULL
+      AND o.id > :lastId
+    ORDER BY o.id ASC
+    """)
+    List<OrderRecoveryDto> findPendingOrdersWithSession(
             @Param("status") OrderStatus status,
             @Param("lastId") Long lastId,
             Pageable pageable

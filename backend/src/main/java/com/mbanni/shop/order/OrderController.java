@@ -27,7 +27,8 @@ public class OrderController {
         return new OrderResponseDto(
                 order.getId(),
                 order.getStatus(),
-                order.getPaidAt()
+                order.getPaidAt(),
+                order.getReviewNeededAt()
 
         );
 

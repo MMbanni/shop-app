@@ -22,7 +22,7 @@ public record OrderSnapshot(
     public boolean hasCreationSettings() { return successUrl != null && cancelUrl != null; }
 
     public OrderResponseDto toResponse() {
-        return new OrderResponseDto(orderId, status, paidAt);
+        return new OrderResponseDto(orderId, status, paidAt, reviewNeededAt);
     }
 
     public record Line(Long id, String productName, int quantity, BigDecimal unitPrice) {}
