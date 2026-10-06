@@ -91,6 +91,19 @@ export function AdminUsersPage() {
         <p className="section-label">Admin</p>
         <h1>Users</h1>
       </div>
+      <div className="tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            className={selectedTab === tab ? "tab active" : "tab"}
+            aria-pressed={selectedTab === tab}
+            onClick={() => setSelectedTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
       <div className="table-card">
         <table>
