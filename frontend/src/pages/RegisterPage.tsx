@@ -51,7 +51,7 @@ export function RegisterPage() {
 
         <label>
           Password
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} />
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} maxLength={72} />
         </label>
 
         {error && <p className="error">{error}</p>}
