@@ -79,6 +79,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             securityErrorResponseWriter.writeBanned(response);
             return;
         }
+        if (user.getStatus() == UserStatus.INACTIVE) {
+            securityErrorResponseWriter.writeInactive(response);
+            return;
+        }
 
 
         List<SimpleGrantedAuthority> authorities = List.of(

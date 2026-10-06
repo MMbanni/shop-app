@@ -52,6 +52,24 @@ public class SecurityErrorResponseWriter {
         );
 
     }
+
+    public void writeInactive(HttpServletResponse response) throws IOException {
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setTitle("ACCOUNT_INACTIVE");
+        problem.setDetail("Account is not active");
+
+
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(
+                MediaType.APPLICATION_PROBLEM_JSON_VALUE
+        );
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                problem
+        );
+
+    }
     public void writeUnauthorized(HttpServletResponse response)
             throws IOException {
         response.setHeader("WWW-Authenticate", "Bearer");
