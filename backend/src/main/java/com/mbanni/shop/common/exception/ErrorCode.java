@@ -58,6 +58,7 @@ public enum ErrorCode {
     ),
 
     ILLEGAL_OPERATION(
+            "Operation not allowed"
 
     ),
 
@@ -98,9 +99,5 @@ public enum ErrorCode {
 
     public String getDefaultMessage() {
         return defaultMessage;
-    }
-
-    public void setDefaultMessage(String defaultMessage) {
-        this.defaultMessage = defaultMessage;
     }
 }
