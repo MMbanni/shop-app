@@ -1,7 +1,8 @@
 export type Order = {
        orderId: number;
        status: OrderStatus;
-       paidAt: string | null
+       paidAt: string | null;
+       reviewNeededAt: Date | null
 }
 
 export type OrderStatus =
@@ -9,6 +10,5 @@ export type OrderStatus =
   | "PAID"
   | "CANCELLED"
   | "EXPIRED"
-  | "SUPERSEDED"
-  | "NEEDS_REVIEW";
+  | "SUPERSEDED";
  
