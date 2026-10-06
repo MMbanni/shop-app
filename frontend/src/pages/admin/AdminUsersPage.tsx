@@ -119,9 +119,12 @@ export function AdminUsersPage() {
 
 
                 <td>
-                  <button onClick={() => handleSuspending(user.id)}> Suspend </button>
-                  <button onClick={() => ban(user.id, 1)}> Ban </button>
-                  <button onClick={() => activate(user.id, 1)}> Activate </button>
+                  <button onClick={() => handleSuspending(user.id)}
+                    disabled={changeUserStatus.isPending} > Suspend </button>
+                  <button onClick={() => ban(user.id, 1)}
+                    disabled={changeUserStatus.isPending}> Ban </button>
+                  <button onClick={() => activate(user.id, 1)}
+                    disabled={changeUserStatus.isPending}> Activate </button>
                 </td>
 
 
