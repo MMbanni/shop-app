@@ -102,8 +102,8 @@ export function AdminProductsPage() {
 
     addProduct.mutate({
       name: newProduct.name,
-      price: Number(newProduct.price),
-      stock: Number(newProduct.stock),
+      price,
+      stock
     },
       {
         onSuccess: () => {
@@ -204,8 +204,8 @@ export function AdminProductsPage() {
       id: productId,
       expectedVersion: editingVersion,
       name: editProduct.name,
-      price: Number(editProduct.price),
-      stock: Number(editProduct.stock),
+      price,
+      stock
     },
       {
         onSuccess: () => {
