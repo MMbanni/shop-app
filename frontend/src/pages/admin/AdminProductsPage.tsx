@@ -92,7 +92,7 @@ export function AdminProductsPage() {
     if ( newProduct.price.trim() === "" || !Number.isFinite(price)) {
       errors.price = "Price must be a valid number"
     }
-    if ( newProduct.stock.trim() === "" ||!Number.isFinite(stock)) {
+    if ( newProduct.stock.trim() === "" ||!Number.isInteger(stock)) {
       errors.stock = "Stock must be a valid number"
     }
 
@@ -117,6 +117,7 @@ export function AdminProductsPage() {
   }
 
   function startEdit(product: Product) {
+    setLocalUpdateErrors({});
     updateProduct.reset();
 
     setEditingProductId(product.id);
@@ -126,11 +127,12 @@ export function AdminProductsPage() {
       name: product.name,
       price: String(product.price),
       stock: String(product.stock),
-    });
+    });   
 
   }
 
   function cancelEdit() {
+    setLocalUpdateErrors({});
     setEditingProductId(null);
     setEditProduct(emptyProductForm);
   }
@@ -190,7 +192,7 @@ export function AdminProductsPage() {
     if ( editProduct.price.trim() === "" || !Number.isFinite(price)) {
       errors.price = "Price must be a valid number"
     }
-    if ( editProduct.stock.trim() === "" ||!Number.isFinite(stock)) {
+    if ( editProduct.stock.trim() === "" ||!Number.isInteger(stock)) {
       errors.stock = "Stock must be a valid number"
     }
     
