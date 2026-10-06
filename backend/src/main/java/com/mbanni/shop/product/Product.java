@@ -12,6 +12,14 @@ import java.util.Objects;
 import static com.mbanni.shop.common.Constants.*;
 
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_product_normalized_name",
+                        columnNames = "normalized_name"
+                )
+        }
+)
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +28,7 @@ public class Product {
     @Column(nullable = false, unique = true, length = MAX_NAME_LENGTH)
     private String name;
 
-    @Column(nullable = false, unique = true, length = MAX_NAME_LENGTH)
+    @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String normalizedName;
 
     @Column(nullable = false)

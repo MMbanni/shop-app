@@ -1,13 +1,10 @@
 package com.mbanni.shop.product.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
-import static com.mbanni.shop.common.Constants.MAX_NAME_LENGTH;
+import static com.mbanni.shop.common.Constants.*;
 
 public record ProductRequestDto (
         @NotBlank(message = "Name required")
@@ -15,8 +12,10 @@ public record ProductRequestDto (
         String name,
         @Min(value = 0, message = "Min 0")
         Integer stock,
+
         @NotNull
-        @Min(value = 0, message = "Min 0")
+        @DecimalMin(value = MIN_PRICE_SEK, message = "Min 4")
+        @DecimalMax(value = MAX_PRICE_SEK, message = "Min 999999.99")
         BigDecimal price,
         @Size(max = 500, message = "Description must be at most 500 characters")
         String description

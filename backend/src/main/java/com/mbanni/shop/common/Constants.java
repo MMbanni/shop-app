@@ -1,5 +1,7 @@
 package com.mbanni.shop.common;
 
+import java.math.BigDecimal;
+
 public class Constants {
     public static final int CART_MAX_QUANTITY = 999;
     public static final int MAX_STOCK = 9999;
@@ -11,6 +13,8 @@ public class Constants {
     public static final int MAX_EMAIL_LENGTH = 254;
     public static final int PRECISION = 12;
     public static final int SCALE = 2;
+    public static final String MIN_PRICE_SEK = "4.00";
+    public static final String MAX_PRICE_SEK = "999999.99";
 
 
 
