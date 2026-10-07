@@ -139,7 +139,7 @@ public class Product {
     }
 
     public void increaseStock(int amount) {
-        if (amount <= 0 || stock + amount > MAX_STOCK) {
+        if (amount <= 0) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
