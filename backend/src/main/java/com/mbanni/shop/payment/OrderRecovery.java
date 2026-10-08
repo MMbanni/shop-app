@@ -110,7 +110,7 @@ public class OrderRecovery {
                 }
                 lastId = dto.orderId();
             }
-            if(pendingOrdersWithSession.size()< maxBatches) break;
+            if(pendingOrdersWithSession.size()< batchSize) break;
         }
 
     }
