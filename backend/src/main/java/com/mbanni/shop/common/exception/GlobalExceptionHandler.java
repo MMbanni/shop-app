@@ -1,6 +1,8 @@
 package com.mbanni.shop.common.exception;
 
 import com.mbanni.shop.checkout.CheckoutValidationException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -77,6 +79,37 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(status)
                 .body(problem);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrity(
+            DataIntegrityViolationException ex
+    ) {
+        Throwable cause = ex;
+
+        while (cause != null) {
+
+            if (cause instanceof ConstraintViolationException constraintEx) {
+
+                String constraint = constraintEx.getConstraintName();
+
+                if ("uk_product_normalized_name".equals(constraint)) {
+                    return handleBusinessException(
+                            new BusinessException(ErrorCode.PRODUCT_ALREADY_EXISTS)
+                    );
+                }
+
+                if ("uk_user_email".equals(constraint)) {
+                    return handleBusinessException(
+                            new BusinessException(ErrorCode.EMAIL_ALREADY_USED)
+                    );
+                }
+            }
+
+            cause = cause.getCause();
+        }
+
+        throw ex;
     }
 
     private HttpStatus statusFor(ErrorCode errorCode) {
