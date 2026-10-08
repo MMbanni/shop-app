@@ -15,17 +15,24 @@ public class OrderRecoveryState {
     @Column(nullable = false)
     private Long lastCheckedOrderId;
 
-    public Long getId(){
-        return this.id;
+    protected OrderRecoveryState() {
+        // Required by JPA
     }
 
-    public Long getLastCheckedOrderId(){
-        return this.lastCheckedOrderId;
+    public OrderRecoveryState(Long id, Long lastCheckedOrderId) {
+        this.id = id;
+        this.lastCheckedOrderId = lastCheckedOrderId;
     }
 
-    public void setLastCheckedOrderId(Long id){
-        this.lastCheckedOrderId = id;
+    public Long getId() {
+        return id;
     }
 
+    public Long getLastCheckedOrderId() {
+        return lastCheckedOrderId;
+    }
 
+    public void setLastCheckedOrderId(Long lastCheckedOrderId) {
+        this.lastCheckedOrderId = lastCheckedOrderId;
+    }
 }
