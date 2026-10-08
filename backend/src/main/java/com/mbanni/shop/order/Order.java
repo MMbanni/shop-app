@@ -6,6 +6,7 @@ import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.user.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +47,10 @@ public class Order {
     @Column(nullable = false)
     private Instant expiresAt;
 
+    private Instant nextRecoveryCheckAt;
+
+    private Instant recoveryLeaseUntil;
+
     private Instant paidAt;
 
     @Column(length = URL_MAX_LENGTH)
@@ -74,6 +79,8 @@ public class Order {
         this.user = user;
         this.createdAt=createdAt;
         this.expiresAt = expiresAt;
+        this.nextRecoveryCheckAt = createdAt;
+        this.recoveryLeaseUntil = createdAt;
     }
 
     public void addItem(OrderItem item) {
@@ -160,18 +167,17 @@ public class Order {
 
     public String getCheckoutUrl() {return checkoutUrl; }
 
-    public void setStripeSessionId(String stripeSessionId) {
-        this.stripeSessionId = stripeSessionId;
-    }
-
-    public void setCheckoutUrl(String checkoutUrl) { this.checkoutUrl = checkoutUrl;}
-
-    public void setStatus(OrderStatus orderStatus){ this.status = orderStatus;}
-
     public Instant getCreatedAt() { return createdAt; }
 
     public Instant getExpiresAt() {
         return expiresAt;
+    }
+
+    public Instant getNextRecoveryCheckAt() {
+        return nextRecoveryCheckAt;
+    }
+    public Instant getRecoveryLeaseUntil() {
+        return recoveryLeaseUntil;
     }
 
     public Instant getPaidAt() {
@@ -191,6 +197,18 @@ public class Order {
     public Long getReviewedBy() { return reviewedBy; }
 
     public String getReviewResolution() { return reviewResolution; }
+
+    public void setStripeSessionId(String stripeSessionId) {
+        this.stripeSessionId = stripeSessionId;
+    }
+
+    public void setCheckoutUrl(String checkoutUrl) { this.checkoutUrl = checkoutUrl;}
+
+    public void setStatus(OrderStatus orderStatus){ this.status = orderStatus;}
+
+    public void setNextRecoveryCheckAt(Instant time){ nextRecoveryCheckAt = time;}
+
+    public void setRecoveryLeaseUntil(Instant time){ recoveryLeaseUntil = time;}
 
     public void configureCheckout(String successUrl, String cancelUrl) {
         if (checkoutSuccessUrl != null || checkoutCancelUrl != null) {

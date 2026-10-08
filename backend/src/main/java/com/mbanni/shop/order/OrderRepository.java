@@ -62,53 +62,56 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Pageable pageable
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
-        o.id, o.user.id
-    )
-    FROM Order o
+    SELECT o FROM Order o
     WHERE o.status = :status
       AND o.stripeSessionId IS NULL
       AND o.reviewNeededAt IS NULL
       AND o.createdAt > :cutoff
-    ORDER BY o.createdAt ASC, o.id ASC
+      AND o.recoveryLeaseUntil <= :now
+      AND o.nextRecoveryCheckAt <= :now
+    ORDER BY o.nextRecoveryCheckAt ASC, o.id ASC
     """)
-    List<OrderRecoveryDto> findOrdersMissingSession(
+    List<Order> findOrdersWithoutSession(
             @Param("status") OrderStatus status,
             @Param("cutoff") Instant cutoff,
+            @Param("now") Instant now,
             Pageable pageable
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
-        o.id, o.user.id
-    )
-    FROM Order o
+    SELECT o FROM Order o
     WHERE o.status = :status
       AND o.stripeSessionId IS NULL
       AND o.reviewNeededAt IS NULL
       AND o.createdAt <= :cutoff
-    ORDER BY o.createdAt ASC, o.id ASC
+      AND o.recoveryLeaseUntil <= :now
+      AND o.nextRecoveryCheckAt <= :now
+    ORDER BY o.nextRecoveryCheckAt ASC, o.id ASC
     """)
-    List<OrderRecoveryDto> findOverdueRecoveryOrders(
+    List<Order> findOverdueOrders(
             @Param("status") OrderStatus status,
             @Param("cutoff") Instant cutoff,
+            @Param("now") Instant now,
             Pageable pageable
     );
 
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-    SELECT new com.mbanni.shop.order.dto.OrderRecoveryDto(
-        o.id, o.user.id
-    )
-    FROM Order o
+    SELECT o FROM Order o
     WHERE o.status = :status
       AND o.stripeSessionId IS NOT NULL
-      AND o.id > :lastId
-    ORDER BY o.id ASC
+      AND o.reviewNeededAt IS NULL
+      AND o.recoveryLeaseUntil <= :now
+      AND o.nextRecoveryCheckAt <= :now
+    ORDER BY o.nextRecoveryCheckAt ASC
     """)
-    List<OrderRecoveryDto> findPendingOrdersWithSession(
+    List<Order> findPendingOrdersWithSession(
             @Param("status") OrderStatus status,
-            @Param("lastId") Long lastId,
+            @Param("now") Instant now,
             Pageable pageable
     );
 

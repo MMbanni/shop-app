@@ -38,11 +38,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import static com.mbanni.shop.common.Constants.CREATION_RETRY_LIMIT;
+
 @Service
 @Transactional(propagation = Propagation.NEVER)
 public class PaymentService {
 
-    private static final Duration CREATION_RETRY_LIMIT = Duration.ofMinutes(5);
     private final CheckoutTransactions checkoutTransactions;
     private final StripeCheckoutGateway stripe;
     private  final Clock clock;
