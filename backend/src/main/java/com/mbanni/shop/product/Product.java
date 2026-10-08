@@ -143,7 +143,11 @@ public class Product {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
-        stock += amount;
+        try {
+            stock = Math.addExact(stock, amount);
+        } catch (ArithmeticException e) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        }
     }
 
     public void setPrice(BigDecimal price) {
