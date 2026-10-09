@@ -13,11 +13,14 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
 
   const loginMutation = useMutation({
-    mutationFn: ({ email, password }: { email:string, password:string }) =>
+    mutationFn: ({ email, password }: { email: string, password: string }) =>
       login(email, password),
 
-    onSuccess: () => {
-      navigate("/products");
+    onSuccess: (loggedIn) => {
+      if (loggedIn) {
+        navigate("/products");
+      }
+
     }
   });
 
@@ -38,25 +41,25 @@ export function LoginPage() {
 
         <label>
           Email
-          <input 
-          name="email"
-          type="email"
-          value={email}
-          autoComplete="email"
-          disabled={loginMutation.isPending}
-          onChange={(event) => setEmail(event.target.value)} required 
+          <input
+            name="email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            disabled={loginMutation.isPending}
+            onChange={(event) => setEmail(event.target.value)} required
           />
         </label>
 
         <label>
           Password
           <input
-          name="password" 
-          type="password" 
-          value={password}
-          disabled={loginMutation.isPending}
-          onChange={(event) => setPassword(event.target.value)}
-          required
+            name="password"
+            type="password"
+            value={password}
+            disabled={loginMutation.isPending}
+            onChange={(event) => setPassword(event.target.value)}
+            required
           />
         </label>
 
@@ -70,7 +73,7 @@ export function LoginPage() {
         <button
           className="button large full"
           disabled={loginMutation.isPending}
-          >
+        >
           {loginMutation.isPending ? "Logging in..." : "Login"}
         </button>
 

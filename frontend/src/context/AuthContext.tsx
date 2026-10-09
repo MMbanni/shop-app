@@ -1,41 +1,50 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { clearToken, getToken, saveToken } from "../lib/token";
 import type { User } from "../types";
-import { useQueryClient } from "@tanstack/react-query";
-import { AuthContextValue } from "../types/auth";
+import type { AuthContextValue } from "../types/auth";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const FORCED_LOGOUT_EVENT = "auth:forced-logout";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const queryClient = useQueryClient();
+  const authGeneration = useRef(0);
 
-  // Listen for a forced logout sent by api.ts
+  const logout = useCallback(() => {
+    authGeneration.current++;
+
+    clearToken();
+    setUser(null);
+    setIsLoading(false);
+    queryClient.clear();
+  }, [queryClient]);
+
   useEffect(() => {
-    function handleForcedLogout() {
-      logout();
-    }
-
-    window.addEventListener(
-      FORCED_LOGOUT_EVENT,
-      handleForcedLogout
-    );
+    window.addEventListener(FORCED_LOGOUT_EVENT, logout);
 
     return () => {
-      window.removeEventListener(
-        FORCED_LOGOUT_EVENT,
-        handleForcedLogout
-      );
+      window.removeEventListener(FORCED_LOGOUT_EVENT, logout);
     };
   }, [logout]);
 
   useEffect(() => {
-    async function loadCurrentUser() {
+    const generation = authGeneration.current;
 
+    async function loadCurrentUser() {
       if (!getToken()) {
         setIsLoading(false);
         return;
@@ -43,60 +52,114 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const currentUser = await api.me();
+
+        if (generation !== authGeneration.current) return;
+
         setUser(currentUser);
       } catch {
+        if (generation !== authGeneration.current) return;
+
         clearToken();
         setUser(null);
-        queryClient.clear()
+        queryClient.clear();
       } finally {
-        setIsLoading(false);
+        if (generation === authGeneration.current) {
+          setIsLoading(false);
+        }
       }
     }
 
     void loadCurrentUser();
+
+    return () => {
+      // Invalidate pending startup, login and registration requests.
+      authGeneration.current++;
+    };
   }, [queryClient]);
 
-  async function login(email: string, password: string) {
-    const response = await api.login(email, password);
+  const login = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      const generation = ++authGeneration.current;
 
-    saveToken(response.token);
-
-    try {
-      const currentUser = await api.me();
-      setUser(currentUser);
-    } catch (error) {
       clearToken();
       setUser(null);
       queryClient.clear();
 
-      throw error;
-    }
-    
-  }
+      try {
+        const response = await api.login(email, password);
 
-  async function register(name: string, email: string, password: string) {
-    await api.register(name, email, password);
-    await login(email, password);
-  }
+        if (generation !== authGeneration.current) return false;
 
+        saveToken(response.token);
 
-  function logout() {
-    clearToken();
-    setUser(null);
-    queryClient.clear();
-  }
+        const currentUser = await api.me();
 
+        if (generation !== authGeneration.current) return false;
 
-  const value: AuthContextValue = {
-  user,
-  isLoading,
-  isLoggedIn: Boolean(user),
-  login,
-  register,
-  logout
-};
+        setUser(currentUser);
+        return true;
+      } catch (error) {
+        if (generation !== authGeneration.current) return false;
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+        clearToken();
+        setUser(null);
+        queryClient.clear();
+
+        throw error;
+      } finally {
+        if (generation === authGeneration.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [queryClient],
+  );
+
+  const register = useCallback(
+    async (
+      name: string,
+      email: string,
+      password: string,
+    ): Promise<boolean> => {
+      const generation = ++authGeneration.current;
+
+      clearToken();
+      setUser(null);
+      queryClient.clear();
+
+      try {
+        await api.register(name, email, password);
+      } catch (error) {
+        if (generation !== authGeneration.current) return false;
+
+        setIsLoading(false);
+        throw error;
+      }
+
+      if (generation !== authGeneration.current) return false;
+
+      return login(email, password);
+    },
+    [login, queryClient],
+  );
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      isLoading,
+      isLoggedIn: Boolean(user),
+      login,
+      register,
+      logout,
+    }),
+    [user, isLoading, login, register, logout],
+  );
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
