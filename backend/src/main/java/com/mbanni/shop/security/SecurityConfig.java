@@ -1,6 +1,7 @@
 package com.mbanni.shop.security;
 
 import jakarta.servlet.DispatcherType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,11 +25,16 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final SecurityErrorResponseWriter securityErrorResponseWriter;
+    private final String frontendUrl;
+
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
-                          SecurityErrorResponseWriter securityErrorResponseWriter
+                          SecurityErrorResponseWriter securityErrorResponseWriter,
+                          @Value("${app.frontend-url}") String frontendUrl
+
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.securityErrorResponseWriter = securityErrorResponseWriter;
+        this.frontendUrl=frontendUrl;
     }
 
     @Bean
@@ -79,8 +85,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173", // Vite / React
-                "http://localhost:3000"  // Create React App
+                frontendUrl
         ));
 
         config.setAllowedMethods(List.of(
