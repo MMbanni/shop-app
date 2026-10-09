@@ -150,6 +150,8 @@ export function AdminProductsPage() {
   }
 
   function handleAddProductChange(event: React.ChangeEvent<HTMLInputElement>) {
+    if (addProduct.isPending) return;
+
     const { name, value } = event.target;
 
     setNewProduct((current) => ({
@@ -358,6 +360,7 @@ export function AdminProductsPage() {
                   <input
                     name="name"
                     value={newProduct.name}
+                    disabled={addProduct.isPending}
                     onChange={handleAddProductChange}
                     placeholder="Product name"
                   />
@@ -373,6 +376,7 @@ export function AdminProductsPage() {
                     name="price"
                     type="number"
                     value={newProduct.price}
+                    disabled={addProduct.isPending}
                     onChange={handleAddProductChange}
                     placeholder="Price"
                   />
@@ -388,6 +392,7 @@ export function AdminProductsPage() {
                     name="stock"
                     type="number"
                     value={newProduct.stock}
+                    disabled={addProduct.isPending}
                     onChange={handleAddProductChange}
                     placeholder="Stock"
                   />
