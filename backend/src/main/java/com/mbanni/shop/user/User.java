@@ -102,19 +102,17 @@ public class User {
         this.status=status;
     }
 
-    public void suspend(int days) {
-        Instant now = Instant.now();
-
+    public void suspend(int days, Instant now) {
 
         if(suspendedUntil!=null && suspendedUntil.isAfter(now)){
             suspendedUntil= suspendedUntil.plus(days, ChronoUnit.DAYS);
 
         } else {
-            suspendedUntil = Instant.now().plus(days, ChronoUnit.DAYS);
+            suspendedUntil = now.plus(days, ChronoUnit.DAYS);
         }
 
         status=UserStatus.SUSPENDED;
-        checkSuspension();
+        checkSuspensionOrActivate(now);
 
 
     }
@@ -129,9 +127,21 @@ public class User {
         this.suspendedUntil = null;
     }
 
-    public void checkSuspension(){
-        if (suspendedUntil != null && !suspendedUntil.isAfter(Instant.now())) {
+    public void checkSuspensionOrActivate(Instant now){
+        if (hasSuspensionExpired(now)) {
             activate();
         }
+    }
+
+    public boolean isSuspendedAt(Instant now) {
+        return (status == UserStatus.SUSPENDED
+                && suspendedUntil == null || suspendedUntil.isAfter(now));
+
+    }
+
+    public boolean hasSuspensionExpired(Instant now) {
+        return status == UserStatus.SUSPENDED
+                && suspendedUntil != null
+                && !suspendedUntil.isAfter(now);
     }
 }

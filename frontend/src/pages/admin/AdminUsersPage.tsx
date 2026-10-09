@@ -91,6 +91,19 @@ export function AdminUsersPage() {
         <p className="section-label">Admin</p>
         <h1>Users</h1>
       </div>
+      <div className="tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            className={selectedTab === tab ? "tab active" : "tab"}
+            aria-pressed={selectedTab === tab}
+            onClick={() => setSelectedTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
       <div className="table-card">
         <table>
@@ -119,9 +132,12 @@ export function AdminUsersPage() {
 
 
                 <td>
-                  <button onClick={() => handleSuspending(user.id)}> Suspend </button>
-                  <button onClick={() => ban(user.id, 1)}> Ban </button>
-                  <button onClick={() => activate(user.id, 1)}> Activate </button>
+                  <button onClick={() => handleSuspending(user.id)}
+                    disabled={changeUserStatus.isPending} > Suspend </button>
+                  <button onClick={() => ban(user.id, 1)}
+                    disabled={changeUserStatus.isPending}> Ban </button>
+                  <button onClick={() => activate(user.id, 1)}
+                    disabled={changeUserStatus.isPending}> Activate </button>
                 </td>
 
 
@@ -130,6 +146,11 @@ export function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+      {!suspending && changeUserStatus.isError && (
+        <p className="error" role="alert">
+          {getErrorMessage(changeUserStatus.error)}
+        </p>
+      )}
       {suspending && suspendingUserId && (
         <UserFormModal
           duration={suspendingDuration}
@@ -140,8 +161,8 @@ export function AdminUsersPage() {
           }
           onChange={handleChange}
           isSubmitting={changeUserStatus.isPending}
-          onSubmit={() => 
-             suspend(suspendingUserId, suspendingDuration)
+          onSubmit={() =>
+            suspend(suspendingUserId, suspendingDuration)
           }
           onClose={handleClose}
         />

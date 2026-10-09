@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -30,7 +31,7 @@ public class ProductService {
 
         String name = Product.validateName(request.name());
 
-        Optional<Product> existingProduct = productRepository.findByNameIgnoreCase(name);
+        Optional<Product> existingProduct = productRepository.findByNormalizedNameIgnoreCase(Product.normalizeName(name));
         if(existingProduct.isPresent()){
             throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name",
                     "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
@@ -73,16 +74,24 @@ public class ProductService {
         Product product = productRepository.findByIdForUpdate(id).
                 orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        if (!Objects.equals(request.expectedVersion(), product.getVersion())) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "This product changed while you were editing it. Reload and try again."
+            );
+        }
+
 
         if(request.name()!= null) {
             String name = Product.validateName(request.name());
 
-            if(!product.getName().equalsIgnoreCase(name)
+            if(!product.getNormalizedName().equalsIgnoreCase(name)
                     && productRepository.existsByNameIgnoreCase(name)) {
                 throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name");
             }
 
             product.setName(name);
+            product.setNormalizedName(Product.normalizeName(name));
         }
 
         if(request.price()!= null) {
@@ -105,6 +114,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
         if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, id)) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
                     "This product is reserved by a pending checkout. Archive it instead of deleting it.");

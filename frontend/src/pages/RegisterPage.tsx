@@ -19,15 +19,18 @@ export function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await register(name, email, password);
-      navigate("/products");
+      const loggedIn = await register(name, email, password);
+
+      if (loggedIn) {
+        navigate("/products");
+      }
     } catch (caughtError) {
       const apiError = getApiError(caughtError);
       const fieldErrors = apiError?.errors;
-      
-      setError(apiError? 
-        fieldErrors?fieldErrors[0].message : apiError?.detail
-      : "Registration failed" );
+
+      setError(apiError ?
+        fieldErrors ? fieldErrors[0].message : apiError?.detail
+        : "Registration failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,7 +54,7 @@ export function RegisterPage() {
 
         <label>
           Password
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} />
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} maxLength={72} />
         </label>
 
         {error && <p className="error">{error}</p>}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
-import { ApiErrorResponse, OrderStatus } from "../types";
+import { ApiErrorResponse, Order, OrderStatus } from "../types";
 import { ApiError, getApiError } from "../lib/ApiError";
 
 
@@ -9,7 +9,7 @@ import { ApiError, getApiError } from "../lib/ApiError";
 export function CheckoutSuccessPage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
+  const [orderInfo, setOrderInfo] = useState<Order | null>(null);
   const [apiError, setApiError] = useState<ApiErrorResponse | null>(null);
 
 
@@ -24,7 +24,7 @@ export function CheckoutSuccessPage() {
       try {
         const response = await api.orderStatus(sessionId!);
 
-        setOrderStatus(response.status);
+        setOrderInfo(response);
 
         if (response.status === "PENDING") {
           timeoutId = window.setTimeout(
@@ -53,9 +53,10 @@ export function CheckoutSuccessPage() {
     };
   }, [sessionId]);
 
-  const paymentConfirmed = orderStatus === "PAID";
-  const cancelled = orderStatus === "CANCELLED";
-  const expired = orderStatus === "EXPIRED";
+  const paymentConfirmed = orderInfo?.status === "PAID";
+  const cancelled = orderInfo?.status === "CANCELLED";
+  const expired = orderInfo?.status === "EXPIRED";
+  const needsReview = orderInfo?.reviewNeededAt !=null; 
 
   if (!sessionId) {
     return (
@@ -76,11 +77,16 @@ export function CheckoutSuccessPage() {
   return (
     <main className="page-shell narrow">
       <div className="success-card">
-        <p className="section-label">{apiError ? "" : orderStatus ?? "CHECKING..."}</p>
+        <p className="section-label">{apiError ? "" : orderInfo?.status ?? "CHECKING..."}</p>
 
         {
           apiError ?
             (<h1> {`${apiError.detail}`} </h1>)
+            : needsReview ? (
+              <>
+                <h1>Order is under review</h1>
+                <p>Please wait, we will contact you when the review is complete </p>
+              </>)
             : cancelled ? (
               <>
                 <h1>Order has been cancelled</h1>

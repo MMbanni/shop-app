@@ -17,10 +17,10 @@ export function Confirm({
                 type="button"
                 onClick={onConfirm}
                 disabled={disabled || isPending}
-                aria-busy={isPending}>
-                
-                Confirm</button>
-            {isPending ? "Confirming..." : "Accept current price"}
+                aria-busy={isPending}
+            >
+                {isPending ? "Confirming..." : "Accept current price"}
+            </button>
         </div>
     )
 }

@@ -1,11 +1,12 @@
 export type Product = {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
   price: number;
   imageUrl?: string;
   stock: number;
-  status: string
+  status: ProductStatus;
+  version: number
 };
 
 export type ProductStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
@@ -15,3 +16,5 @@ export type ProductForm = {
   price: string;
   stock: string;
 };
+
+export type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;

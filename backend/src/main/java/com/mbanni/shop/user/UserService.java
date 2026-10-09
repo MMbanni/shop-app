@@ -11,8 +11,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
+
+import static com.mbanni.shop.common.Constants.MIN_NAME_LENGTH;
 
 @Service
 public class UserService {
@@ -20,11 +23,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final UserMapper userMapper;
+    private final Clock clock;
 
-    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserMapper userMapper, Clock clock) {
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
         this.userMapper = userMapper;
+        this.clock = clock;
     }
 
 
@@ -38,7 +43,7 @@ public class UserService {
         UserStatus userStatus;
 
         try {
-            userStatus = UserStatus.valueOf(status.toUpperCase());
+            userStatus = UserStatus.valueOf(status.toUpperCase(Locale.ROOT));
 
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
@@ -60,7 +65,7 @@ public class UserService {
 
         if (command.name() != null) {
             String name = command.name().trim();
-            if (name.isEmpty()) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+            if (name.length()<MIN_NAME_LENGTH) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
             user.setName(name);
         }
         if (command.email() != null) {
@@ -98,7 +103,7 @@ public class UserService {
                         "Duration required when suspending a user"
                 );
             }
-            user.suspend(command.duration());
+            user.suspend(command.duration(), clock.instant());
         }
         if (status.equals("ACTIVE")) {
             user.activate();

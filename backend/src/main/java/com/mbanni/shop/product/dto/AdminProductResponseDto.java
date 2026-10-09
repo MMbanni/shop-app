@@ -10,5 +10,6 @@ public record AdminProductResponseDto(
     Integer stock,
     BigDecimal price,
     String description,
-    ProductStatus status
+    ProductStatus status,
+    Long version
 ){}

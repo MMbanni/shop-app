@@ -12,11 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.mbanni.shop.common.Constants.CART_MAX_QUANTITY;
+
 @Entity
 public class Cart {
-
-    public static final int MAX_QUANTITY = 999;
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +49,7 @@ public class Cart {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        if(quantity>MAX_QUANTITY) {
+        if(quantity>CART_MAX_QUANTITY) {
             throw new BusinessException(ErrorCode.EXCEEDED_QUANTITY_LIMIT);
         }
 
@@ -61,7 +60,7 @@ public class Cart {
         CartItem existingItem = findItemByProductId(product.getId());
 
         if(existingItem != null) {
-            if(existingItem.getQuantity() + quantity>MAX_QUANTITY) {
+            if(existingItem.getQuantity() + quantity>CART_MAX_QUANTITY) {
                 throw new BusinessException(ErrorCode.EXCEEDED_QUANTITY_LIMIT);
             }
             existingItem.setQuantity(existingItem.getQuantity() + quantity);

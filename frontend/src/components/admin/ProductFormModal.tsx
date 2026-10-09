@@ -1,8 +1,6 @@
 import type { ChangeEvent } from "react";
-import type { ProductForm } from "../../types";
+import type { ProductForm, ProductFormErrors } from "../../types";
 import "./FormModal.css";
-
-type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
 
 type ProductFormModalProps = {
   title: string;
@@ -27,6 +25,9 @@ export function ProductFormModal({
 }: ProductFormModalProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) return;
+    
     onSubmit();
   }
 
@@ -34,7 +35,7 @@ export function ProductFormModal({
     <div
       className="modal-backdrop"
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && !isSubmitting) {
           onClose();
         }
       }}
@@ -56,6 +57,7 @@ export function ProductFormModal({
             type="button"
             className="modal-close"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Close modal"
           >
             ×

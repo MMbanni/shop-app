@@ -15,9 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Locale;
+
+import static com.mbanni.shop.common.Constants.MIN_NAME_LENGTH;
 
 @Service
 public class AuthService {
@@ -25,12 +26,14 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Clock clock;
 
     // Inject repository, Jwt service and password encoder
-    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, Clock clock) {
         this.userRepository=userRepository;
         this.jwtService=jwtService;
         this.passwordEncoder=passwordEncoder;
+        this.clock=clock;
     }
 
     @Transactional
@@ -38,16 +41,21 @@ public class AuthService {
 
         // Keep letters English for email
         String email = command.email().trim().toLowerCase(Locale.ROOT);
+        String name = command.name().trim();
 
         if(userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_USED);
         }
 
+        if(name.length() < MIN_NAME_LENGTH) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
+        }
+
         User user = new User();
 
         user.setEmail(email);
-        user.setName(command.name().trim());
-        user.setStatus(UserStatus.INACTIVE);
+        user.setName(name);
+        user.setStatus(UserStatus.ACTIVE);
 
         String hashedPassword = passwordEncoder.encode(command.password());
         user.setPassword(hashedPassword);
@@ -68,21 +76,20 @@ public class AuthService {
         User user = userRepository.findByEmailForUpdate(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
+
         boolean match = passwordEncoder.matches(request.password(), user.getPassword());
         if(!match) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (user.getStatus() == UserStatus.BANNED) {
+        user.checkSuspensionOrActivate(clock.instant());
+
+        if (user.getStatus() == UserStatus.BANNED || user.getStatus() == UserStatus.INACTIVE) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
-            if(user.getSuspendedUntil().isBefore(Instant.now())){
-                user.activate();
-            } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
-            }
         }
 
         String token = jwtService.createToken(user);
