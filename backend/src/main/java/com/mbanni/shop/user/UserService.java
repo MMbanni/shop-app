@@ -43,7 +43,7 @@ public class UserService {
         UserStatus userStatus;
 
         try {
-            userStatus = UserStatus.valueOf(status.toUpperCase());
+            userStatus = UserStatus.valueOf(status.toUpperCase(Locale.ROOT));
 
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
