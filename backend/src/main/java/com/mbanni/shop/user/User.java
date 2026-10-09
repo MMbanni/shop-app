@@ -128,7 +128,7 @@ public class User {
     }
 
     public void checkSuspensionOrActivate(Instant now){
-        if (suspendedUntil != null && !suspendedUntil.isAfter(now)) {
+        if (hasSuspensionExpired(now)) {
             activate();
         }
     }
@@ -137,5 +137,11 @@ public class User {
         return (status == UserStatus.SUSPENDED
                 && suspendedUntil == null || suspendedUntil.isAfter(now));
 
+    }
+
+    public boolean hasSuspensionExpired(Instant now) {
+        return status == UserStatus.SUSPENDED
+                && suspendedUntil != null
+                && !suspendedUntil.isAfter(now);
     }
 }

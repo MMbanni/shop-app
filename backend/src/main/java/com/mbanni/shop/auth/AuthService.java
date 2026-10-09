@@ -76,21 +76,20 @@ public class AuthService {
         User user = userRepository.findByEmailForUpdate(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
+
         boolean match = passwordEncoder.matches(request.password(), user.getPassword());
         if(!match) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
+
+        user.checkSuspensionOrActivate(clock.instant());
 
         if (user.getStatus() == UserStatus.BANNED || user.getStatus() == UserStatus.INACTIVE) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
         if(user.getStatus() == UserStatus.SUSPENDED) {
-            if(user.getSuspendedUntil().isBefore(clock.instant())){
-                user.activate();
-            } else {
                 throw new BusinessException(ErrorCode.ACCESS_DENIED);
-            }
         }
 
         String token = jwtService.createToken(user);
