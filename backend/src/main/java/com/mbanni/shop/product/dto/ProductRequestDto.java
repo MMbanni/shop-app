@@ -12,6 +12,8 @@ public record ProductRequestDto (
         String name,
         @NotNull
         @Min(value = 0, message = "Min 0")
+        @Min(value = 0, message = "Stock cannot be negative")
+        @Max(value = 9999, message = "Stock cannot exceed 9999")
         Integer stock,
 
         @NotNull
