@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UserStatus, UpdateUserStatusRequest, Order } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, LoginResponse } from "../dto/";
 
 import { getToken } from "./token";

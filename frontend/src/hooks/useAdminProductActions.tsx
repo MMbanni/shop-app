@@ -4,7 +4,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useState } from "react";
 import { AdminProductTab, ProductStatus } from "../types";
 
 type ProductInput = {
