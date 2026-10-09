@@ -2,9 +2,7 @@ package com.mbanni.shop.order;
 
 import com.mbanni.shop.order.dto.OrderResponseDto;
 import com.mbanni.shop.payment.PaymentService;
-import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
