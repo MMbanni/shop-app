@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { ApiErrorResponse, Order, OrderStatus } from "../types";
 import { getErrorMessage, getApiError } from "../lib/ApiError";
+import { BackToCartButton } from "../components/buttons/BackToCartButton";
 
 
 
@@ -68,6 +69,7 @@ export function CheckoutSuccessPage() {
   const paymentConfirmed = orderInfo?.status === "PAID";
   const cancelled = orderInfo?.status === "CANCELLED";
   const expired = orderInfo?.status === "EXPIRED";
+  const superseded = orderInfo?.status === "SUPERSEDED";
   const needsReview = orderInfo?.reviewNeededAt != null;
 
   if (!sessionId) {
@@ -130,11 +132,21 @@ export function CheckoutSuccessPage() {
                       <h1>Order expired</h1>
                       <p>Please try again</p>
                     </>)
+                    : superseded ? (
+                    <>
+                      <h1>Order has been replaced</h1>
+                      <BackToCartButton></BackToCartButton>
+                    </>)
+
+
+                    
                     : (
                       <>
                         <h1>Confirming payment</h1>
                         <p>Please wait...</p>
                       </>)
+
+                      
         }
 
 
