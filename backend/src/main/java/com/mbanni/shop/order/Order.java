@@ -98,7 +98,7 @@ public class Order {
     }
 
     public boolean hasExpired(Instant now) {
-        return expiresAt != null && now.isAfter(expiresAt);
+        return expiresAt != null && !now.isBefore(expiresAt);
     }
 
     public void markPaid(String stripeSessionId, Instant now) {
