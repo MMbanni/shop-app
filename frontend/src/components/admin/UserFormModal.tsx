@@ -44,7 +44,7 @@ export function UserFormModal({
         }
       >
         <header className="modal-header">
-          <h2 id="modal-title">Suspend user</h2>
+          <h2 id="modal-title">Adjust User Suspension</h2>
           <button
             type="button"
             className="modal-close"
@@ -73,7 +73,7 @@ export function UserFormModal({
 
 
           <label>
-            Enter amount of days to suspend
+            Number of days to add or remove
 
             <input
               name="stock"

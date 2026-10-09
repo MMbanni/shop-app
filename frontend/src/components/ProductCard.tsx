@@ -4,7 +4,6 @@ import { money } from "../lib/money";
 import type { Product } from "../types/product";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FloatingMessage } from "../components/messages/FloatingMessage";
 import { useState } from "react";
 import { getApiError } from "../lib/ApiError";
 
@@ -22,24 +21,8 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   const queryClient = useQueryClient();
   const addButtonRef = useRef<HTMLButtonElement>(null)
   
-  const [message, setMessage] = useState<string|null>(null);
-
-  const [messageVisible, setMessageVisible] = useState<boolean>(false);
-
   const isOutOfStock = product.stock < 1;
   const imageUrl = product.imageUrl || "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
-
-
-
-  function showCartMessage() {
-    setMessageVisible(true)
-
-    setTimeout(() => {
-      setMessageVisible(false)
-
-    }, 3000);
-
-  }
 
   const addMutation = useMutation({
     mutationFn: () => api.addToCart(product.id, 1),

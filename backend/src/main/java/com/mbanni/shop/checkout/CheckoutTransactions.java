@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import static com.mbanni.shop.common.Constants.MAX_ORDER_TOTAL;
 
 
 @Service
@@ -68,6 +69,11 @@ public class CheckoutTransactions {
 
         Map<Long, Product> products = lockProducts(cartProductIds(cart));
         Order order = createOrder(user, validateCart(cart, products, null));
+        if (order.getTotal().compareTo(MAX_ORDER_TOTAL) > 0) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION, "Order total exceeds maximum of " + MAX_ORDER_TOTAL + " SEK."
+            );
+        }
 
         return new BeginCheckoutDto(snapshot(order), false, false, true);
     }
