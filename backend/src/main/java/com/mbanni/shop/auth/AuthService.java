@@ -81,7 +81,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (user.getStatus() == UserStatus.BANNED) {
+        if (user.getStatus() == UserStatus.BANNED || user.getStatus() == UserStatus.INACTIVE) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
