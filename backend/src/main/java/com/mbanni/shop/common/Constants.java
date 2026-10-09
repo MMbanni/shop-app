@@ -19,6 +19,9 @@ public class Constants {
     public static final int SCALE = 2;
     public static final String MIN_PRICE_SEK = "4.00";
     public static final String MAX_PRICE_SEK = "999999.99";
+    public static final BigDecimal MAX_ORDER_TOTAL = new BigDecimal("9999999999.99");
+
+
     public static final Duration CREATION_RETRY_LIMIT = Duration.ofMinutes(5);
 
     public static final Duration HIGH_PRIORITY_RECOVERY_TIME = Duration.of(30, SECONDS);
