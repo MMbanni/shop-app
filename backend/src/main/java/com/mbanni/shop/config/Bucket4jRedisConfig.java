@@ -3,7 +3,10 @@ package com.mbanni.shop.config;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.SocketOptions;
+import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
@@ -21,7 +24,16 @@ public class Bucket4jRedisConfig {
     public RedisClient redisClient(
             @Value("${spring.data.redis.url}") String redisUrl
     ) {
-        return RedisClient.create(redisUrl);
+        RedisClient client = RedisClient.create(redisUrl);
+
+        client.setOptions(ClientOptions.builder()
+                .socketOptions(SocketOptions.builder()
+                        .connectTimeout(Duration.ofSeconds(2))
+                        .build())
+                .timeoutOptions(TimeoutOptions.enabled(Duration.ofSeconds(2)))
+                .build());
+
+        return client;
     }
 
     @Bean(destroyMethod = "close")
