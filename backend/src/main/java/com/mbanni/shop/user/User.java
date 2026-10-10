@@ -135,7 +135,7 @@ public class User {
 
     public boolean isSuspendedAt(Instant now) {
         return (status == UserStatus.SUSPENDED
-                && suspendedUntil == null || suspendedUntil.isAfter(now));
+                && (suspendedUntil == null || suspendedUntil.isAfter(now)));
 
     }
 
