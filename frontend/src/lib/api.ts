@@ -1,5 +1,5 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User } from "../types";
-import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse,  LoginResponse} from "../dto/";
+import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
+import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, LoginResponse } from "../dto/";
 
 import { getToken } from "./token";
 import { ApiError } from "./ApiError";
@@ -23,19 +23,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
     headers
   });
-  
+
   // No content
   if (response.status === 204) {
     return undefined as T;
   }
-  
+
   // Fallback
   if (!response.ok) {
     let errorResponse: ApiErrorResponse = {
-    title: "REQUEST_FAILED",
-    detail: `Request failed with status ${response.status}`,
-    status: response.status
-  };
+      title: "REQUEST_FAILED",
+      detail: `Request failed with status ${response.status}`,
+      status: response.status
+    };
 
     try {
       const data = (await response.json()) as ApiErrorResponse;
@@ -46,7 +46,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // fallback if backend did not return JSON.
     }
-        
+
+    const accountBlocked = [
+      "ACCOUNT_BANNED",
+      "ACCOUNT_SUSPENDED",
+      "ACCOUNT_INACTIVE",
+    ].includes(errorResponse.title);
+
+    if (token &&
+      token === getToken() &&
+      (response.status === 401 || 
+        response.status === 403 && accountBlocked
+      )
+    ) {
+      window.dispatchEvent(
+        new Event("auth:forced-logout")
+      );
+    }
+
     throw new ApiError(errorResponse);
   }
 
@@ -85,17 +102,21 @@ export const api = {
     return request<Cart>("/cart");
   },
 
+  orderStatus(sessionId: string) {
+    return request<Order>(`/orders/by-session/${sessionId}`);
+  },
+
   addToCart(productId: number, quantity = 1) {
-    return request<Cart>("/cart", {
+    return request<void>("/cart", {
       method: "POST",
       body: JSON.stringify({ productId, quantity })
     });
   },
 
   updateCartItem(itemId: number, quantity: number) {
-    return request<Cart>(`/cart/items/${itemId}`, {
-      method: "PUT",
-      body: JSON.stringify(quantity)
+    return request<void>(`/cart/items/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify({ quantity })
     });
   },
 
@@ -114,6 +135,13 @@ export const api = {
   cancelCheckout() {
     return request<void>("/payments/checkout/cancel", {
       method: "POST"
+    });
+  },
+
+  confirmPrice(cartItemId: number, agreedPrice: number) {
+    return request<void>(`/cart/items/${cartItemId}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ agreedPrice })
     });
   },
 
@@ -149,8 +177,21 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status })
     });
-  }
+  },
 
-  
+  adminGetUsers(status: AdminUserTab) {
+    if (status === "ALL") return request<User[]>(`/users`);
+    else return request<User[]>(`/users/${status}`);
+  },
+
+  changeUserStatus(updateRequest: UpdateUserStatusRequest) {
+    const { id, status, duration } = updateRequest;
+    return request<void>(`/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, duration })
+    });
+  },
+
+
 };
 

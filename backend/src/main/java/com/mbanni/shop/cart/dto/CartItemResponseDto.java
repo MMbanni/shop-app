@@ -7,7 +7,9 @@ public record CartItemResponseDto(
         Long productId,
         String productName,
         int quantity,
+        BigDecimal priceWhenAdded,
         BigDecimal price,
+        boolean priceChanged,
         BigDecimal lineTotal
 ) {
 }

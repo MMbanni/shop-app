@@ -6,6 +6,9 @@ import com.mbanni.shop.product.Product;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import static com.mbanni.shop.common.Constants.*;
 
 @Entity
 public class CartItem {
@@ -25,17 +28,23 @@ public class CartItem {
     @Column(nullable = false)
     private BigDecimal discount = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = PRICE_PRECISION, scale = SCALE)
+    private BigDecimal priceWhenAdded;
+
     @Column(nullable = false)
     private int quantity;
 
 
-    public CartItem(){}
+    public CartItem(){
+    }
 
     CartItem(Cart cart, Product product, int quantity) {
 
-        this.product = product;
         this.cart = cart;
+        this.product = product;
+        this.priceWhenAdded=(product.getPrice());
         setQuantity(quantity);
+
     }
 
     public Long getId() {
@@ -44,6 +53,9 @@ public class CartItem {
 
     public BigDecimal getDiscount() {
         return this.discount;
+    }
+    public BigDecimal getPriceWhenAdded() {
+        return this.priceWhenAdded;
     }
 
     public Product getProduct() {
@@ -68,21 +80,32 @@ public class CartItem {
         this.discount = discount;
     }
 
+
+    public boolean hasPriceChanged() {
+        return priceWhenAdded.compareTo(product.getPrice()) != 0;
+    }
+
+    public void acceptCurrentPrice() {
+        this.priceWhenAdded = product.getPrice();
+    }
+
     void setQuantity(int value) {
-        if (value < 1 || value > Cart.MAX_QUANTITY) {
+        if (value < 1 || value > CART_MAX_QUANTITY) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
         this.quantity = value;
     }
 
-    public BigDecimal calculateLineTotal() {
-        BigDecimal price = product.getPrice();
-        BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discount);
+    public BigDecimal calculateUnitPrice(){
+        return product.getPrice()
+                .multiply(BigDecimal.ONE.subtract(discount))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
 
-        return price
-                .multiply(discountMultiplier)
-                .multiply(BigDecimal.valueOf(quantity));
+    public BigDecimal calculateLineTotal() {
+
+        return calculateUnitPrice().multiply(BigDecimal.valueOf(quantity));
     }
 
 }

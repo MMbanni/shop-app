@@ -1,6 +1,8 @@
 package com.mbanni.shop.common.exception;
 
 import com.mbanni.shop.checkout.CheckoutValidationException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +45,7 @@ public class GlobalExceptionHandler {
         problem.setTitle("VALIDATION_ERROR");
         problem.setDetail("Invalid request body");
 
+        // Jackson will convert Java list into JSON array
         List<ValidationFieldError> errors = ex.getBindingResult()
                         .getFieldErrors()
                         .stream()
@@ -78,6 +81,37 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrity(
+            DataIntegrityViolationException ex
+    ) {
+        Throwable cause = ex;
+
+        while (cause != null) {
+
+            if (cause instanceof ConstraintViolationException constraintEx) {
+
+                String constraint = constraintEx.getConstraintName();
+
+                if ("uk_product_normalized_name".equals(constraint)) {
+                    return handleBusinessException(
+                            new BusinessException(ErrorCode.PRODUCT_ALREADY_EXISTS)
+                    );
+                }
+
+                if ("uk_user_email".equals(constraint)) {
+                    return handleBusinessException(
+                            new BusinessException(ErrorCode.EMAIL_ALREADY_USED)
+                    );
+                }
+            }
+
+            cause = cause.getCause();
+        }
+
+        throw ex;
+    }
+
     private HttpStatus statusFor(ErrorCode errorCode) {
         return switch (errorCode) {
             case USER_NOT_FOUND,
@@ -86,7 +120,11 @@ public class GlobalExceptionHandler {
                  ORDER_NOT_FOUND-> HttpStatus.NOT_FOUND;
 
             case EMAIL_ALREADY_USED,
-                 PRODUCT_ALREADY_EXISTS-> HttpStatus.CONFLICT;
+                 PRICE_CHANGED,
+                 PRODUCT_ALREADY_EXISTS,
+                 VERSION_MISMATCH,
+                 CHECKOUT_NEEDS_REVIEW,
+                 PROCESSING-> HttpStatus.CONFLICT;
 
             case INVALID_CREDENTIALS -> HttpStatus.UNAUTHORIZED;
 
@@ -95,13 +133,17 @@ public class GlobalExceptionHandler {
                  ACCOUNT_SUSPENDED-> HttpStatus.FORBIDDEN;
 
 
-            case CART_ERROR -> HttpStatus.UNPROCESSABLE_CONTENT;
+            case CART_ERROR,
+                 INSUFFICIENT_STOCK,
+                 PRODUCT_NOT_AVAILABLE-> HttpStatus.UNPROCESSABLE_CONTENT;
 
             case EXCEEDED_QUANTITY_LIMIT,
                  ILLEGAL_OPERATION,
+                 INVALID_QUANTITY,
                  PRODUCT_NOT_IN_CART -> HttpStatus.BAD_REQUEST;
 
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
+
         };
     }
 }

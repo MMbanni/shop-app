@@ -4,22 +4,34 @@ import { money } from "../lib/money";
 import type { Product } from "../types/product";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import { getApiError } from "../lib/ApiError";
+
+import { useRef } from "react";
+
 
 type ProductCardProps = {
   product: Product;
-  onAddSuccess: () => void
+  onAddSuccess: ( button: HTMLButtonElement) => void
 };
 
 export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const addButtonRef = useRef<HTMLButtonElement>(null)
+  
+  const isOutOfStock = product.stock < 1;
+  const imageUrl = product.imageUrl || "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
 
   const addMutation = useMutation({
     mutationFn: () => api.addToCart(product.id, 1),
+
     onSuccess: async () => {
+      if (addButtonRef.current){
+        onAddSuccess(addButtonRef.current)
+      }
       await queryClient.invalidateQueries({ queryKey: ["cart"] });
-      onAddSuccess();
     }
   });
 
@@ -32,29 +44,53 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
     addMutation.mutate();
   }
 
-  const imageUrl = product.imageUrl || "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
+  const stockMessage = isOutOfStock ? "Out of stock"
+    : product.stock > 10
+      ? "In stock"
+      : `Only ${product.stock} left`;
+
+  const addError = addMutation.isError
+    ? getApiError(addMutation.error)?.detail ??
+    "We couldn't add this product to your cart."
+    : null;
 
 
   return (
     <article className="product-card">
-      <img src={imageUrl} alt={product.name} />
+      <img src={imageUrl}
+        alt={product.name}
+      />
+
       <div className="product-body">
-        <p className="eyebrow">{
-          product.stock < 1 ? "Out of stock" :
-          product.stock > 10 ? "In stock" :
-          `Only ${product.stock} left`
-          }
-        </p>
-        
+        <p className="section-label">{stockMessage}</p>
+
         <h3>{product.name}</h3>
+
         <p className="muted">{product.description}</p>
+
         <div className="product-footer">
           <strong>{money(product.price)}</strong>
-          <button className="button" onClick={handleAddToCart} disabled={addMutation.isPending}>
-            {addMutation.isPending ? "Adding..." : "Add to cart"}
+
+          <button
+            ref={addButtonRef}
+            className="button"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock || addMutation.isPending}
+          >
+
+            {isOutOfStock ?
+              "Out of stock" :
+              addMutation.isPending ? "Adding..." :
+                "Add to cart"}
           </button>
         </div>
-        {addMutation.isError && <p className="error">{addMutation.error.message}</p>}
+        
+        <div className="product-error" aria-live="polite">
+          {addError && (
+            <p className="error">{addError}</p>
+          )}
+        </div>
+
       </div>
     </article>
   );

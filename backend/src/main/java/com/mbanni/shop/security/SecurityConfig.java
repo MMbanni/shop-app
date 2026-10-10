@@ -1,7 +1,10 @@
 package com.mbanni.shop.security;
 
+import jakarta.servlet.DispatcherType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,8 +24,17 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    private final SecurityErrorResponseWriter securityErrorResponseWriter;
+    private final String frontendUrl;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          SecurityErrorResponseWriter securityErrorResponseWriter,
+                          @Value("${app.frontend-url}") String frontendUrl
+
+    ) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.securityErrorResponseWriter = securityErrorResponseWriter;
+        this.frontendUrl=frontendUrl;
     }
 
     @Bean
@@ -30,31 +42,41 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Filter chain
-     * Only login and home permitted
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/",
-                        "/products",
-                        "/auth/register",
-                        "/auth/login",
-                        "/payments/webhook").permitAll()
+                http
+                        .cors(Customizer.withDefaults())
+                        .csrf(csrf -> csrf.disable())
+                        .authorizeHttpRequests(auth -> auth
+                                // Do not hide controller/service failures behind a 403
+                                // when Spring performs its secondary /error dispatch.
+                                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
-                        .anyRequest().authenticated()
+                                .requestMatchers("/",
+                                        "/products",
+                                        "/products/{id}",
+                                        "/auth/register",
+                                        "/auth/login").permitAll()
 
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                                .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
+
+                                .anyRequest().authenticated()
+
+                        )
+                        .exceptionHandling(errors -> errors
+                                .authenticationEntryPoint((request, response, exception) ->
+                                        securityErrorResponseWriter.writeUnauthorized(response)
+                                )
+                                .accessDeniedHandler((request, response, exception) ->
+                                        securityErrorResponseWriter.writeAccessDenied(response)
+                                )
+                        )
+                        .sessionManagement(session -> session
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        )
+                        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                        .build();
 
     }
 
@@ -63,8 +85,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173", // Vite / React
-                "http://localhost:3000"  // Create React App
+                frontendUrl
         ));
 
         config.setAllowedMethods(List.of(

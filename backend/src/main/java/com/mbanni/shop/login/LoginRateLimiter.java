@@ -9,6 +9,7 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -21,7 +22,7 @@ public class LoginRateLimiter {
     }
 
     public void checkAllowed(String email, String ipAddress) {
-        String normalizedEmail = email.toLowerCase().trim();
+        String normalizedEmail = email.toLowerCase(Locale.ROOT).trim();
 
         consumeToken(
                 "login:ip:" + ipAddress,

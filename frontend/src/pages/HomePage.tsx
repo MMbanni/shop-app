@@ -4,7 +4,7 @@ export function HomePage() {
   return (
     <main className="hero page-shell">
       <section className="hero-content">
-        <p className="eyebrow">Spring Boot + React portfolio project</p>
+        <p className="section-label">Spring Boot + React portfolio project</p>
         <h1>Shop app</h1>
         <p className="hero-text">
           Products, login, protected cart pages, JWT auth, and Stripe Checkout.

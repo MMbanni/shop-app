@@ -1,6 +1,7 @@
 package com.mbanni.shop.user;
 
 import com.mbanni.shop.user.dto.UpdateUserRequestDto;
+import com.mbanni.shop.user.dto.UpdateUserStatusRequestDto;
 import com.mbanni.shop.user.dto.UserResponseDto;
 import com.mbanni.shop.user.mapper.UserMapper;
 import jakarta.validation.Valid;
@@ -26,7 +27,13 @@ public class UserController {
     // Requires admin role
     @GetMapping
     public List<UserResponseDto> getUsers() {
-        return userService.getAllUsers();
+        return userService.searchUsers("ALL");
+    }
+
+    // Requires admin role
+    @GetMapping("/{status}")
+    public List<UserResponseDto> getUsers(@PathVariable String status) {
+        return userService.searchUsers(status);
     }
 
     @GetMapping("/me")
@@ -44,6 +51,16 @@ public class UserController {
                 userId,
                 userMapper.toCommand(request)
         );
+    }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequestDto request) {
+
+        userService.updateUserStatus(
+                id,
+                userMapper.toCommand(request)
+        );
+        return ResponseEntity.noContent().build();
+
     }
 
     @DeleteMapping("/{userId}")

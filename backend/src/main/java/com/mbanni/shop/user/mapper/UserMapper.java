@@ -4,7 +4,9 @@ import com.mbanni.shop.user.User;
 import com.mbanni.shop.auth.command.RegisterUserCommand;
 import com.mbanni.shop.user.command.UpdateUserCommand;
 import com.mbanni.shop.auth.dto.RegisterUserRequestDto;
+import com.mbanni.shop.user.command.UpdateUserStatusCommand;
 import com.mbanni.shop.user.dto.UpdateUserRequestDto;
+import com.mbanni.shop.user.dto.UpdateUserStatusRequestDto;
 import com.mbanni.shop.user.dto.UserResponseDto;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,9 @@ public class UserMapper {
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                user.getRole()
+                user.getRole(),
+                user.getStatus(),
+                user.getSuspendedUntil()
         );
     }
 
@@ -41,6 +45,12 @@ public class UserMapper {
         return new UpdateUserCommand(
                 request.name(),
                 request.email()
+        );
+    }
+    public UpdateUserStatusCommand toCommand(UpdateUserStatusRequestDto request) {
+        return new UpdateUserStatusCommand(
+                request.status(),
+                request.duration()
         );
     }
 

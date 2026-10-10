@@ -1,8 +1,10 @@
 package com.mbanni.shop.product.dto;
 
 import com.mbanni.shop.product.ProductStatus;
+import jakarta.validation.constraints.NotNull;
 
 public record ProductStatusRequestDto(
-            ProductStatus status
+        @NotNull(message = "Status required")
+        ProductStatus status
 ){}
 

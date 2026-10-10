@@ -29,6 +29,10 @@ public enum ErrorCode {
             "Product not found"
     ),
 
+    PRODUCT_NOT_AVAILABLE(
+            "Product currently unavailable"
+    ),
+
     PRODUCT_ALREADY_EXISTS(
             "Product already exists"
     ),
@@ -37,23 +41,38 @@ public enum ErrorCode {
             "Product is not in cart"
     ),
 
+    VERSION_MISMATCH(
+            "Request does not match expected version"
+    ),
+
     CART_ERROR(
-            "Some items in your cart need attention before checkout"
+            "One or more items in your cart need attention"
     ),
 
     CART_ITEM_NOT_FOUND(
-            "Product not found"
+            "Cart item not found"
+    ),
+
+    INVALID_QUANTITY(
+            "Quantity must be at least 1"
     ),
 
     ILLEGAL_OPERATION(
+            "Operation not allowed"
 
     ),
 
     EXCEEDED_QUANTITY_LIMIT(
-            "Maximum quantity is 999"
+            "Maximum cart capacity exceeded"
     ),
 
+    INSUFFICIENT_STOCK(
+            "There is not enough stock available"
+    ),
 
+    PRICE_CHANGED(
+            "The price for this item has changed"
+    ),
 
     ORDER_NOT_FOUND(
             "Order not found"
@@ -61,6 +80,13 @@ public enum ErrorCode {
 
     TOO_MANY_ATTEMPTS(
             "Too many attempts"
+    ),
+    CHECKOUT_NEEDS_REVIEW(
+            "Checkout could not be confirmed. Please contact support."
+    ),
+
+    PROCESSING (
+            "You have a pending order being processed. Please wait..."
     );
 
     private String defaultMessage;
@@ -73,9 +99,5 @@ public enum ErrorCode {
 
     public String getDefaultMessage() {
         return defaultMessage;
-    }
-
-    public void setDefaultMessage(String defaultMessage) {
-        this.defaultMessage = defaultMessage;
     }
 }

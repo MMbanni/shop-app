@@ -2,24 +2,27 @@ package com.mbanni.shop.product;
 
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.order.OrderRepository;
+import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.command.CreateProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
-import com.mbanni.shop.product.dto.ProductRequestDto;
-import com.mbanni.shop.product.dto.ProductResponseDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, OrderRepository orderRepository) {
         this.productRepository = productRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Transactional
@@ -28,17 +31,10 @@ public class ProductService {
 
         String name = Product.validateName(request.name());
 
-        Optional<Product> existingProduct = productRepository.findByNameIgnoreCase(name);
+        Optional<Product> existingProduct = productRepository.findByNormalizedNameIgnoreCase(Product.normalizeName(name));
         if(existingProduct.isPresent()){
-            if(existingProduct.get().getProductStatus()==ProductStatus.ACTIVE){
-                throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS, "name");
-            } else {
-                Product product = existingProduct.get();
-                product.activate();
-                return product;
-
-            }
-
+            throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name",
+                    "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
         }
 
         Product product = new Product(name, request.price(), request.description());
@@ -50,9 +46,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Product getProduct(Long Id) {
-
-        return productRepository.findById(Id)
+    public Product getProduct(Long id) {
+        return productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
                 .orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
@@ -74,21 +69,29 @@ public class ProductService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public Product updateProduct(Long Id, UpdateProductCommand request) {
+    public Product updateProduct(Long id, UpdateProductCommand request) {
 
-        Product product = productRepository.findById(Id).
+        Product product = productRepository.findByIdForUpdate(id).
                 orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        if (!Objects.equals(request.expectedVersion(), product.getVersion())) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "This product changed while you were editing it. Reload and try again."
+            );
+        }
 
 
         if(request.name()!= null) {
             String name = Product.validateName(request.name());
 
-            if(!product.getName().equalsIgnoreCase(name)
+            if(!product.getNormalizedName().equalsIgnoreCase(name)
                     && productRepository.existsByNameIgnoreCase(name)) {
                 throw BusinessException.forField(ErrorCode.PRODUCT_ALREADY_EXISTS,"name");
             }
 
             product.setName(name);
+            product.setNormalizedName(Product.normalizeName(name));
         }
 
         if(request.price()!= null) {
@@ -99,21 +102,34 @@ public class ProductService {
             product.setStock(request.stock());
         }
 
-
+        if(request.description()!= null) {
+            product.setDescription(request.description());
+        }
 
         return product;
     }
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteProduct(Long Id) {
-        productRepository.deleteById(Id);
+    public void deleteProduct(Long id) {
+        Product product = productRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        if (orderRepository.existsByStatusAndProductId(OrderStatus.PENDING, id)) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "This product is reserved by a pending checkout. Archive it instead of deleting it.");
+        }
+        if(productRepository.existsInAnyCart(id)) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "This product exists in a user's cart. Please archive instead of deleting.");
+        }
+        productRepository.delete(product);
     }
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void changeProductStatus(Long productId, ProductStatus status) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         if (status == ProductStatus.ACTIVE) {

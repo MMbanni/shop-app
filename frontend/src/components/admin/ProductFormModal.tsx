@@ -1,8 +1,6 @@
 import type { ChangeEvent } from "react";
-import type { ProductForm } from "../../types/product";
-import "./ProductFormModal.css";
-
-type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
+import type { ProductForm, ProductFormErrors } from "../../types";
+import "./FormModal.css";
 
 type ProductFormModalProps = {
   title: string;
@@ -27,6 +25,9 @@ export function ProductFormModal({
 }: ProductFormModalProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) return;
+    
     onSubmit();
   }
 
@@ -34,28 +35,29 @@ export function ProductFormModal({
     <div
       className="modal-backdrop"
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && !isSubmitting) {
           onClose();
         }
       }}
     >
 
       <aside
-        className="product-modal"
+        className="modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="product-modal-title"
+        aria-labelledby="modal-title"
         aria-describedby={
-          submitError ? "product-modal-submit-error" : undefined
+          submitError ? "modal-submit-error" : undefined
         }
       >
-        <header className="product-modal-header">
-          <h2 id="product-modal-title">{title}</h2>
+        <header className="modal-header">
+          <h2 id="modal-title">{title}</h2>
 
           <button
             type="button"
             className="modal-close"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Close modal"
           >
             ×
@@ -63,14 +65,14 @@ export function ProductFormModal({
         </header>
 
         <form
-          className="product-modal-form"
+          className="modal-form"
           onSubmit={handleSubmit}
           noValidate>
           
           {submitError && (
             <div
-              id="product-modal-submit-error"
-              className="product-modal-error"
+              id="modal-submit-error"
+              className="modal-error"
               role="alert"
             >
               {submitError}
@@ -88,13 +90,13 @@ export function ProductFormModal({
               disabled={isSubmitting}
               aria-invalid={Boolean(errors.name)}
               aria-describedby={
-                errors.name ? "product-name-error" : undefined
+                errors.name ? "name-error" : undefined
               }
             />
 
             {errors.name && (
               <span 
-              id="product-name-error"
+              id="name-error"
               className="field-error"
               role="alert"
               >
@@ -116,13 +118,13 @@ export function ProductFormModal({
               disabled={isSubmitting}
               aria-invalid={Boolean(errors.price)}
               aria-describedby={
-                errors.price ? "product-price-error" : undefined
+                errors.price ? "price-error" : undefined
               }
             />
 
             {errors.price && (
               <span
-                id="product-price-error"
+                id="price-error"
                 className="field-error"
                 role="alert"
               >
@@ -144,13 +146,13 @@ export function ProductFormModal({
               disabled={isSubmitting}
               aria-invalid={Boolean(errors.stock)}
               aria-describedby={
-                errors.stock ? "product-stock-error" : undefined
+                errors.stock ? "stock-error" : undefined
               }
             />
 
             {errors.stock && (
               <span
-                id="product-stock-error"
+                id="stock-error"
                 className="field-error"
                 role="alert"
               >
@@ -159,7 +161,7 @@ export function ProductFormModal({
             )}
           </label>
 
-          <footer className="product-modal-actions">
+          <footer className="modal-actions">
             <button
               type="button"
               className="button ghost"

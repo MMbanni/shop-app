@@ -4,6 +4,7 @@ import java.util.Date;
 
 public enum UserStatus {
     ACTIVE,
+    INACTIVE,
     SUSPENDED,
     BANNED
 }

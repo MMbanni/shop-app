@@ -5,11 +5,13 @@ export type ValidationFieldError = {
 };
 
 export type CartItemProblem = {
-  cartItemId: number;
+  code: string;
+  cartItemId: number | null;
   productId?: number;
-  stock?: number;
+  stock?: number | null;
   title?: string;
   detail?: string;
+  priceChanged?:boolean
 };
 
 export type ApiErrorResponse = {

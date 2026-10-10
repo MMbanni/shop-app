@@ -6,10 +6,13 @@ import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.user.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static com.mbanni.shop.common.Constants.*;
 
 @Entity
 @Table(name = "shop_order")
@@ -29,32 +32,62 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = ORDER_TOTAL_PRECISION, scale = SCALE)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(unique = true)
     private String stripeSessionId;
 
-    @Column(length = 2048)
+    @Column(length = URL_MAX_LENGTH)
     private String checkoutUrl;
 
     @Column(nullable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(nullable = false)
     private Instant expiresAt;
 
+    private Instant nextRecoveryCheckAt;
+
+    private Instant recoveryLeaseUntil;
+
     private Instant paidAt;
+
+    @Column(length = URL_MAX_LENGTH)
+    private String checkoutSuccessUrl;
+
+    @Column(length = URL_MAX_LENGTH)
+    private String checkoutCancelUrl;
+
+    private Instant reviewNeededAt;
+
+    @Column(length = 500)
+    private String reviewReason;
+
+    private Instant reviewResolvedAt;
+
+    @Column(length = MAX_NAME_LENGTH)
+    private Long reviewedBy;
+
+    @Column(length = 1000)
+    private String reviewResolution;
 
     protected Order() {
     }
 
-    public Order(User user, Instant expiresAt) {
+    public Order(User user, Instant createdAt,Instant expiresAt) {
         this.user = user;
+        this.createdAt=createdAt;
         this.expiresAt = expiresAt;
+        this.nextRecoveryCheckAt = createdAt;
+        this.recoveryLeaseUntil = createdAt;
     }
 
     public void addItem(OrderItem item) {
+        if (!isPending()) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION,
+                    "Items can only be added to pending orders");
+        }
         item.setOrder(this);
         items.add(item);
         total = total.add(item.getLineTotal());
@@ -65,17 +98,17 @@ public class Order {
     }
 
     public boolean hasExpired(Instant now) {
-        return expiresAt != null && now.isAfter(expiresAt);
+        return expiresAt != null && !now.isBefore(expiresAt);
     }
 
-    public void markPaid(String stripeSessionId) {
+    public void markPaid(String stripeSessionId, Instant now) {
         if (status != OrderStatus.PENDING) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
         }
 
         this.status = OrderStatus.PAID;
         this.stripeSessionId = stripeSessionId;
-        this.paidAt = Instant.now();
+        this.paidAt = now;
     }
 
     public void markExpired() {
@@ -96,6 +129,16 @@ public class Order {
         }
 
         status = OrderStatus.CANCELLED;
+    }
+
+    public void markSuperseded() {
+        if (status != OrderStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Only pending orders can be superseded"
+            );
+        }
+
+        status = OrderStatus.SUPERSEDED;
     }
 
     public Long getId() {
@@ -124,6 +167,37 @@ public class Order {
 
     public String getCheckoutUrl() {return checkoutUrl; }
 
+    public Instant getCreatedAt() { return createdAt; }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public Instant getNextRecoveryCheckAt() {
+        return nextRecoveryCheckAt;
+    }
+    public Instant getRecoveryLeaseUntil() {
+        return recoveryLeaseUntil;
+    }
+
+    public Instant getPaidAt() {
+        return paidAt;
+    }
+
+    public String getCheckoutSuccessUrl() { return checkoutSuccessUrl; }
+
+    public String getCheckoutCancelUrl() { return checkoutCancelUrl; }
+
+    public Instant getReviewNeededAt() { return reviewNeededAt; }
+
+    public String getReviewReason() { return reviewReason; }
+
+    public Instant getReviewResolvedAt() { return reviewResolvedAt; }
+
+    public Long getReviewedBy() { return reviewedBy; }
+
+    public String getReviewResolution() { return reviewResolution; }
+
     public void setStripeSessionId(String stripeSessionId) {
         this.stripeSessionId = stripeSessionId;
     }
@@ -132,15 +206,31 @@ public class Order {
 
     public void setStatus(OrderStatus orderStatus){ this.status = orderStatus;}
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public void setNextRecoveryCheckAt(Instant time){ nextRecoveryCheckAt = time;}
+
+    public void setRecoveryLeaseUntil(Instant time){ recoveryLeaseUntil = time;}
+
+    public void configureCheckout(String successUrl, String cancelUrl) {
+        if (checkoutSuccessUrl != null || checkoutCancelUrl != null) {
+            throw new IllegalStateException("Checkout request settings are immutable");
+        }
+        checkoutSuccessUrl = successUrl;
+        checkoutCancelUrl = cancelUrl;
     }
 
-    public Instant getExpiresAt() {
-        return expiresAt;
+    public void requireReview(Instant now, String reason) {
+        if (reviewNeededAt == null) reviewNeededAt = now;
+        reviewReason = reason;
     }
 
-    public Instant getPaidAt() {
-        return paidAt;
+    public void clearReview() {
+        reviewNeededAt = null;
+        reviewReason = null;
+    }
+
+    public void recordReviewResolution(Long adminId, Instant now, String resolution) {
+        reviewedBy = adminId;
+        reviewResolvedAt = now;
+        reviewResolution = resolution;
     }
 }

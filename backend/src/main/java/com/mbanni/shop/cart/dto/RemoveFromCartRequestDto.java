@@ -5,10 +5,12 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import static com.mbanni.shop.common.Constants.CART_MAX_QUANTITY;
+
 public record RemoveFromCartRequestDto(
         @NotNull
         Long cartItemId,
 
-        @Min(1) @Max(Cart.MAX_QUANTITY)
+        @Min(1) @Max(CART_MAX_QUANTITY)
         int quantity
 ) {}

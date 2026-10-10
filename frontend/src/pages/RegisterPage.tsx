@@ -1,6 +1,8 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getApiError, getFieldErrors, getFormErrorMessage } from "../lib/ApiError";
+import { api } from "../lib/api";
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -17,10 +19,18 @@ export function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await register(name, email, password);
-      navigate("/products");
+      const loggedIn = await register(name, email, password);
+
+      if (loggedIn) {
+        navigate("/products");
+      }
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Registration failed");
+      const apiError = getApiError(caughtError);
+      const fieldErrors = apiError?.errors;
+
+      setError(apiError ?
+        fieldErrors ? fieldErrors[0].message : apiError?.detail
+        : "Registration failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -29,7 +39,7 @@ export function RegisterPage() {
   return (
     <main className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <p className="eyebrow">New customer</p>
+        <p className="section-label">New customer</p>
         <h1>Create account</h1>
 
         <label>
@@ -44,7 +54,7 @@ export function RegisterPage() {
 
         <label>
           Password
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} />
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} maxLength={72} />
         </label>
 
         {error && <p className="error">{error}</p>}

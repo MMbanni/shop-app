@@ -5,5 +5,7 @@ import java.math.BigDecimal;
 public record UpdateProductCommand(
         String name,
         Integer stock,
-        BigDecimal price
+        BigDecimal price,
+        String description,
+        Long expectedVersion
 ) {}

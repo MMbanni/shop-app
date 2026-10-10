@@ -1,8 +1,45 @@
 import { money } from "../lib/money";
 import { useCart } from "../hooks/useCart";
-import { ApiErrorResponse } from "../types";
-import { getApiError } from "../lib/ApiError";
+import { CartItemProblem } from "../types";
+import { getCartItemProblems, getErrorMessage } from "../lib/ApiError";
+import { Confirm } from "../components/messages/Confirm";
 
+function problemPriority(problem: CartItemProblem): number {
+  switch (problem.code) {
+    case "PRODUCT_NOT_AVAILABLE":
+      return 3;
+    case "INSUFFICIENT_STOCK":
+      return 2;
+    case "PRICE_CHANGED":
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+// { CartItem ID: Problem }
+function mapProblemsByCartItemId(
+  problems: CartItemProblem[],
+): Map<number, CartItemProblem> {
+  const result = new Map<number, CartItemProblem>();
+
+  for (const problem of problems) {
+    const id = problem.cartItemId;
+
+    if (typeof id !== "number") continue;
+
+    const existing = result.get(id);
+
+    if (
+      !existing ||
+      problemPriority(problem) > problemPriority(existing)
+    ) {
+      result.set(id, problem);
+    }
+  }
+
+  return result;
+}
 
 export function CartPage() {
   const {
@@ -10,7 +47,15 @@ export function CartPage() {
     updateMutation,
     removeMutation,
     checkoutMutation,
+    confirmPrice,
+    checkoutProblems
   } = useCart();
+
+  const isCartBusy =
+    updateMutation.isPending ||
+    removeMutation.isPending ||
+    checkoutMutation.isPending ||
+    confirmPrice.isPending;
 
   if (cartQuery.isLoading) {
     return <p className="page-message">Loading cart...</p>;
@@ -26,11 +71,11 @@ export function CartPage() {
 
   function getProductErrorMessage(
     productName: string,
-    error: ApiErrorResponse,
+    error: CartItemProblem,
   ) {
     const availableStock = error.stock;
 
-    if (error.title === "CART_ERROR") {
+    if (error.code === "INSUFFICIENT_STOCK") {
       if (availableStock === 0) {
         return (
           <>
@@ -61,54 +106,51 @@ export function CartPage() {
     (a, b) => a.cartItemId - b.cartItemId,
   );
 
-  const updateError = getApiError(updateMutation.error);
-  const removeError = getApiError(removeMutation.error);
+  const updateItemErrors = getCartItemProblems(updateMutation.error);
+  const removeItemErrors = getCartItemProblems(removeMutation.error);
+  const checkoutItemErrors = checkoutProblems;
 
-  const checkoutError = getApiError(
-    checkoutMutation.error,
-  )
+  const updateErrorsByItemId =
+    mapProblemsByCartItemId(updateItemErrors);
 
-  /*
-   * Only use checkout item errors when checkout is currently
-   * in an error state. This prevents old checkout errors from
-   * appearing after the cart changes.
-   */
-  const checkoutItemErrors =
-    checkoutMutation.isError
-      ? checkoutError?.itemErrors ??
-        (checkoutError?.cartItemId !== undefined
-          ? [checkoutError]
-          : [])
-      : [];
+  const removeErrorsByItemId =
+    mapProblemsByCartItemId(removeItemErrors);
 
-  const checkoutErrorsByItemId = new Map<
-    number,
-    ApiErrorResponse
-  >();
-
-  for (const error of checkoutItemErrors) {
-    if (error.cartItemId !== undefined) {
-      checkoutErrorsByItemId.set(
-        error.cartItemId,
-        error,
-      );
-    }
-  }
+  const checkoutErrorsByItemId =
+    mapProblemsByCartItemId(checkoutItemErrors);
 
   const hasCheckoutItemErrors =
     checkoutErrorsByItemId.size > 0;
+
+  /*
+* An update/remove error that cannot be connected
+* to a particular cart item.
+*/
+
+  const getGeneralActionError = () => {
+    if (updateMutation.isError && updateItemErrors.length === 0) {
+      return updateMutation.error.message;
+    }
+
+    if (removeMutation.isError && removeItemErrors.length === 0) {
+      return removeMutation.error.message;
+    }
+
+    return null;
+  };
+
+  const generalActionError = getGeneralActionError();
 
   function updateQuantity(
     itemId: number,
     quantity: number,
   ) {
-    /*
-     * The cart is changing, so previous checkout and remove
-     * errors are no longer relevant.
-     */
+    if (isCartBusy) {
+      return;
+    }
     checkoutMutation.reset();
     removeMutation.reset();
-    updateMutation.reset();
+    confirmPrice.reset();
 
     updateMutation.mutate({
       itemId,
@@ -117,24 +159,26 @@ export function CartPage() {
   }
 
   function removeItem(itemId: number) {
-    /*
-     * Clear errors from previous actions before removing.
-     */
+    if (isCartBusy) {
+      return;
+    }
+
+    // Clear errors from previous actions before removing.    
     checkoutMutation.reset();
     updateMutation.reset();
-    removeMutation.reset();
+    confirmPrice.reset();
 
     removeMutation.mutate(itemId);
   }
 
   function checkout() {
-    /*
-     * Update/remove errors should not remain visible when
-     * the user tries checkout again.
-     */
+
+    if (isCartBusy) {
+      return;
+    }
     updateMutation.reset();
     removeMutation.reset();
-    checkoutMutation.reset();
+    confirmPrice.reset();
 
     checkoutMutation.mutate();
   }
@@ -142,9 +186,24 @@ export function CartPage() {
   return (
     <main className="page-shell narrow">
       <div className="page-heading">
-        <p className="eyebrow">Cart</p>
+        {/*<p className="section-label">Cart</p>*/}
         <h1>Your cart</h1>
       </div>
+
+      {generalActionError && (
+        <p
+          className="page-message error"
+          role="alert"
+        >
+          {generalActionError}
+        </p>
+      )}
+
+      {confirmPrice.isError && (
+        <p className="page-message error" role="alert">
+          {getErrorMessage(confirmPrice.error)}
+        </p>
+      )}
 
       {isEmpty ? (
         <div className="empty-state">
@@ -158,21 +217,20 @@ export function CartPage() {
           <div className="cart-list">
             {sortedItems.map((item) => {
               const updateErrorForItem =
-                updateMutation.isError &&
-                updateError?.cartItemId === item.cartItemId
-                  ? updateError
-                  : null;
+                updateErrorsByItemId.get(
+                  item.cartItemId,
+                ) ?? null;
 
               const removeErrorForItem =
-                removeMutation.isError &&
-                removeError?.cartItemId === item.cartItemId
-                  ? removeError
-                  : null;
+                removeErrorsByItemId.get(
+                  item.cartItemId,
+                ) ?? null;
 
               const checkoutErrorForItem =
                 checkoutErrorsByItemId.get(
                   item.cartItemId,
                 ) ?? null;
+
 
               const itemError =
                 updateErrorForItem ??
@@ -182,12 +240,12 @@ export function CartPage() {
               const isUpdatingThisItem =
                 updateMutation.isPending &&
                 updateMutation.variables?.itemId ===
-                  item.cartItemId;
+                item.cartItemId;
 
               const isRemovingThisItem =
                 removeMutation.isPending &&
                 removeMutation.variables ===
-                  item.cartItemId;
+                item.cartItemId;
 
               return (
                 <article
@@ -202,22 +260,36 @@ export function CartPage() {
                     </p>
 
                     {itemError && (
-                      <p className="error" role="alert">
-                        {getProductErrorMessage(
-                          item.productName,
-                          itemError,
-                        )}
-                      </p>
-                    )}
+                      itemError.code === "PRICE_CHANGED" ? (
+
+                        <Confirm
+                          message={`The price of this item has changed from ${money(item.priceWhenAdded)} to ${money(item.price)}. Would you like to proceed with the current price?`}
+                          onConfirm={() => confirmPrice.mutate({ cartItemId: item.cartItemId, agreedPrice: item.price })}
+                          isPending={
+                            confirmPrice.isPending &&
+                            confirmPrice.variables?.cartItemId === item.cartItemId
+                          }
+                          disabled={isCartBusy} >
+
+
+                        </Confirm>
+                      ) : (
+
+                        <p className="error" role="alert">
+                          {getProductErrorMessage(
+                            item.productName,
+                            itemError,
+                          )}
+                        </p>
+                      )
+                    )
+                    }
                   </div>
 
                   <div className="quantity-controls">
                     <button
                       className="round-button"
-                      disabled={
-                        isUpdatingThisItem ||
-                        isRemovingThisItem
-                      }
+                      disabled={isCartBusy}
                       onClick={() =>
                         updateQuantity(
                           item.cartItemId,
@@ -232,10 +304,7 @@ export function CartPage() {
 
                     <button
                       className="round-button"
-                      disabled={
-                        isUpdatingThisItem ||
-                        isRemovingThisItem
-                      }
+                      disabled={isCartBusy}
                       onClick={() =>
                         updateQuantity(
                           item.cartItemId,
@@ -253,10 +322,7 @@ export function CartPage() {
 
                   <button
                     className="button danger"
-                    disabled={
-                      removeMutation.isPending ||
-                      isUpdatingThisItem
-                    }
+                    disabled={isCartBusy}
                     onClick={() =>
                       removeItem(item.cartItemId)
                     }
@@ -267,7 +333,10 @@ export function CartPage() {
                   </button>
                 </article>
               );
-            })}
+            }
+            )
+
+            }
           </div>
 
           <aside className="summary-card">
@@ -281,25 +350,22 @@ export function CartPage() {
             <button
               className="button large full"
               onClick={checkout}
-              disabled={
-                checkoutMutation.isPending ||
-                updateMutation.isPending ||
-                removeMutation.isPending
-              }
+              disabled={isCartBusy}
             >
               {checkoutMutation.isPending
                 ? "Opening Stripe..."
                 : "Pay with Stripe"}
             </button>
 
-            {checkoutMutation.isError && (
+            {hasCheckoutItemErrors ? (
               <p className="error" role="alert">
-                {hasCheckoutItemErrors
-                  ? "Please update the highlighted items before checkout."
-                  : checkoutError?.detail ??
-                    checkoutMutation.error.message}
+                Please update the highlighted items before checkout.
               </p>
-            )}
+            ) : checkoutMutation.isError ? (
+              <p className="error" role="alert">
+                {getErrorMessage(checkoutMutation.error)}
+              </p>
+            ) : null}
           </aside>
         </section>
       )}

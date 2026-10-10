@@ -12,11 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.mbanni.shop.common.Constants.CART_MAX_QUANTITY;
+
 @Entity
 public class Cart {
-
-    public static final int MAX_QUANTITY = 999;
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +49,7 @@ public class Cart {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        if(quantity>MAX_QUANTITY) {
+        if(quantity>CART_MAX_QUANTITY) {
             throw new BusinessException(ErrorCode.EXCEEDED_QUANTITY_LIMIT);
         }
 
@@ -61,7 +60,7 @@ public class Cart {
         CartItem existingItem = findItemByProductId(product.getId());
 
         if(existingItem != null) {
-            if(existingItem.getQuantity() + quantity>MAX_QUANTITY) {
+            if(existingItem.getQuantity() + quantity>CART_MAX_QUANTITY) {
                 throw new BusinessException(ErrorCode.EXCEEDED_QUANTITY_LIMIT);
             }
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
@@ -94,6 +93,29 @@ public class Cart {
         }
     }
 
+    // Payment webhook cleanup
+    public void removePurchasedQuantity(Long cartItemId, int purchasedQuantity) {
+        if (cartItemId == null || purchasedQuantity < 1) {
+            return;
+        }
+        CartItem foundItem = findItemById(cartItemId);
+
+        // The customer already removed item.
+        if (foundItem == null) {
+            return;
+        }
+
+        int remainingQuantity =
+                foundItem.getQuantity() - purchasedQuantity;
+
+        if (remainingQuantity <= 0) {
+            items.remove(foundItem);
+            foundItem.detachFromCart();
+        } else {
+            foundItem.setQuantity(remainingQuantity);
+        }
+    }
+
     public void removeAll(Long cartItemId) {
 
         CartItem foundItem = findItemById(cartItemId);
@@ -101,7 +123,16 @@ public class Cart {
         if(foundItem == null) throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
 
         items.remove(foundItem);
+        foundItem.detachFromCart();
 
+    }
+
+    // Deprecated
+    public void clearItems() {
+        for(CartItem item: items) {
+            item.detachFromCart();
+        }
+        items.clear();
     }
 
     public BigDecimal calculateTotal() {
@@ -122,7 +153,6 @@ public class Cart {
                 return item;
             }
         }
-
         return null;
     }
 

@@ -107,11 +107,19 @@ export function getFormErrorMessage(
 function isCartItemProblem(
   value: unknown
 ): value is CartItemProblem {
+
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+
+  const problem = value as Record<string, unknown>;
+  const hasCartItemId = typeof problem.cartItemId === "number";
+  const hasProductId = typeof problem.productId === "number";
+
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "cartItemId" in value &&
-    typeof value.cartItemId === "number"
+    typeof problem.code === "string" &&
+    typeof problem.detail === "string" &&
+    (hasCartItemId || hasProductId)
   );
 }
 
