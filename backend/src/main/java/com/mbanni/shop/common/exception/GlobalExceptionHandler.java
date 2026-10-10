@@ -112,6 +112,24 @@ public class GlobalExceptionHandler {
         throw ex;
     }
 
+    @ExceptionHandler(RateLimiterUnavailableException.class)
+    public ResponseEntity<ProblemDetail> handleRateLimiterUnavailable(
+            RateLimiterUnavailableException ex
+    ) {
+        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+
+        ProblemDetail problem = ProblemDetail.forStatus(status);
+
+        problem.setTitle("RATE_LIMITER_UNAVAILABLE");
+        problem.setDetail(
+                "Login is temporarily unavailable. Please try again later."
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(problem);
+    }
+
     private HttpStatus statusFor(ErrorCode errorCode) {
         return switch (errorCode) {
             case USER_NOT_FOUND,
