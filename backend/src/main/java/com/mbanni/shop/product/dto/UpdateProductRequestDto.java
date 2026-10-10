@@ -10,7 +10,8 @@ public record UpdateProductRequestDto(
         @Size(max = MAX_NAME_LENGTH)
         String name,
 
-        @Min(0)
+        @Min(value = 0, message = "Stock cannot be negative")
+        @Max(value = MAX_STOCK, message = "Stock cannot exceed 9999")
         Integer stock,
 
 
