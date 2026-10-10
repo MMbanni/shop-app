@@ -14,7 +14,7 @@ public record UpdateProductRequestDto(
         Integer stock,
 
 
-        @Digits(integer = PRECISION-SCALE, fraction = SCALE)
+        @Digits(integer = PRICE_PRECISION-SCALE, fraction = SCALE)
         @DecimalMin(value = MIN_PRICE_SEK, message = "Min 4")
         @DecimalMax(value = MAX_PRICE_SEK, message = "Max 999999.99")
         BigDecimal price,
