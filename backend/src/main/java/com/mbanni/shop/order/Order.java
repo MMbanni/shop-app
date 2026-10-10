@@ -66,7 +66,6 @@ public class Order {
 
     private Instant reviewResolvedAt;
 
-    @Column(length = MAX_NAME_LENGTH)
     private Long reviewedBy;
 
     @Column(length = 1000)
