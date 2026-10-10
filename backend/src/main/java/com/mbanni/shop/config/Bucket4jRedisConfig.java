@@ -19,10 +19,9 @@ public class Bucket4jRedisConfig {
 
     @Bean(destroyMethod = "shutdown")
     public RedisClient redisClient(
-            @Value("${spring.data.redis.host}") String host,
-            @Value("${spring.data.redis.port}") int port
+            @Value("${spring.data.redis.url}") String redisUrl
     ) {
-        return RedisClient.create("redis://" + host + ":" + port);
+        return RedisClient.create(redisUrl);
     }
 
     @Bean(destroyMethod = "close")
