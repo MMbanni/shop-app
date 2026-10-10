@@ -34,14 +34,14 @@ public class Product {
     @Column(nullable = false)
     private int stock = 0;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = PRICE_PRECISION, scale = SCALE)
     private BigDecimal price;
 
     @ManyToOne
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = PRICE_PRECISION, scale = SCALE)
     private BigDecimal cost = BigDecimal.valueOf(0);
 
     @Column(nullable = false)
