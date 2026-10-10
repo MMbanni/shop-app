@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -68,7 +69,17 @@ public class CheckoutTransactions {
         checkForCheckoutAbuse(userId, 0);
 
         Map<Long, Product> products = lockProducts(cartProductIds(cart));
-        Order order = createOrder(user, validateCart(cart, products, null));
+        var reservations = validateCart(cart, products, null);
+        BigDecimal total = reservations.stream()
+                .map(r -> r.unitPrice().multiply(BigDecimal.valueOf(r.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (total.compareTo(MAX_ORDER_TOTAL) > 0) {
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order total is too large.");
+        }
+
+        Order order = createOrder(user, reservations);
+
         if (order.getTotal().compareTo(MAX_ORDER_TOTAL) > 0) {
             throw new BusinessException(
                     ErrorCode.ILLEGAL_OPERATION, "Order total exceeds maximum of " + MAX_ORDER_TOTAL + " SEK."
