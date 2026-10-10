@@ -2,10 +2,13 @@ package com.mbanni.shop.login;
 
 import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
+import com.mbanni.shop.common.exception.RateLimiterUnavailableException;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -16,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class LoginRateLimiter {
 
     private final ProxyManager<String> proxyManager;
+    private static final Logger log = LoggerFactory.getLogger(LoginRateLimiter.class);
 
     public LoginRateLimiter(ProxyManager<String> proxyManager) {
         this.proxyManager = proxyManager;
@@ -50,25 +54,19 @@ public class LoginRateLimiter {
                         .refillGreedy(capacity, refillPeriod))
                 .build();
 
-        Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+        try {
 
-        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+            Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 
-        long secondsToWait = TimeUnit.NANOSECONDS.toSeconds(
-                probe.getNanosToWaitForRefill()
-        );
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
-        System.out.println("=================================");
-        System.out.println("Bucket key: " + key);
-        System.out.println("Allowed: " + probe.isConsumed());
-        System.out.println("Remaining tokens: " + probe.getRemainingTokens());
-        System.out.println("Seconds to wait: " + secondsToWait);
-        System.out.println("Capacity: " + capacity);
-        System.out.println("Refill period: " + refillPeriod);
-        System.out.println("=================================");
+            if (!probe.isConsumed()) {
+                throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
+            }
 
-        if (!probe.isConsumed()) {
-            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS);
+        } catch (io.lettuce.core.RedisException e) {
+            log.error("Redis rate limiter unavailable", e);
+            throw new RateLimiterUnavailableException(e);
         }
     }
 }
