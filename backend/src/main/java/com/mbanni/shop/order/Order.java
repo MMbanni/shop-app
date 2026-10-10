@@ -32,7 +32,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = ORDER_TOTAL_PRECISION, scale = SCALE)
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(unique = true)

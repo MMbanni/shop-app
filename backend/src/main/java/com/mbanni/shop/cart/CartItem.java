@@ -28,10 +28,10 @@ public class CartItem {
     @Column(nullable = false)
     private BigDecimal discount = BigDecimal.ZERO;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = PRICE_PRECISION, scale = SCALE)
     private BigDecimal priceWhenAdded;
 
-    @Column(nullable = false, precision = PRECISION)
+    @Column(nullable = false)
     private int quantity;
 
 

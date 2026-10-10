@@ -5,8 +5,7 @@ import com.mbanni.shop.common.exception.ErrorCode;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-import static com.mbanni.shop.common.Constants.PRECISION;
-import static com.mbanni.shop.common.Constants.SCALE;
+import static com.mbanni.shop.common.Constants.*;
 
 @Entity
 @Table(name = "order_item")
@@ -27,10 +26,10 @@ public class OrderItem {
     private String productNameSnapshot;
     private int quantity;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = PRICE_PRECISION, scale = SCALE)
     private BigDecimal price;
 
-    @Column(nullable = false, precision = PRECISION, scale = SCALE)
+    @Column(nullable = false, precision = LINE_TOTAL_PRECISION, scale = SCALE)
     private BigDecimal lineTotal;
 
     protected OrderItem() {
