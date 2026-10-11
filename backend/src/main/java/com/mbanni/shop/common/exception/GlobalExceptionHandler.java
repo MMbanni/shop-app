@@ -130,6 +130,31 @@ public class GlobalExceptionHandler {
                 .body(problem);
     }
 
+    @ExceptionHandler(PaymentProviderException.class)
+    public ResponseEntity<ProblemDetail> handlePaymentProvider(
+            PaymentProviderException ex
+    ) {
+        HttpStatus status = ex.isTemporary()
+                ? HttpStatus.SERVICE_UNAVAILABLE
+                : HttpStatus.BAD_GATEWAY;
+
+        ProblemDetail problem = ProblemDetail.forStatus(status);
+
+        problem.setTitle(
+                ex.isTemporary()
+                        ? "PAYMENT_PROVIDER_UNAVAILABLE"
+                        : "PAYMENT_PROVIDER_ERROR"
+        );
+
+        problem.setDetail(
+                ex.isTemporary()
+                        ? "Payment service is temporarily unavailable. Please try again later."
+                        : "Unable to process the payment request."
+        );
+
+        return ResponseEntity.status(status).body(problem);
+    }
+
     private HttpStatus statusFor(ErrorCode errorCode) {
         return switch (errorCode) {
             case USER_NOT_FOUND,
