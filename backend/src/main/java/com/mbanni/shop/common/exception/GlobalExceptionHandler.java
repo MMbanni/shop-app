@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
 
         problem.setTitle("RATE_LIMITER_UNAVAILABLE");
         problem.setDetail(
-                "Login is temporarily unavailable. Please try again later."
+                "Authentication is temporarily unavailable. Please try again later."
         );
 
         return ResponseEntity
