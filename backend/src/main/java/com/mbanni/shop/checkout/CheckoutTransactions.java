@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static com.mbanni.shop.common.Constants.MAX_ORDER_TOTAL;
+import static com.mbanni.shop.common.Constants.MIN_PRICE_SEK;
 
 
 @Service
@@ -74,6 +75,17 @@ public class CheckoutTransactions {
                 .map(r -> r.unitPrice().multiply(BigDecimal.valueOf(r.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal minimumPaidTotal = new BigDecimal(MIN_PRICE_SEK);
+
+        if (total.signum() > 0
+                && total.compareTo(minimumPaidTotal) < 0) {
+            throw new BusinessException(
+                    ErrorCode.ILLEGAL_OPERATION,
+                    "The order total must be at least "
+                            + minimumPaidTotal + " SEK."
+            );
+        }
+
         if (total.compareTo(MAX_ORDER_TOTAL) > 0) {
             throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Order total is too large.");
         }
@@ -88,38 +100,6 @@ public class CheckoutTransactions {
 
         return new BeginCheckoutDto(snapshot(order), false, false, true);
     }
-
-   /* @Transactional
-    public BeginCheckoutDto replaceAfterExpiry(Long userId, Long orderId,
-                                               StripeSessionSnapshot session, boolean superseded) {
-        if (!session.isExpired()) throw new BusinessException(ErrorCode.PROCESSING);
-        User user = lockUser(userId);
-        Order previous = lockOrder(orderId, userId);
-        bindVerifiedSession(previous, session);
-        if (previous.getStatus() == OrderStatus.PAID) throw new BusinessException(ErrorCode.PROCESSING);
-
-        Optional<Order> current = orderRepository.findByUserIdAndStatusForUpdate(userId, OrderStatus.PENDING);
-        if (current.isPresent() && !current.get().getId().equals(orderId)) {
-            // Another request already replaced this checkout while Stripe was responding.
-            return existingCheckout(current.get(), user.getCart());
-        }
-
-        Cart cart = getValidCartOrThrow(user);
-        checkForCheckoutAbuse(userId, previous.isPending() ? 1 : 0);
-        List<Long> ids = new ArrayList<>(cartProductIds(cart));
-        if (previous.isPending()) ids.addAll(orderProductIds(previous));
-        Map<Long, Product> products = lockProducts(ids);
-
-        // Lock the complete union once, in ID order. Reuse the same managed products.
-        if (previous.isPending()) {
-            releaseStock(previous, products);
-            if (superseded) previous.markSuperseded();
-            else previous.markExpired();
-        }
-        previous.clearReview();
-        Order replacement = createOrder(user, validateCart(cart, products, null));
-        return new BeginCheckoutDto(snapshot(replacement), false, false, true);
-    }*/
 
     @Transactional
     public void closeExpiredCheckout(
