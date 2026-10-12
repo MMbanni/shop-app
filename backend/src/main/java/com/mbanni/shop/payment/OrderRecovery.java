@@ -30,7 +30,7 @@ public class OrderRecovery {
     public void runRecovery() {
 
         /* Resolve orders created less than 5 minutes ago */
-        int batchSize = 100;
+        int batchSize = 10;
 
         List<OrderRecoveryDto> orders = orderRecoveryService.claimOrdersWithoutSession(batchSize);
 
