@@ -76,7 +76,7 @@ public class ProductService {
 
         if (!Objects.equals(request.expectedVersion(), product.getVersion())) {
             throw new BusinessException(
-                    ErrorCode.ILLEGAL_OPERATION,
+                    ErrorCode.VERSION_MISMATCH,
                     "This product changed while you were editing it. Reload and try again."
             );
         }
