@@ -59,7 +59,13 @@ public class SecurityConfig {
                                         "/auth/register",
                                         "/auth/login").permitAll()
 
-                                .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/payments/webhook").permitAll()
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/actuator/health"
+                                ).permitAll()
 
                                 .anyRequest().authenticated()
 
