@@ -81,4 +81,18 @@ class AuthServiceTest {
         assertEquals(UserStatus.ACTIVE, user.getStatus());
         assertNull(user.getSuspendedUntil());
     }
+
+    @Test void inactiveUserMustNotReceiveAToken() {
+        user.setStatus(UserStatus.INACTIVE);
+        assertThrows(BusinessException.class, () -> service.login(login));
+        verify(jwt, never()).createToken(any());
+    }
+
+    @Test void suspensionEndingExactlyNowIsOver() {
+        user.suspend(1, NOW.minusSeconds(86400));
+        user.setStatus(UserStatus.SUSPENDED);
+        ReflectionTestUtils.setField(user, "suspendedUntil", NOW);
+        assertDoesNotThrow(() -> service.login(login));
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
+    }
 }
