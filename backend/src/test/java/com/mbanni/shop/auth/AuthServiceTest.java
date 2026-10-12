@@ -65,4 +65,20 @@ class AuthServiceTest {
         verify(jwt, never()).createToken(any());
     }
 
+    @Test void bannedUserCannotLogIn() {
+        user.ban();
+        assertThrows(BusinessException.class, () -> service.login(login));
+        verify(jwt, never()).createToken(any());
+    }
+
+    @Test void expiredSuspensionIsClearedAtLogin() {
+        user.suspend(1, NOW.minusSeconds(172800));
+        user.setStatus(UserStatus.SUSPENDED);
+
+        ReflectionTestUtils.setField(user, "suspendedUntil", NOW.minusSeconds(1));
+
+        assertEquals("test-token", service.login(login).token());
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
+        assertNull(user.getSuspendedUntil());
+    }
 }
