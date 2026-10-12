@@ -66,6 +66,12 @@ public class Cart {
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
             return;
         }
+        if (items.size() >= 100) {
+            throw new BusinessException(
+                    ErrorCode.EXCEEDED_QUANTITY_LIMIT,
+                    "A cart can contain at most 100 different products."
+            );
+        }
 
         CartItem item = new CartItem(this, product, quantity);
         items.add(item);
