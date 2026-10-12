@@ -38,7 +38,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public UserResponseDto register(@Valid @RequestBody RegisterUserRequestDto request) {
+    public UserResponseDto register(
+            @Valid @RequestBody RegisterUserRequestDto request,
+            HttpServletRequest httpRequest) {
+        loginRateLimiter.checkRegistrationAllowed(clientIpService.getClientIp(httpRequest));
+
         User user = authService.register(userMapper.toCommand(request));
         return userMapper.toResponse(user);
     }

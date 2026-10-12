@@ -69,4 +69,12 @@ public class LoginRateLimiter {
             throw new RateLimiterUnavailableException(e);
         }
     }
+
+    public void checkRegistrationAllowed(String ipAddress) {
+        consumeToken(
+                "register:ip:" + ipAddress,
+                5,
+                Duration.ofHours(1)
+        );
+    }
 }
