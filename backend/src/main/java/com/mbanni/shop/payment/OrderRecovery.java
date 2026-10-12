@@ -4,14 +4,12 @@ import com.mbanni.shop.order.*;
 import com.mbanni.shop.order.dto.OrderRecoveryDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Component
 public class OrderRecovery {
@@ -30,43 +28,43 @@ public class OrderRecovery {
     public void runRecovery() {
 
         /* Resolve orders created less than 5 minutes ago */
-        int batchSize = 10;
+        recover(
+                10,
+                () -> orderRecoveryService.claimOrdersWithoutSession(1)
+        );
 
-        List<OrderRecoveryDto> orders = orderRecoveryService.claimOrdersWithoutSession(batchSize);
+        recover(
+                10,
+                () -> orderRecoveryService.claimOverdueOrders(1)
+        );
 
-        for (OrderRecoveryDto dto : orders) {
+        recover(
+                30,
+                () -> orderRecoveryService.claimOrdersWithSession(1)
+        );
+    }
+
+    private void recover(int maxOrders, Supplier<List<OrderRecoveryDto>> claim) {
+        for (int i = 0; i < maxOrders; i++) {
+            List<OrderRecoveryDto> claimed = claim.get();
+
+            if (claimed.isEmpty()) {
+                return;
+            }
+
+            OrderRecoveryDto order = claimed.get(0);
+
             try {
-                paymentService.refreshOrderStatus(dto.userId(), dto.orderId());
-            } catch (RuntimeException e) {
-                log.error("Could not recover order {}", dto.orderId(), e);
-            }
-        }
-
-        List<OrderRecoveryDto> overdueOrders = orderRecoveryService.claimOverdueOrders(batchSize);
-
-        for (OrderRecoveryDto dto : overdueOrders) {
-            try {
-                paymentService.refreshOrderStatus(dto.userId(), dto.orderId());
-            } catch (RuntimeException e) {
-                log.error("Overdue order {} needs attention", dto.orderId(), e);
-            }
-        }
-
-        int maxBatches = 3;
-        for (int batch = 0; batch < maxBatches; batch++) {
-
-            List<OrderRecoveryDto> pendingOrdersWithSession = orderRecoveryService.claimOrdersWithSession(batchSize);
-            if (pendingOrdersWithSession.isEmpty()) {
-                break;
-            }
-
-            for (OrderRecoveryDto dto : pendingOrdersWithSession) {
-                try {
-                    paymentService.refreshOrderStatus(dto.userId(), dto.orderId());
-                } catch (RuntimeException e) {
-                    log.error("Could not reconcile pending order {}", dto.orderId(), e);
-                }
-
+                paymentService.refreshOrderStatus(
+                        order.userId(),
+                        order.orderId()
+                );
+            } catch (RuntimeException exception) {
+                log.error(
+                        "Could not recover order {}",
+                        order.orderId(),
+                        exception
+                );
             }
         }
 
