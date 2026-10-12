@@ -2,6 +2,7 @@ package com.mbanni.shop.checkout;
 
 import com.mbanni.shop.checkout.dto.CheckoutReviewDto;
 import com.mbanni.shop.checkout.dto.ReconcileRequestDto;
+import com.mbanni.shop.checkout.dto.ResolveWithoutSessionRequest;
 import com.mbanni.shop.payment.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,20 @@ public class AdminCheckoutController {
                                        @Valid @RequestBody ReconcileRequestDto request,
                                        Authentication authentication) {
         return payments.reconcileCheckout(Long.valueOf(authentication.getName()), orderId, request.sessionId());
+    }
+
+    @PostMapping("/{orderId}/resolve-without-session")
+    public CheckoutReviewDto resolveWithoutSession(
+            @PathVariable Long orderId,
+            @Valid @RequestBody ResolveWithoutSessionRequest request,
+            Authentication authentication
+    ) {
+        return payments.resolveWithoutSession(
+                Long.valueOf(authentication.getName()),
+                orderId,
+                request.confirmedNoSession(),
+                request.reason()
+        );
     }
 
 }

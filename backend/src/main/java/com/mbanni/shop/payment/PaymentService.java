@@ -104,6 +104,21 @@ public class PaymentService {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public CheckoutReviewDto resolveWithoutSession(
+            Long adminId,
+            Long orderId,
+            boolean confirmedNoSession,
+            String reason
+    ) {
+        return checkoutTransactions.resolveWithoutSession(
+                adminId,
+                orderId,
+                confirmedNoSession,
+                reason
+        );
+    }
+
     public void handleCheckoutCompleted(Session session) {
         StripeSessionSnapshot verified = StripeSessionSnapshot.from(session);
         if (verified.isComplete()) checkoutTransactions.applyWebhook(verified);
