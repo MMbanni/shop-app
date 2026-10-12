@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 
@@ -26,11 +27,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final SecurityErrorResponseWriter securityErrorResponseWriter;
+    private final Clock clock;
 
-    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository, SecurityErrorResponseWriter securityErrorResponseWriter) {
+    public JwtAuthFilter(JwtService jwtService,
+                         UserRepository userRepository,
+                         SecurityErrorResponseWriter securityErrorResponseWriter,
+                         Clock clock
+    ) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.securityErrorResponseWriter = securityErrorResponseWriter;
+        this.clock=clock;
+
     }
 
     @Override
@@ -71,7 +79,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (user.getStatus() == UserStatus.SUSPENDED) {
+        if (user.isSuspendedAt(clock.instant())) {
             securityErrorResponseWriter.writeSuspended(response, user.getSuspendedUntil());
             return;
         }
