@@ -1,0 +1,9 @@
+.git
+.ideabacked
+.vscode
+target
+*.iml
+.env
+.env.*
+**/application-local.properties
+src/main/resources/interesting.java
