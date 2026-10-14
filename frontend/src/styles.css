@@ -470,6 +470,25 @@ table:has(tbody tr) thead th {
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  translate: -50% 0;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.75rem;
+  background: #0f766e;
+  color: white;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+.auth-card input:focus-visible {
+  outline: 2px solid #5eead4;
+  outline-offset: 2px;
 }
 
 .floating-message.show {
