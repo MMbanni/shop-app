@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
 import { api } from "../lib/api";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FloatingMessage } from "../components/messages/FloatingMessage";
 
 type CartMessage = {
@@ -19,16 +19,21 @@ export function ProductsPage() {
   const [cartMessageVisible, setCartMessageVisible] = useState<boolean>(false);
 
 
+  const messageTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => window.clearTimeout(messageTimer.current);
+  }, []);
+
   function showCartMessage(text: string, button: HTMLButtonElement) {
+    window.clearTimeout(messageTimer.current);
+
     setCartMessage({ text, anchor: button });
-    setCartMessageVisible(true)
+    setCartMessageVisible(true);
 
-
-    setTimeout(() => {
-      setCartMessageVisible(false)
-
+    messageTimer.current = window.setTimeout(() => {
+      setCartMessageVisible(false);
     }, 3000);
-
   }
 
 
