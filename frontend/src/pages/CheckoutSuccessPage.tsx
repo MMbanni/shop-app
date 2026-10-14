@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
-import { ApiErrorResponse, Order, OrderStatus } from "../types";
-import { getErrorMessage, getApiError } from "../lib/ApiError";
+import { Order } from "../types";
+import { getErrorMessage } from "../lib/ApiError";
 import { BackToCartButton } from "../components/buttons/BackToCartButton";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 
 export function CheckoutSuccessPage() {
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -21,30 +23,43 @@ export function CheckoutSuccessPage() {
 
     let cancelled = false;
     let timeoutId: number | undefined;
+    let attempts = 0;
 
     async function checkOrderStatus() {
 
       try {
-        const response = await api.orderStatus(sessionId!);
+        attempts++;
+
+        const response =
+          retryCount > 0 && attempts === 1
+            ? await api.refreshOrderStatus(sessionId!)
+            : await api.orderStatus(sessionId!);
+
 
         if (cancelled) return;
 
         setOrderInfo(response);
         setError(null);
 
-        if (response.status === "PENDING" &&
-          response.reviewNeededAt == null
-        ) {
-          timeoutId = window.setTimeout(
-            checkOrderStatus,
-            1500
-          );
+        if (response.status === "PENDING") {
+          void queryClient.invalidateQueries({ queryKey: ["cart"] });
+          void queryClient.invalidateQueries({ queryKey: ["products"] });
+        } else if (response.reviewNeededAt == null) {
+          if (attempts >= 20) {
+            setError(
+              "Payment confirmation is taking longer than expected. " +
+              "Check its status again; do not make another payment."
+            );
+          } else {
+            timeoutId = window.setTimeout(
+              checkOrderStatus,
+              3000
+            );
+          }
         }
       }
       catch (e) {
-        if (cancelled) return;
-
-        setError(getErrorMessage(e));
+        if (!cancelled) setError(getErrorMessage(e));
       }
 
     }
@@ -53,12 +68,10 @@ export function CheckoutSuccessPage() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
 
-      if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId);
-      }
     };
-  }, [sessionId, retryCount]);
+  }, [sessionId, retryCount, queryClient]);
 
   function retryPaymentStatus() {
     setError(null);
@@ -97,19 +110,19 @@ export function CheckoutSuccessPage() {
         {
           error ? (
             <>
-            <h1> Unable to check payment status </h1>
-            <p className="error">{error}</p>
-            <p>
-              Your payment may have succeeded, do not retry payment yet.
-            </p>
-            <button
-            type="button"
-            className="button large"
-            onClick={retryPaymentStatus} 
-            >
-              Check payment status
-            </button>
-            
+              <h1> Unable to check payment status </h1>
+              <p className="error">{error}</p>
+              <p>
+                Your payment may have succeeded, do not retry payment yet.
+              </p>
+              <button
+                type="button"
+                className="button large"
+                onClick={retryPaymentStatus}
+              >
+                Check payment status
+              </button>
+
             </>)
             : needsReview ? (
               <>
@@ -133,20 +146,20 @@ export function CheckoutSuccessPage() {
                       <p>Please try again</p>
                     </>)
                     : superseded ? (
-                    <>
-                      <h1>Order has been replaced</h1>
-                      <BackToCartButton></BackToCartButton>
-                    </>)
-
-
-                    
-                    : (
                       <>
-                        <h1>Confirming payment</h1>
-                        <p>Please wait...</p>
+                        <h1>Order has been replaced</h1>
+                        <BackToCartButton></BackToCartButton>
                       </>)
 
-                      
+
+
+                      : (
+                        <>
+                          <h1>Confirming payment</h1>
+                          <p>Please wait...</p>
+                        </>)
+
+
         }
 
 

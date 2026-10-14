@@ -106,6 +106,13 @@ export const api = {
     return request<Order>(`/orders/by-session/${sessionId}`);
   },
 
+  refreshOrderStatus(sessionId: string) {
+  return request<Order>(
+    `/orders/by-session/${sessionId}}/refresh`,
+    { method: "POST" }
+  );
+},
+
   addToCart(productId: number, quantity = 1) {
     return request<void>("/cart", {
       method: "POST",
