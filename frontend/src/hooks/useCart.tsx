@@ -7,13 +7,16 @@ import { api } from "../lib/api";
 import { useState } from "react";
 import { CartItemProblem } from "../types";
 import { getCartItemProblems, getApiError } from "../lib/ApiError";
+import { useAuth } from "../context/AuthContext";
 
 export function useCart() {
   const queryClient = useQueryClient();
   const [checkoutProblems, setCheckoutProblems] = useState<CartItemProblem[]>([]);
+  const { user } = useAuth();
+  const cartKey = ["cart", user?.id];
 
   const cartQuery = useQuery({
-    queryKey: ["cart"],
+    queryKey: cartKey,
     queryFn: api.cart,
   });
 
@@ -30,7 +33,7 @@ export function useCart() {
       try {
         const updatedCart = await api.cart();
 
-        queryClient.setQueryData(["cart"], updatedCart);
+        queryClient.setQueryData(cartKey, updatedCart);
 
         const updatedItem = updatedCart.items.find(
           (item) => item.cartItemId === variables.itemId
