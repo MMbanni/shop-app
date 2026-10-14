@@ -158,7 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (generation !== authGeneration.current) return false;
 
-      return login(email, password);
+      try {
+        return await login(email, password);
+      } catch {
+        throw new Error(
+          "Your account was created, but automatic login failed. " +
+          "Please use the Login page."
+        );
+      }
     },
     [login, queryClient],
   );
