@@ -131,7 +131,7 @@ export function AdminProductsPage() {
   }
 
   function handleAddProductErrors(name: string) {
-    let fieldErrors = errorResponse?.errors
+    const fieldErrors = errorResponse?.errors
 
     if (fieldErrors) {
       for (const error of fieldErrors) {
@@ -324,7 +324,7 @@ export function AdminProductsPage() {
 
               </td>
 
-              <td>Active</td>
+              <td>Inactive</td>
 
               <td>
                 <button
