@@ -268,7 +268,7 @@ export function AdminProductsPage() {
                         onClick={() => startEdit(product)}
                         aria-label={`Edit ${product.name}`}
                       >
-                        <img src="/icons/edit.png" />
+                        <img> Edit </img>
                       </button>
 
                       <button
