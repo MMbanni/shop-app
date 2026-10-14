@@ -2,7 +2,7 @@ export type Order = {
        orderId: number;
        status: OrderStatus;
        paidAt: string | null;
-       reviewNeededAt: Date | null
+       reviewNeededAt: string | null
 }
 
 export type OrderStatus =
