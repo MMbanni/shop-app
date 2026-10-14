@@ -10,9 +10,10 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { clearToken, getToken, saveToken } from "../lib/token";
+import { clearToken, getToken, saveToken, TOKEN_KEY } from "../lib/token";
 import type { User } from "../types";
 import type { AuthContextValue } from "../types/auth";
+import { getErrorMessage } from "../lib/ApiError";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const FORCED_LOGOUT_EVENT = "auth:forced-logout";
@@ -20,18 +21,41 @@ const FORCED_LOGOUT_EVENT = "auth:forced-logout";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [startupError, setStartupError] = useState<string | null>(null);
+
+  const invalidateAuthRequests = useCallback(() => {
+    authGeneration.current++;
+  }, []);
+
+  useEffect(() => {
+    function handleStorage(event: StorageEvent) {
+      if (
+        event.storageArea === localStorage &&
+        (event.key === TOKEN_KEY || event.key === null)
+      ) {
+        window.location.reload();
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const queryClient = useQueryClient();
   const authGeneration = useRef(0);
 
   const logout = useCallback(() => {
-    authGeneration.current++;
+    invalidateAuthRequests();
+    setStartupError(null);
 
     clearToken();
     setUser(null);
     setIsLoading(false);
     queryClient.clear();
-  }, [queryClient]);
+  }, [queryClient, invalidateAuthRequests]);
 
   useEffect(() => {
     window.addEventListener(FORCED_LOGOUT_EVENT, logout);
@@ -56,12 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (generation !== authGeneration.current) return;
 
         setUser(currentUser);
-      } catch {
+      } catch (error) {
         if (generation !== authGeneration.current) return;
 
-        clearToken();
-        setUser(null);
-        queryClient.clear();
+        setStartupError(getErrorMessage(error))
+
       } finally {
         if (generation === authGeneration.current) {
           setIsLoading(false);
@@ -71,11 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void loadCurrentUser();
 
-    return () => {
-      // Invalidate pending startup, login and registration requests.
-      authGeneration.current++;
-    };
-  }, [queryClient]);
+    return invalidateAuthRequests;
+  }, [invalidateAuthRequests]);
 
   const login = useCallback(
     async (email: string, password: string): Promise<boolean> => {
@@ -154,6 +174,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [user, isLoading, login, register, logout],
   );
+
+  if (startupError) {
+    return (
+      <main className="page-shell narrow">
+        <h1>Unable to restore your session</h1>
+
+        <p className="error" role="alert">
+          {startupError}
+        </p>
+
+        <button
+          className="button"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+
+        <button className="button ghost" onClick={logout}>
+          Sign out
+        </button>
+      </main>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
