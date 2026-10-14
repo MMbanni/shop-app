@@ -5,7 +5,8 @@ export type AddProductsRequest = {
 }
 
 export type UpdateProductsRequest = {
-  id: number
+  id: number;
+  expectedVersion: number;
   name?: string;
   price?: number;
   stock?: number

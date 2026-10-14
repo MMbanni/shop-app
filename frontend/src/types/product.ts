@@ -6,7 +6,10 @@ export type Product = {
   imageUrl?: string;
   stock: number;
   status: ProductStatus;
-  version: number
+};
+
+export type AdminProduct = Product & {
+  version: number;
 };
 
 export type ProductStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";

@@ -1,7 +1,7 @@
 import { money } from "../../lib/money";
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
 import { useState } from "react";
-import type { AdminProductTab, ApiErrorResponse, Product, ProductStatus } from "../../types";
+import type { AdminProductTab, ApiErrorResponse, AdminProduct, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
 import { ApiError, getApiError } from "../../lib/ApiError";
@@ -37,6 +37,7 @@ export function AdminProductsPage() {
   const [newProduct, setNewProduct] = useState<ProductForm>(emptyProductForm);
 
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
 
   const [editProduct, setEditProduct] = useState<ProductForm>(emptyProductForm);
 
@@ -57,7 +58,10 @@ export function AdminProductsPage() {
     );
   }
 
-  function startEdit(product: Product) {
+  function startEdit(product: AdminProduct) {
+    setEditingVersion(product.version);
+    updateProduct.reset;
+
     setEditingProductId(product.id);
     setErrorResponse(null);
 
@@ -71,6 +75,7 @@ export function AdminProductsPage() {
 
   function cancelEdit() {
     setEditingProductId(null);
+    setEditingVersion(null);
     setEditProduct(emptyProductForm);
     setErrorResponse(null);
   }
@@ -100,8 +105,12 @@ export function AdminProductsPage() {
   }
 
   function handleSaveEdit(productId: number) {
+
+    if (editingVersion === null || updateProduct.isPending) return;
+
     updateProduct.mutate({
       id: productId,
+      expectedVersion:editingVersion,
       name: editProduct.name,
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),
@@ -109,6 +118,8 @@ export function AdminProductsPage() {
       {
         onSuccess: () => {
           setEditingProductId(null);
+          setEditingVersion(null);
+          
           setEditProduct(emptyProductForm);
           setErrorResponse(null);
         },

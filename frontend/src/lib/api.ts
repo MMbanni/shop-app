@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, AdminProduct,Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, LoginResponse } from "../dto/";
 
 import { getToken } from "./token";
@@ -169,7 +169,7 @@ export const api = {
   adminGetProducts(status: AdminProductTab) {
     const query = status === "ALL" ? "" : `?status=${status}`;
 
-    return request<Product[]>(`/admin/products${query}`);
+    return request<AdminProduct[]>(`/admin/products${query}`);
   },
 
   changeProductStatus(productId: number, status: ProductStatus) {
