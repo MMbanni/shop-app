@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { AdminProductTab, ApiErrorResponse, AdminProduct, ProductStatus } from "../../types";
 import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
-import { ApiError, getApiError } from "../../lib/ApiError";
+import { getApiError, getErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
@@ -110,7 +110,7 @@ export function AdminProductsPage() {
 
     updateProduct.mutate({
       id: productId,
-      expectedVersion:editingVersion,
+      expectedVersion: editingVersion,
       name: editProduct.name,
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),
@@ -119,7 +119,7 @@ export function AdminProductsPage() {
         onSuccess: () => {
           setEditingProductId(null);
           setEditingVersion(null);
-          
+
           setEditProduct(emptyProductForm);
           setErrorResponse(null);
         },
@@ -135,7 +135,7 @@ export function AdminProductsPage() {
 
     if (fieldErrors) {
       for (const error of fieldErrors) {
-        if (!editingProductId && error.field==name) {
+        if (!editingProductId && error.field == name) {
           return <p className="error" role="alert">
             {error.message}
 
@@ -154,7 +154,7 @@ export function AdminProductsPage() {
 
 
     for (const fieldError of fieldErrors) {
-      const belongsToField = Object.values(fieldError).includes(fieldName);
+      const belongsToField = fieldError.field === fieldName;
       const message = fieldError["message"];
 
 
@@ -206,6 +206,15 @@ export function AdminProductsPage() {
       </div>
 
       <div className="table-card">
+
+        {[addProduct.error, changeProductStatus.error, removeProduct.error].map(
+          (actionError, index) =>
+            actionError ? (
+              <p key={index} className="error" role="alert">
+                {getErrorMessage(actionError)}
+              </p>
+            ) : null,
+        )}
         <table>
           <thead>
             <tr>
@@ -340,6 +349,11 @@ export function AdminProductsPage() {
             price: getUpdateProductError("price"),
             stock: getUpdateProductError("stock"),
           }}
+          submitError={
+            updateProduct.isError
+              ? getErrorMessage(updateProduct.error)
+              : null
+          }
           isSubmitting={updateProduct.isPending}
           onChange={handleEditProductChange}
           onSubmit={() => handleSaveEdit(editingProductId)}
