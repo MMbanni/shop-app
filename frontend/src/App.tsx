@@ -24,7 +24,9 @@ export function App() {
         <Route path="/contact" element={<ContactPage/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+        <Route 
+          path="/checkout/success" 
+          element={<ProtectedRoute><CheckoutSuccessPage /></ProtectedRoute>} />
         <Route path="/checkout/cancel" element={<Navigate to="/cart" replace />} />
         <Route
           path="/cart"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SubmitEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import { ApiErrorMessage } from "../components/messages/ApiErrorMessage";
@@ -8,6 +8,17 @@ import { ApiErrorMessage } from "../components/messages/ApiErrorMessage";
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const requestedPath: unknown = location.state?.returnTo;
+
+  const returnTo =
+    typeof requestedPath === "string" &&
+      requestedPath.startsWith("/") &&
+      !requestedPath.startsWith("//") &&
+      !requestedPath.includes("\\")
+      ? requestedPath
+      : "/products";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +29,7 @@ export function LoginPage() {
 
     onSuccess: (loggedIn) => {
       if (loggedIn) {
-        navigate("/products");
+        navigate(returnTo, {replace: true});
       }
 
     }
