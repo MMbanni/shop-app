@@ -1,5 +1,5 @@
 import { BackToAdminButton } from "../../components/buttons/BackToAdminButton";
-import type { AdminUserTab, ApiErrorResponse, UserStatus } from "../../types";
+import type { AdminUserTab } from "../../types";
 import { useState } from "react";
 import { useAdminUsers } from "../../hooks/useAdminUserActions";
 import { UserFormModal } from "../../components/admin/UserFormModal";
@@ -12,11 +12,6 @@ const tabs: AdminUserTab[] = ["ALL", "ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"
 export function AdminUsersPage() {
 
   const [selectedTab, setSelectedTab] = useState<AdminUserTab>("ALL");
-  // Leave for error handling update
-  const [errorResponse, setErrorResponse] = useState<ApiErrorResponse | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [messageVisible, setMessageVisible] = useState<boolean>(false);
-
   const [suspendingUserId, setSuspendingUserId] = useState<number | null>(null);
   const [suspendingDuration, setSuspendingDuration] = useState<string>("");
   const [suspending, setSuspending] = useState<boolean>(false);

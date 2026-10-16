@@ -1,5 +1,3 @@
-import { ReactNode } from "react";
-
 export type User = {
   id: number;
   email: string;
