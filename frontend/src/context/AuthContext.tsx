@@ -23,6 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [startupError, setStartupError] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
+  const authGeneration = useRef(0);
+
   const invalidateAuthRequests = useCallback(() => {
     authGeneration.current++;
   }, []);
@@ -43,9 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
-
-  const queryClient = useQueryClient();
-  const authGeneration = useRef(0);
 
   const logout = useCallback(() => {
     invalidateAuthRequests();
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (generation !== authGeneration.current) return;
 
-        setStartupError(getErrorMessage(error))
+        setStartupError(getErrorMessage(error));
 
       } finally {
         if (generation === authGeneration.current) {

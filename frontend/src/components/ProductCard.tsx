@@ -4,7 +4,6 @@ import { money } from "../lib/money";
 import type { Product } from "../types/product";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
 import { getApiError } from "../lib/ApiError";
 
 import { useRef } from "react";
