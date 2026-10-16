@@ -60,7 +60,7 @@ export function AdminProductsPage() {
 
   function startEdit(product: AdminProduct) {
     setEditingVersion(product.version);
-    updateProduct.reset;
+    updateProduct.reset();
 
     setEditingProductId(product.id);
     setErrorResponse(null);

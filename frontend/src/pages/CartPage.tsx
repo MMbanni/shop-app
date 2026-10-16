@@ -237,11 +237,6 @@ export function CartPage() {
                 removeErrorForItem ??
                 checkoutErrorForItem;
 
-              const isUpdatingThisItem =
-                updateMutation.isPending &&
-                updateMutation.variables?.itemId ===
-                item.cartItemId;
-
               const isRemovingThisItem =
                 removeMutation.isPending &&
                 removeMutation.variables ===
