@@ -4,7 +4,9 @@ import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, Login
 import { getToken } from "./token";
 import { ApiError } from "./ApiError";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+const API_URL = (
+  import.meta.env.VITE_API_URL?.trim() || "http://localhost:8080"
+).replace(/\/+$/, "");
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
