@@ -18,6 +18,8 @@ export type ProductForm = {
   name: string;
   price: string;
   stock: string;
+  description?: string,
+  imageUrl?: string
 };
 
 export type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;

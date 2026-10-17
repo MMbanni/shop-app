@@ -13,6 +13,8 @@ const emptyProductForm: ProductForm = {
   name: "",
   price: "",
   stock: "0",
+  description: "",
+  imageUrl:""
 };
 
 export function AdminProductsPage() {
@@ -46,6 +48,8 @@ export function AdminProductsPage() {
       name: newProduct.name,
       price: Number(newProduct.price),
       stock: Number(newProduct.stock),
+      description: newProduct.description,
+      imageUrl: newProduct.imageUrl
     },
       {
         onSuccess: () => setNewProduct(emptyProductForm),
@@ -114,6 +118,8 @@ export function AdminProductsPage() {
       name: editProduct.name,
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),
+      description: editProduct.description,
+      imageUrl: editProduct.imageUrl
     },
       {
         onSuccess: () => {
@@ -268,7 +274,7 @@ export function AdminProductsPage() {
                         onClick={() => startEdit(product)}
                         aria-label={`Edit ${product.name}`}
                       >
-                        <img> Edit </img>
+                         Edit 
                       </button>
 
                       <button
@@ -321,6 +327,28 @@ export function AdminProductsPage() {
                   placeholder="Stock"
                 />
                 {handleAddProductErrors("stock")}
+
+              </td>
+
+              <td>
+                <input
+                  name="description"
+                  value={newProduct.description}
+                  onChange={handleAddProductChange}
+                  placeholder="Description"
+                />
+                {handleAddProductErrors("description")}
+
+              </td>
+
+              <td>
+                <input
+                  name="imageUrl"
+                  value={newProduct.imageUrl}
+                  onChange={handleAddProductChange}
+                  placeholder="Image url"
+                />
+                {handleAddProductErrors("imageUrl")}
 
               </td>
 

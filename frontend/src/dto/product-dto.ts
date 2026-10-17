@@ -1,7 +1,9 @@
 export type AddProductsRequest = {
   name: string;
   price: number;
-  stock?: number
+  stock?: number;
+  description?: string;
+  imageUrl?: string
 }
 
 export type UpdateProductsRequest = {
@@ -9,5 +11,7 @@ export type UpdateProductsRequest = {
   expectedVersion: number;
   name?: string;
   price?: number;
-  stock?: number
+  stock?: number;
+  description?: string;
+  imageUrl?: string
 }
