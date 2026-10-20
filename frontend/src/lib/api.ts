@@ -100,6 +100,10 @@ export const api = {
     return request<Product[]>("/products");
   },
 
+  product(id:number) {
+    return request<Product>(`/products/${id}`);
+  },
+
   cart() {
     return request<Cart>("/cart");
   },

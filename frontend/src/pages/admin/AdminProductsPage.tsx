@@ -73,6 +73,8 @@ export function AdminProductsPage() {
       name: product.name,
       price: String(product.price),
       stock: String(product.stock ?? 0),
+      description: String(product.description),
+      imageUrl: String(product.imageUrl)
     });
 
   }
@@ -228,7 +230,9 @@ export function AdminProductsPage() {
               <th>Name</th>
               <th>Price</th>
               <th>Stock</th>
-              <th>Status</th>
+              <th>Description</th>
+              <th>Image url</th>
+              <th>Status</th>              
               <th>Actions</th>
             </tr>
           </thead>
@@ -246,6 +250,8 @@ export function AdminProductsPage() {
                   <td>{product.name}</td>
                   <td>{money(product.price)}</td>
                   <td>{product.stock ?? 0}</td>
+                  <td>{product.description ? "✓" : "✗"}</td>
+                  <td>{product.imageUrl ? "✓" : "✗"}</td>
 
 
 

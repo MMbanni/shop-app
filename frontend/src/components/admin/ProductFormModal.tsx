@@ -161,6 +161,59 @@ export function ProductFormModal({
             )}
           </label>
 
+          <label>
+            Description
+
+            <input
+              name="description"   
+              max="500"
+              step="1"
+              value={form.description}
+              onChange={onChange}
+              disabled={isSubmitting}
+              aria-invalid={Boolean(errors.description)}
+              aria-describedby={
+                errors.description ? "description-error" : undefined
+              }
+            />
+
+            {errors.description && (
+              <span
+                id="description-error"
+                className="field-error"
+                role="alert"
+              >
+                {errors.description}
+              </span>
+            )}
+          </label>
+
+          <label>
+            Image URL
+
+            <input
+              name="imageUrl"
+              step="1"
+              value={form.imageUrl}
+              onChange={onChange}
+              disabled={isSubmitting}
+              aria-invalid={Boolean(errors.imageUrl)}
+              aria-describedby={
+                errors.imageUrl ? "imageUrl-error" : undefined
+              }
+            />
+
+            {errors.imageUrl && (
+              <span
+                id="imageUrl-error"
+                className="field-error"
+                role="alert"
+              >
+                {errors.imageUrl}
+              </span>
+            )}
+          </label>
+
           <footer className="modal-actions">
             <button
               type="button"

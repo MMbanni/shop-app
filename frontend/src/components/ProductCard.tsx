@@ -65,8 +65,6 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
 
         <h3>{product.name}</h3>
 
-        <p className="muted">{product.description}</p>
-
         <div className="product-footer">
           <strong>{money(product.price)}</strong>
 
