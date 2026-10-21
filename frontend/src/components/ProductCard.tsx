@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { money } from "../lib/money";
 import type { Product } from "../types/product";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getApiError } from "../lib/ApiError";
 
@@ -11,7 +11,7 @@ import { useRef } from "react";
 
 type ProductCardProps = {
   product: Product;
-  onAddSuccess: ( button: HTMLButtonElement) => void
+  onAddSuccess: (button: HTMLButtonElement) => void
 };
 
 export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
@@ -19,7 +19,7 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const addButtonRef = useRef<HTMLButtonElement>(null)
-  
+
   const isOutOfStock = product.stock < 1;
   const imageUrl = product.imageUrl || "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
 
@@ -27,7 +27,7 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
     mutationFn: () => api.addToCart(product.id, 1),
 
     onSuccess: async () => {
-      if (addButtonRef.current){
+      if (addButtonRef.current) {
         onAddSuccess(addButtonRef.current)
       }
       await queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -56,14 +56,16 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
 
   return (
     <article className="product-card">
-      <img src={imageUrl}
-        alt={product.name}
-      />
+      <NavLink to={`/products/${product.id}`} >
+        <img src={imageUrl}
+          alt={product.name}
+        />
+      </NavLink>
 
       <div className="product-body">
         <p className="section-label">{stockMessage}</p>
 
-        <h3>{product.name}</h3>
+        <NavLink to={`/products/${product.id}`} > <h3>{product.name}</h3></NavLink>
 
         <div className="product-footer">
           <strong>{money(product.price)}</strong>
@@ -81,7 +83,7 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
                 "Add to cart"}
           </button>
         </div>
-        
+
         <div className="product-error" aria-live="polite">
           {addError && (
             <p className="error">{addError}</p>
