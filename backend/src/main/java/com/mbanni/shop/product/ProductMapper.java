@@ -19,6 +19,7 @@ public class ProductMapper {
                 product.getStock(),
                 product.getPrice(),
                 product.getDescription(),
+                product.getImageUrl(),
                 product.getProductStatus()
         );
     }
@@ -29,6 +30,7 @@ public class ProductMapper {
                 product.getStock(),
                 product.getPrice(),
                 product.getDescription(),
+                product.getImageUrl(),
                 product.getProductStatus(),
                 product.getVersion()
         );
@@ -55,7 +57,8 @@ public class ProductMapper {
                 request.name(),
                 request.stock(),
                 request.price(),
-                request.description()
+                request.description(),
+                request.imageUrl()
         );
     }
 
@@ -65,6 +68,7 @@ public class ProductMapper {
                 request.stock(),
                 request.price(),
                 request.description(),
+                request.imageUrl(),
                 request.expectedVersion()
 
         );

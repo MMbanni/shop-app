@@ -37,7 +37,7 @@ public class ProductService {
                     "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
         }
 
-        Product product = new Product(name, request.price(), request.description());
+        Product product = new Product(name, request.price(), request.description(), request.imageUrl());
 
         Integer stock = request.stock();
         product.setStock(stock == null ? 0 : stock);
@@ -104,6 +104,10 @@ public class ProductService {
 
         if(request.description()!= null) {
             product.setDescription(request.description());
+        }
+
+        if(request.imageUrl()!= null) {
+            product.setImageUrl(request.imageUrl());
         }
 
         return product;

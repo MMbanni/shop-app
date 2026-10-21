@@ -1,6 +1,7 @@
 package com.mbanni.shop.product.dto;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
 
@@ -22,6 +23,10 @@ public record UpdateProductRequestDto(
 
         @Size(max = 500, message = "Description must be at most 500 characters")
         String description,
+
+        @Size(max = 2048, message = "Image URL must be at most 2048 characters")
+        @URL(protocol = "https", message = "Image must be a valid HTTPS URL")
+        String imageUrl,
 
         @NotNull
         Long expectedVersion

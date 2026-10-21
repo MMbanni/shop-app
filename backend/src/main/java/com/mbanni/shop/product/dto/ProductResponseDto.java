@@ -10,5 +10,6 @@ public record ProductResponseDto(
     Integer stock,
     BigDecimal price,
     String description,
+    String imageUrl,
     ProductStatus status
 ){}

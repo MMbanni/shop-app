@@ -10,6 +10,7 @@ public record AdminProductResponseDto(
     Integer stock,
     BigDecimal price,
     String description,
+    String imageUrl,
     ProductStatus status,
     Long version
 ){}

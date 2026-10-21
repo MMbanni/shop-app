@@ -31,6 +31,7 @@ public class Product {
     @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String normalizedName;
 
+
     @Column(nullable = false)
     private int stock = 0;
 
@@ -48,6 +49,9 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.INACTIVE;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(length = 500)
     private String description;
 
@@ -56,11 +60,12 @@ public class Product {
 
     public Product() {}
 
-    public Product(String name, BigDecimal price, String description) {
+    public Product(String name, BigDecimal price, String description, String imageUrl) {
         setName(name);
         setNormalizedName(normalizeName(name));
         setPrice(price);
         setDescription(description);
+        setImageUrl(imageUrl);
     }
 
     public void deactivate() {
@@ -108,6 +113,8 @@ public class Product {
     public String getDescription() {
         return description;
     }
+
+    public String getImageUrl() { return imageUrl; }
 
     public Long getVersion() { return version; }
 
@@ -167,6 +174,12 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl == null || imageUrl.isBlank()
+                ? null
+                : imageUrl.trim();
     }
 
     @Override
