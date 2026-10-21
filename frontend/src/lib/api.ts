@@ -100,7 +100,7 @@ export const api = {
     return request<Product[]>("/products");
   },
 
-  product(id:number) {
+  product(id: string) {
     return request<Product>(`/products/${id}`);
   },
 

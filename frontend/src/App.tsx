@@ -13,6 +13,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { AdminPage } from "./pages/admin/AdminPage";
 import { Footer } from "./components/Footer";
 import { ContactPage } from "./pages/ContactPage";
+import { ProductPage } from "./pages/ProductPage";
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductPage />} />
         <Route path="/contact" element={<ContactPage/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
