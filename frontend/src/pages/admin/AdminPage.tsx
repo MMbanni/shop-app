@@ -11,7 +11,7 @@ export function AdminPage() {
       </div>
 
       <section className="admin-panel">
-        <nav>
+        <nav className="admin-nav">
             <NavLink className="button" to="/admin/products">Products</NavLink>
             <NavLink className="button" to="/admin/users">Users</NavLink>
         </nav>

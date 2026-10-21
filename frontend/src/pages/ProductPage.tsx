@@ -96,27 +96,15 @@ export function ProductPage() {
           {product?.description}
         </section>
 
-        <article className="add-box-out">
+        <article className="add-box">
           
-          
-            <div className="add-box-in">
+              <div className="product-footer">
+                <strong className="price">{money(product.price)}</strong>                
+              </div>
 
               <p className="section-label muted">{stockMessage}</p>
 
-              <div className="product-footer">
-                <strong>{money(product.price)}</strong>
-
-                
-              </div>
-
-              
-            </div>
-
-            <div className="product-error" aria-live="polite">
-                {addError && (
-                  <p className="error">{addError}</p>
-                )}
-              </div>
+            
             <button
 
                   className="button"
@@ -129,6 +117,15 @@ export function ProductPage() {
                     addMutation.isPending ? "Adding..." :
                       "Add to cart"}
                 </button>
+
+                <div className="product-error" aria-live="polite">
+                {addError && (
+                  <p className="error">{addError}</p>
+                )}
+              </div>
+            
+
+            
 
           
         </article>

@@ -63,9 +63,11 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
       </NavLink>
 
       <div className="product-body">
-        <p className="section-label">{stockMessage}</p>
-
+        
         <NavLink to={`/products/${product.id}`} > <h3>{product.name}</h3></NavLink>
+        <p className="section-label muted">{stockMessage}</p>
+
+        <div className="divider"> </div>
 
         <div className="product-footer">
           <strong>{money(product.price)}</strong>
