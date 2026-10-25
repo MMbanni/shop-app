@@ -96,6 +96,19 @@ export function ProductPage() {
           {product?.description}
         </section>
 
+        <section className="product-specifications">
+  <h2>Specifications</h2>
+
+  <dl>
+    {Object.entries(product.attributes ?? {}).map(([name, value]) => (
+      <div key={name}>
+        <dt>{name}</dt>
+        <dd>{value}</dd>
+      </div>
+    ))}
+  </dl>
+</section>
+
         <article className="add-box">
           
               <div className="product-footer">

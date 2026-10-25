@@ -13,5 +13,6 @@ export type UpdateProductsRequest = {
   price?: number;
   stock?: number;
   description?: string;
-  imageUrl?: string
+  imageUrl?: string;
+  attributes: Record<string,string>
 }

@@ -4,6 +4,7 @@ export type Product = {
   description?: string | null;
   price: number;
   imageUrl?: string;
+  attributes: Record<string, string>;
   stock: number;
   status: ProductStatus;
 };
@@ -19,7 +20,8 @@ export type ProductForm = {
   price: string;
   stock: string;
   description?: string,
-  imageUrl?: string
+  imageUrl?: string,
+  attributes: Record<string,string>
 };
 
 export type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;

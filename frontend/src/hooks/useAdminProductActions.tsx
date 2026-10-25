@@ -10,8 +10,9 @@ type ProductInput = {
   name: string;
   price: number;
   stock: number;
-  description?: string,
-  imageUrl?: string
+  description?: string;
+  imageUrl?: string;
+  attributes: Record<string,string>
 };
 
 type UpdateProductInput = ProductInput & {

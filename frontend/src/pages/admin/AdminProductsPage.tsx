@@ -14,7 +14,8 @@ const emptyProductForm: ProductForm = {
   price: "",
   stock: "0",
   description: "",
-  imageUrl:""
+  imageUrl:"",
+  attributes:{}
 };
 
 export function AdminProductsPage() {
@@ -74,7 +75,8 @@ export function AdminProductsPage() {
       price: String(product.price),
       stock: String(product.stock ?? 0),
       description: String(product.description),
-      imageUrl: String(product.imageUrl)
+      imageUrl: String(product.imageUrl),
+      attributes: product.attributes
     });
 
   }
@@ -100,8 +102,15 @@ export function AdminProductsPage() {
     }));
   }
 
+  function handleAttributeChange(attributes: Record<string,string>){
+    setEditProduct((current)=> ({
+      ...current,
+      attributes
+    }))
+  }
 
-  function handleEditProductChange(event: React.ChangeEvent<HTMLInputElement>) {
+
+  function handleEditProductChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = event.target;
 
     setEditProduct((current) => ({
@@ -121,7 +130,8 @@ export function AdminProductsPage() {
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),
       description: editProduct.description,
-      imageUrl: editProduct.imageUrl
+      imageUrl: editProduct.imageUrl,
+      attributes: editProduct.attributes
     },
       {
         onSuccess: () => {
@@ -137,6 +147,8 @@ export function AdminProductsPage() {
         }
       });
   }
+
+
 
   function handleAddProductErrors(name: string) {
     const fieldErrors = errorResponse?.errors
@@ -168,8 +180,6 @@ export function AdminProductsPage() {
 
       if (belongsToField && message) {
         return String(message)
-
-
       }
 
     }
@@ -390,6 +400,7 @@ export function AdminProductsPage() {
           }
           isSubmitting={updateProduct.isPending}
           onChange={handleEditProductChange}
+          onAttributeChange={handleAttributeChange}
           onSubmit={() => handleSaveEdit(editingProductId)}
           onClose={cancelEdit}
         />

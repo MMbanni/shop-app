@@ -18,7 +18,7 @@
 
 /* Floating modal card */
 .modal {
-  width: min(500px, 100%);
+  width: min(800px, 100%);
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
 
@@ -111,10 +111,25 @@
   transform: scale(0.96);
 }
 
+td {
+  text-align: center;
+}
 /* Form layout */
-.modal-form {
+.modal-form, .product-details {
   display: grid;
   gap: 1.25rem;
+}
+
+.product-details, .product-attributes{
+  margin: 0 0 20px;
+  padding: 20px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+}
+
+.modal-form h3{
+  margin:0%;   
 }
 
 /* Each label contains its text, input and error */
@@ -171,6 +186,27 @@
 .modal-form input::placeholder,
 .modal-form textarea::placeholder {
   color: #64748b;
+}
+
+.modal-form textarea {
+  width: 100%;
+  min-height: 100px;
+  max-height: 300px;
+  resize: vertical;
+  box-sizing: border-box;
+
+}
+
+.attribute-table{
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+  border-radius: 2rem;
+  margin-top: 20px;
+}
+
+.product-attributes input{
+  text-align:left
 }
 
 /* Disabled inputs */
