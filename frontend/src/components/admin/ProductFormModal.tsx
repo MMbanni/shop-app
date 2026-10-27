@@ -233,7 +233,6 @@ export function ProductFormModal({
 
             <label>
               Stock
-
               <input
                 name="stock"
                 type="number"

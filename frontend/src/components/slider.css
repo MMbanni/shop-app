@@ -1,0 +1,14 @@
+.slider-track {
+    display: flex;
+    background-color: rgba(240, 248, 255, 0.322);
+    width: 200px;
+    height: 10px;
+    border-radius: 1rem;
+}
+
+.slider-min, .slider-max{
+    background-color: rgba(240, 248, 255, 0.952);
+    width: 10px;
+    height: 10px;
+    border-radius: 10rem;
+}

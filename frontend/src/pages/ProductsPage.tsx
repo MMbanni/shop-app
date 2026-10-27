@@ -3,6 +3,7 @@ import { ProductCard } from "../components/ProductCard";
 import { api } from "../lib/api";
 import { useEffect, useRef, useState } from "react";
 import { FloatingMessage } from "../components/messages/FloatingMessage";
+import { ProductFilter } from "../components/ProductFilter";
 
 type CartMessage = {
   text: string;
@@ -58,6 +59,9 @@ export function ProductsPage() {
       <div className="page-heading">
         <h1>Products</h1>
       </div>
+      <div className="products-container">
+
+      <ProductFilter></ProductFilter>
 
       <section className="product-grid">
         {products?.map((product) =>
@@ -74,6 +78,7 @@ export function ProductsPage() {
         anchor={cartMessage?.anchor ?? null}
         visible={cartMessageVisible}
       />
+      </div>
 
     </main>
   );
