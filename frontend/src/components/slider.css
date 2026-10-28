@@ -4,11 +4,24 @@
     width: 200px;
     height: 10px;
     border-radius: 1rem;
+    position: relative;
+    justify-content: space-between;
 }
 
 .slider-min, .slider-max{
     background-color: rgba(240, 248, 255, 0.952);
-    width: 10px;
-    height: 10px;
+    width: 20px;
+    height: 20px;
     border-radius: 10rem;
+    position: absolute;
+    transform: translate(-50%, -25%);
+
 }
+
+.slider-active {
+    background-color: rgba(240, 248, 255, 0.952);
+    height: 10px;
+    border-radius: 1rem;
+    position: absolute;
+}
+

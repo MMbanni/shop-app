@@ -422,7 +422,7 @@ table:has(tbody tr) thead th {
  .product-filter {
   display: grid;
   background-color: rgba(53, 57, 70, 0.308);
-  width: 200px;
+  width: 250px;
   justify-content: center;
  }
 
