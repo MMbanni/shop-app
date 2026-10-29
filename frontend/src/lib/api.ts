@@ -3,6 +3,7 @@ import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, Login
 
 import { getToken } from "./token";
 import { ApiError } from "./ApiError";
+import { PriceRange } from "../pages/ProductsPage";
 
 const API_URL = (
   import.meta.env.VITE_API_URL?.trim() || "http://localhost:8080"
@@ -98,6 +99,13 @@ export const api = {
 
   products() {
     return request<Product[]>("/products");
+  },
+
+  filterProducts(priceQuery:PriceRange) {
+    return request<Product[]>("/products",{
+      method: "POST",
+      body: JSON.stringify(priceQuery)
+    });
   },
 
   product(id: string) {

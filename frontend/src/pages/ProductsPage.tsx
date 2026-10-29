@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
 import { api } from "../lib/api";
 import { useEffect, useRef, useState } from "react";
@@ -10,11 +10,22 @@ type CartMessage = {
   anchor: HTMLButtonElement;
 };
 
+export type PriceRange = {
+  min: number;
+  max: number;
+};
+
 export function ProductsPage() {
-  const { data: products, isLoading, isError, error } = useQuery({
-    queryKey: ["products"],
-    queryFn: api.products
+  const [priceQuery, setPriceQuery] = useState<PriceRange>({
+    min: 0,
+    max: 50000
   });
+
+  const { data: products, isLoading, isError, error } = useQuery({
+    queryKey: ["products", priceQuery],
+    queryFn: ()=> api.filterProducts(priceQuery)
+  });
+
 
   const [cartMessage, setCartMessage] = useState<CartMessage | null>(null);
   const [cartMessageVisible, setCartMessageVisible] = useState<boolean>(false);
@@ -37,11 +48,6 @@ export function ProductsPage() {
     }, 3000);
   }
 
-
-  if (isLoading) {
-    return <p className="page-message">Loading products...</p>;
-  }
-
   if (isError) {
     return (
       <p className="page-message error">
@@ -61,23 +67,25 @@ export function ProductsPage() {
       </div>
       <div className="products-container">
 
-      <ProductFilter></ProductFilter>
+        <ProductFilter 
+        priceRange = {priceQuery} onPriceChange={setPriceQuery}></ProductFilter>
 
-      <section className="product-grid">
-        {products?.map((product) =>
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddSuccess={(button) => showCartMessage(`${product.name} added to cart`, button)}
+        <section className="product-grid">
+          {isLoading && <p>Loading products...</p>}
+          {products?.map((product) =>
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddSuccess={(button) => showCartMessage(`${product.name} added to cart`, button)}
 
-          />)}
-      </section>
-      <FloatingMessage
-        className="added-to-cart-message"
-        message={cartMessage?.text ?? ""}
-        anchor={cartMessage?.anchor ?? null}
-        visible={cartMessageVisible}
-      />
+            />)}
+        </section>
+        <FloatingMessage
+          className="added-to-cart-message"
+          message={cartMessage?.text ?? ""}
+          anchor={cartMessage?.anchor ?? null}
+          visible={cartMessageVisible}
+        />
       </div>
 
     </main>

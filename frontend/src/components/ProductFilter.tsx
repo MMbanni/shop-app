@@ -1,23 +1,21 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { Slider } from "./Slider";
-
-export function ProductFilter() {
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(0);
+import { PriceRange } from "../pages/ProductsPage";
 
 
-  
-  function changeMinPrice(event: ChangeEvent<HTMLInputElement>){
-    setMinPrice(Number(event.target.value));
-  }
+type ProductFilterProps = {
+  priceRange: PriceRange;
+  onPriceChange: (range: PriceRange) => void;
+};
 
+export function ProductFilter({priceRange,onPriceChange}:ProductFilterProps) {
 
   return (
     <div className="product-filter">
       <div className="filter-price">
         <h3>Price</h3>
         
-        <Slider></Slider>
+        <Slider priceRange={priceRange} onPriceChange={onPriceChange}></Slider>
       </div>
 
     </div>
