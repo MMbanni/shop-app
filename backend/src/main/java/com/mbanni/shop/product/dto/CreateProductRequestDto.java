@@ -8,7 +8,7 @@ import java.util.Map;
 
 import static com.mbanni.shop.common.Constants.*;
 
-public record ProductRequestDto (
+public record CreateProductRequestDto(
         @NotBlank(message = "Name required")
         @Size(max = MAX_NAME_LENGTH)
         String name,

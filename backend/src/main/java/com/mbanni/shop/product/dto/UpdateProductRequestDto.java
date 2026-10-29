@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import static com.mbanni.shop.common.Constants.*;
 
@@ -27,6 +28,8 @@ public record UpdateProductRequestDto(
         @Size(max = 2048, message = "Image URL must be at most 2048 characters")
         @URL(protocol = "https", message = "Image must be a valid HTTPS URL")
         String imageUrl,
+
+        Map<String, String> attributes,
 
         @NotNull
         Long expectedVersion

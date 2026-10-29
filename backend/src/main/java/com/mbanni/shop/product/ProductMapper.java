@@ -3,7 +3,7 @@ package com.mbanni.shop.product;
 import com.mbanni.shop.product.command.CreateProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
 import com.mbanni.shop.product.dto.AdminProductResponseDto;
-import com.mbanni.shop.product.dto.ProductRequestDto;
+import com.mbanni.shop.product.dto.CreateProductRequestDto;
 import com.mbanni.shop.product.dto.ProductResponseDto;
 import com.mbanni.shop.product.dto.UpdateProductRequestDto;
 import org.springframework.stereotype.Component;
@@ -20,6 +20,7 @@ public class ProductMapper {
                 product.getPrice(),
                 product.getDescription(),
                 product.getImageUrl(),
+                product.getAttributes(),
                 product.getProductStatus()
         );
     }
@@ -31,6 +32,7 @@ public class ProductMapper {
                 product.getPrice(),
                 product.getDescription(),
                 product.getImageUrl(),
+                product.getAttributes(),
                 product.getProductStatus(),
                 product.getVersion()
         );
@@ -52,13 +54,14 @@ public class ProductMapper {
 
 
 
-    public CreateProductCommand toCreateCommand(ProductRequestDto request) {
+    public CreateProductCommand toCreateCommand(CreateProductRequestDto request) {
         return new CreateProductCommand(
                 request.name(),
                 request.stock(),
                 request.price(),
                 request.description(),
-                request.imageUrl()
+                request.imageUrl(),
+                request.attributes()
         );
     }
 
@@ -69,6 +72,7 @@ public class ProductMapper {
                 request.price(),
                 request.description(),
                 request.imageUrl(),
+                request.attributes(),
                 request.expectedVersion()
 
         );

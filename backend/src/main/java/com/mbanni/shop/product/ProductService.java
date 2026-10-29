@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,6 +68,11 @@ public class ProductService {
         return productRepository.findByStatus(ProductStatus.ACTIVE);
     }
 
+
+    public List<Product> searchActive(BigDecimal minPrice, BigDecimal maxPrice) {
+        return productRepository.findByPriceBetween(minPrice, maxPrice);
+    }
+
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public Product updateProduct(Long id, UpdateProductCommand request) {
@@ -108,6 +114,10 @@ public class ProductService {
 
         if(request.imageUrl()!= null) {
             product.setImageUrl(request.imageUrl());
+        }
+
+        if(request.attributes()!= null) {
+            product.setAttributes(request.attributes());
         }
 
         return product;

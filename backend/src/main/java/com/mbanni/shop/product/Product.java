@@ -4,9 +4,13 @@ import com.mbanni.shop.common.exception.BusinessException;
 import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.supplier.Supplier;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.mbanni.shop.common.Constants.*;
@@ -31,7 +35,6 @@ public class Product {
     @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String normalizedName;
 
-
     @Column(nullable = false)
     private int stock = 0;
 
@@ -54,6 +57,10 @@ public class Product {
 
     @Column(length = 500)
     private String description;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "attributes", columnDefinition = "jsonb", nullable = false)
+    private Map<String, String> attributes = new HashMap<>();
 
     @Version
     private Long version;
@@ -115,6 +122,11 @@ public class Product {
     }
 
     public String getImageUrl() { return imageUrl; }
+
+
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
 
     public Long getVersion() { return version; }
 
@@ -180,6 +192,12 @@ public class Product {
         this.imageUrl = imageUrl == null || imageUrl.isBlank()
                 ? null
                 : imageUrl.trim();
+    }
+
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes == null
+                ? new HashMap<>()
+                : new HashMap<>(attributes);
     }
 
     @Override

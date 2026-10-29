@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -19,11 +20,19 @@ public class ProductController {
     }
 
     @PostMapping("/admin/products")
-    public ProductResponseDto addProduct(@Valid @RequestBody ProductRequestDto request) {
+    public ProductResponseDto addProduct(@Valid @RequestBody CreateProductRequestDto request) {
         Product product = productService.create(productMapper.toCreateCommand(request));
         return productMapper.toResponse(product);
     }
 
+
+    @PostMapping("/products")
+    public List<ProductResponseDto> searchProducts(@RequestBody FilterProductRequestDto request) {
+        System.out.println(request);
+
+        List<Product> products = productService.searchActive(request.min(),request.max());
+        return productMapper.toResponseList(products);
+    }
 
     @GetMapping("/products")
     public List<ProductResponseDto> getProducts() {

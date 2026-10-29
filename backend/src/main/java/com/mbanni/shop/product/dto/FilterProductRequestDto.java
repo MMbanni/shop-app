@@ -1,4 +1,9 @@
 package com.mbanni.shop.product.dto;
 
-public record FilterProductRequestDto() {
+import java.math.BigDecimal;
+
+public record FilterProductRequestDto(
+        BigDecimal min,
+        BigDecimal max
+) {
 }

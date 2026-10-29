@@ -28,7 +28,7 @@ public final class TestSetup {
         return u;
     }
     public static Product product() {
-        Product p = new Product("Chair", new BigDecimal("100.00"), "Test only");
+        Product p = new Product("Chair", new BigDecimal("100.00"), "Test only", "test");
         id(p, 20L);
         p.setStock(10);
         version(p,3);

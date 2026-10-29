@@ -6,6 +6,7 @@ import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.command.UpdateProductCommand;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Optional;
 import static com.mbanni.shop.support.TestSetup.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,7 +22,7 @@ class ProductServiceTest {
         when(products.findByIdForUpdate(20L)).thenReturn(Optional.of(product));
 
         assertThrows(BusinessException.class, () -> service.updateProduct(20L,
-                new UpdateProductCommand(null, 999, null, null, 2L)));
+                new UpdateProductCommand(null, 999, null, null, "",new HashMap<>(),2L)));
         assertEquals(10, product.getStock());
     }
 
@@ -29,7 +30,7 @@ class ProductServiceTest {
         Product product = product();
         when(products.findByIdForUpdate(20L)).thenReturn(Optional.of(product));
 
-        service.updateProduct(20L, new UpdateProductCommand("  TABLE  ", null, null, null, 3L));
+        service.updateProduct(20L, new UpdateProductCommand("  TABLE  ", null, null, null, "test", new HashMap<>(),3L));
 
         assertEquals("TABLE", product.getName()); assertEquals("table", product.getNormalizedName());
     }
