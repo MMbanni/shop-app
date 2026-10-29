@@ -16,14 +16,35 @@ export type PriceRange = {
 };
 
 export function ProductsPage() {
-  const [priceQuery, setPriceQuery] = useState<PriceRange>({
-    min: 0,
-    max: 50000
+  const [priceQuery, setPriceQuery] = useState<PriceRange | null>(null);
+
+  const { data: allProducts = [],
+    isSuccess: catalogLoaded
+  } = useQuery({
+    queryKey: ["all-products"],
+    queryFn: api.products,
   });
 
+  const maxAllowed = Math.max(
+    0,
+    ...allProducts.map(product=>product.price)
+  )
+
+  const effectiveRange = priceQuery ?? {
+    min:0,
+    max: maxAllowed
+  }
+
+    useEffect(() => {
+    return () => window.clearTimeout(messageTimer.current);
+  }, []);
+
+  
+
   const { data: products, isLoading, isError, error } = useQuery({
-    queryKey: ["products", priceQuery],
-    queryFn: ()=> api.filterProducts(priceQuery)
+    queryKey: ["products", effectiveRange],
+    queryFn: () => api.filterProducts(effectiveRange),
+    enabled: catalogLoaded
   });
 
 
@@ -66,9 +87,14 @@ export function ProductsPage() {
         <h1>Products</h1>
       </div>
       <div className="products-container">
+        
+        { catalogLoaded &&
+        <ProductFilter
+          maxAllowed = {maxAllowed} priceRange={effectiveRange} onPriceChange={setPriceQuery}></ProductFilter>
+        }
+        { products && products?.length < 1 && <p>No products found, please widen your search</p>
 
-        <ProductFilter 
-        priceRange = {priceQuery} onPriceChange={setPriceQuery}></ProductFilter>
+        }
 
         <section className="product-grid">
           {isLoading && <p>Loading products...</p>}

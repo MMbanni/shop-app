@@ -3,10 +3,11 @@ import "./slider.css"
 import { PriceRange } from "../pages/ProductsPage";
 
 type SliderProps = {
-  priceRange: PriceRange
+  maxAllowed: number;
+  priceRange: PriceRange;
   onPriceChange: (range: PriceRange) => void;
 };
-export function Slider({ priceRange, onPriceChange }: SliderProps) {
+export function Slider({ maxAllowed, priceRange, onPriceChange }: SliderProps) {
   const [draftRange, setDraftRange] = useState<PriceRange>(priceRange);
   const draftRef = useRef(priceRange);
 
@@ -20,8 +21,8 @@ export function Slider({ priceRange, onPriceChange }: SliderProps) {
 
   const minPrice = draftRange.min;
   const maxPrice = draftRange.max;
-  const minPosition = (minPrice / 50000) * 100;
-  const maxPosition = (maxPrice / 50000) * 100;
+  const minPosition = (minPrice / maxAllowed) * 100;
+  const maxPosition = (maxPrice / maxAllowed) * 100;
 
   function fitTrack(value: number, min: number, max: number) {
     if (value > max) return max;
@@ -64,19 +65,19 @@ export function Slider({ priceRange, onPriceChange }: SliderProps) {
     const pointerX = event.clientX - rect.left;
 
     const position = fitTrack(pointerX, 0, rect.width)
-    const price = (position / rect.width) * 50000;
+    const price = (position / rect.width) * maxAllowed;
 
     if (event.currentTarget.className === "slider-min") {
       updateDraft({
         ...draftRef.current,
-        min: Math.min(price, maxPrice)
+        min: Math.min(price, maxPrice - 100)
       })
 
     } else if (event.currentTarget.className === "slider-max") {
 
       updateDraft({
         ...draftRef.current,
-        max: Math.max(price, minPrice)
+        max: Math.max(price, minPrice + 100)
       })
 
     }
