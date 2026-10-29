@@ -8,7 +8,8 @@
     justify-content: space-between;
 }
 
-.slider-min, .slider-max{
+.slider-min,
+.slider-max {
     background-color: rgba(240, 248, 255, 0.952);
     z-index: 2;
     width: 20px;
@@ -16,13 +17,14 @@
     border-radius: 10rem;
     position: absolute;
     transform: translate(-50%, -25%);
+    touch-action: none; /* no gestures*/
+    user-select: none; /* dont highlight text */
 
 }
-
 .slider-active {
     background-color: rgba(240, 248, 255, 0.952);
     height: 10px;
     border-radius: 1rem;
     position: absolute;
+    pointer-events: none;
 }
-
