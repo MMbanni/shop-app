@@ -15,8 +15,14 @@ export type PriceRange = {
   max: number;
 };
 
+export type Filters = Record<string, Set<string>>;
+
+
 export function ProductsPage() {
   const [priceQuery, setPriceQuery] = useState<PriceRange | null>(null);
+  const [activeFilters, setActiveFilters] = useState<Filters>({});
+  useEffect(()=> console.log(activeFilters), [activeFilters]
+  )
 
   const { data: allProducts = [],
     isSuccess: catalogLoaded
@@ -58,8 +64,8 @@ export function ProductsPage() {
   
 
   const { data: products, isLoading, isError, error } = useQuery({
-    queryKey: ["products", effectiveRange],
-    queryFn: () => api.filterProducts(effectiveRange),
+    queryKey: ["products", effectiveRange, activeFilters],
+    queryFn: () => api.filterProducts(effectiveRange, activeFilters),
     enabled: catalogLoaded
   });
 
@@ -106,7 +112,7 @@ export function ProductsPage() {
         
         { catalogLoaded &&
         <ProductFilter
-          filters={filters} maxAllowed = {maxAllowed} priceRange={effectiveRange} onPriceChange={setPriceQuery}></ProductFilter>
+          filters={filters} activeFilters={activeFilters} setActiveFilters={setActiveFilters}maxAllowed = {maxAllowed} priceRange={effectiveRange} onPriceChange={setPriceQuery}></ProductFilter>
         }
         { products && products?.length < 1 && <p>No products found, please widen your search</p>
 

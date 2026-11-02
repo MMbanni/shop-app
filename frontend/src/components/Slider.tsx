@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import "./slider.css"
+import "./filter.css"
 import { PriceRange } from "../pages/ProductsPage";
 
 type SliderProps = {

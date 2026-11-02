@@ -1,44 +1,67 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { Slider } from "./Slider";
-import { PriceRange } from "../pages/ProductsPage";
+import { Filters, PriceRange } from "../pages/ProductsPage";
 
 
 type ProductFilterProps = {
   maxAllowed: number;
   priceRange: PriceRange;
-  filters: Record<string, Set<string>>;
+  filters: Filters;
+  activeFilters: Filters;
   onPriceChange: (range: PriceRange) => void;
+  setActiveFilters: React.Dispatch<React.SetStateAction<Filters>>;
+
 };
 
-export function ProductFilter({filters, maxAllowed, priceRange,onPriceChange}:ProductFilterProps) {
-  const [isOpen, setIsOpen] = useState([]);
+export function ProductFilter({ filters, activeFilters, setActiveFilters, maxAllowed, priceRange, onPriceChange }: ProductFilterProps) {
+
+  function handleChecked(event: ChangeEvent<HTMLInputElement>, key: string, value: string) {
+    const isChecked = event.target.checked;
+    setActiveFilters(current => {
+      const values = new Set(current[key] ?? []);
+
+      isChecked ? values.add(value) : values.delete(value);
+
+      return {
+        ...current,
+        [key]: values
+      };
+    })
+  }
 
 
   return (
     <div className="product-filter">
       <div className="filter-price">
-        <h3>Price</h3>        
+        <h3>Price</h3>
         <Slider maxAllowed={maxAllowed} priceRange={priceRange} onPriceChange={onPriceChange}></Slider>
       </div>
       <div>
-        { Object.entries(filters).map(([key,values])=>(
-          <div key={key}>
-            <details>
-              <summary>{key}</summary>
-              {[...values].map((value)=>(
-                <label>
+        {Object.entries(filters).map(([key, values]) => (
+          <details key={key}
+            className="filter-section"
+          >
+            <summary className="filter-title">{key}</summary>
+            <div className="filter-options">
+              {[...values].map((value) => (
+                <label key={value}>
                   <input
-                  type="checkbox">
-                </input> {value}</label>
-                
+                    type="checkbox"
+                    value={value}
+                    checked={activeFilters[key]?.has(value) ?? false}
+                    onChange={(event) => handleChecked(event, key, value)}>
+
+                  </input> {value}</label>
+
               ))}
-            </details>
-          </div>
+            </div>
+          </details>
+
         ))
 
         }
-          
-        
+
+
 
       </div>
 
