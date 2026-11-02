@@ -25,6 +25,22 @@ export function ProductsPage() {
     queryFn: api.products,
   });
 
+  const attributes = allProducts.flatMap((product) => Object.keys(product.attributes)); 
+  const keys = [...new Set(attributes)];
+  const filters: Record<string, Set<string>> = {}
+  keys.forEach((key)=>{
+    filters[key] = new Set
+  })
+
+  allProducts.forEach((product)=>{
+    for(const key of keys){
+      if(product.attributes[key]){
+        filters[key].add(product.attributes[key])
+      }
+    }
+  })
+
+
   const maxAllowed = Math.max(
     0,
     ...allProducts.map(product=>product.price)
@@ -90,7 +106,7 @@ export function ProductsPage() {
         
         { catalogLoaded &&
         <ProductFilter
-          maxAllowed = {maxAllowed} priceRange={effectiveRange} onPriceChange={setPriceQuery}></ProductFilter>
+          filters={filters} maxAllowed = {maxAllowed} priceRange={effectiveRange} onPriceChange={setPriceQuery}></ProductFilter>
         }
         { products && products?.length < 1 && <p>No products found, please widen your search</p>
 
