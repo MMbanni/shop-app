@@ -5,6 +5,7 @@ import com.mbanni.shop.common.exception.ErrorCode;
 import com.mbanni.shop.order.OrderRepository;
 import com.mbanni.shop.order.OrderStatus;
 import com.mbanni.shop.product.command.CreateProductCommand;
+import com.mbanni.shop.product.command.FilterProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -69,8 +70,12 @@ public class ProductService {
     }
 
 
-    public List<Product> searchActive(BigDecimal minPrice, BigDecimal maxPrice) {
-        return productRepository.findByPriceBetween(minPrice, maxPrice);
+    public List<Product> filterProducts(
+            FilterProductCommand command
+    ) {
+        return productRepository.findAll(
+                        ProductSpecification.filter(command)
+                );
     }
 
     @Transactional

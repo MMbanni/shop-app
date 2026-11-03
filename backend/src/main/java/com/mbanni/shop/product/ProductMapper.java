@@ -1,11 +1,9 @@
 package com.mbanni.shop.product;
 
 import com.mbanni.shop.product.command.CreateProductCommand;
+import com.mbanni.shop.product.command.FilterProductCommand;
 import com.mbanni.shop.product.command.UpdateProductCommand;
-import com.mbanni.shop.product.dto.AdminProductResponseDto;
-import com.mbanni.shop.product.dto.CreateProductRequestDto;
-import com.mbanni.shop.product.dto.ProductResponseDto;
-import com.mbanni.shop.product.dto.UpdateProductRequestDto;
+import com.mbanni.shop.product.dto.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -75,6 +73,13 @@ public class ProductMapper {
                 request.attributes(),
                 request.expectedVersion()
 
+        );
+    }
+
+    public FilterProductCommand toFilterCommand(FilterProductRequestDto request) {
+        return new FilterProductCommand(
+                request.priceQuery(),
+                request.filters()
         );
     }
 

@@ -27,11 +27,13 @@ public class ProductController {
 
 
     @PostMapping("/products")
-    public List<ProductResponseDto> searchProducts(@RequestBody FilterProductRequestDto request) {
-        System.out.println(request);
+    public List<ProductResponseDto> filterProducts(
+            @RequestBody FilterProductRequestDto request
+    ) {
+        List<Product> products = productService.filterProducts(productMapper.toFilterCommand(request));;
 
-        List<Product> products = productService.searchActive(request.min(),request.max());
         return productMapper.toResponseList(products);
+
     }
 
     @GetMapping("/products")
