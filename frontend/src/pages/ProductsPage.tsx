@@ -16,6 +16,8 @@ export type PriceRange = {
 };
 
 export type Filters = Record<string, Set<string>>;
+export type SelectedFilters = Record<string, string[]>;
+
 
 
 export function ProductsPage() {
@@ -33,7 +35,8 @@ export function ProductsPage() {
 
   const attributes = allProducts.flatMap((product) => Object.keys(product.attributes)); 
   const keys = [...new Set(attributes)];
-  const filters: Record<string, Set<string>> = {}
+
+  const filters: Filters = {}
   keys.forEach((key)=>{
     filters[key] = new Set
   })
@@ -60,12 +63,16 @@ export function ProductsPage() {
     useEffect(() => {
     return () => window.clearTimeout(messageTimer.current);
   }, []);
-
   
+  const selectedAttributes = Object.fromEntries(
+    Object.entries(activeFilters).map(
+      ([key,value])=> [key,[...value]]
+    )
+  )
 
   const { data: products, isLoading, isError, error } = useQuery({
-    queryKey: ["products", effectiveRange, activeFilters],
-    queryFn: () => api.filterProducts(effectiveRange, activeFilters),
+    queryKey: ["products", effectiveRange, selectedAttributes],
+    queryFn: () => api.filterProducts(effectiveRange, selectedAttributes),
     enabled: catalogLoaded
   });
 
