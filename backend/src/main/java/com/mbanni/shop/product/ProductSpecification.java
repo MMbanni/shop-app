@@ -1,7 +1,6 @@
 package com.mbanni.shop.product;
 
 import com.mbanni.shop.product.command.FilterProductCommand;
-import com.mbanni.shop.product.dto.FilterProductRequestDto;
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Expression;
@@ -54,7 +53,6 @@ public class ProductSpecification {
                         continue;
                     }
 
-                    // PostgreSQL JSONB extraction
                     Expression<String> attribute = cb.function(
                             "jsonb_extract_path_text",
                             String.class,
