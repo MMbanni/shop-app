@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +21,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findByIdForUpdate(Long id);
 
     List<Product> findByStatus(ProductStatus status);
-    List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 
     Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
 
