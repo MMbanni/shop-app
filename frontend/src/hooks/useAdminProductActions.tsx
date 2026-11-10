@@ -5,25 +5,8 @@ import {
 } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { AdminProductTab, ProductStatus } from "../types";
+import { UpdateProductsRequest } from "../dto";
 
-type ProductInput = {
-  name: string;
-  price: number;
-  stock: number;
-  description?: string;
-  imageUrl?: string;
-  attributes: Record<string,string>
-};
-
-type UpdateProductInput = ProductInput & {
-  id: number;
-  expectedVersion:number
-};
-
-type ChangeStatusInput = {
-  productId: number;
-  status: ProductStatus;
-};
 
 export function useAdminProducts(selectedTab: AdminProductTab){
   const queryClient = useQueryClient();
@@ -46,7 +29,7 @@ export function useAdminProducts(selectedTab: AdminProductTab){
     });
   
     const updateProduct = useMutation({
-      mutationFn: ( product:UpdateProductInput) => api.adminUpdateProduct(product),  
+      mutationFn: ( product:UpdateProductsRequest) => api.adminUpdateProduct(product),  
       onSuccess: refreshProductLists
     });
   
@@ -54,7 +37,7 @@ export function useAdminProducts(selectedTab: AdminProductTab){
       mutationFn: ({
         productId,
         status,
-      }: ChangeStatusInput) => api.changeProductStatus(productId, status),
+      }: { productId: number; status: ProductStatus }) => api.changeProductStatus(productId, status),
   
       onSuccess: refreshProductLists
     });
