@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import type { ProductForm, ProductFormErrors } from "../../types";
 import "./FormModal.css";
+import { ProductImagesEditor } from "./ProductImagesEditor";
 
 type ProductFormModalProps = {
   title: string;
@@ -10,6 +11,7 @@ type ProductFormModalProps = {
   isSubmitting: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onAttributeChange: (attributes: Record<string, string>) => void;
+  onImagesChange: (images: string[]) => void;
   onSubmit: () => void;
   onClose: () => void;
 };
@@ -22,6 +24,7 @@ export function ProductFormModal({
   isSubmitting,
   onChange,
   onAttributeChange,
+  onImagesChange,
   onSubmit,
   onClose,
 }: ProductFormModalProps) {
@@ -36,7 +39,7 @@ export function ProductFormModal({
 
   const isEditing = Boolean(editingKey);
 
-   function addAttribute() {
+  function addAttribute() {
     const name = addAttributeName.trim();
     const value = addAttributeValue.trim();
     if (Object.keys(form.attributes).includes(name)) {
@@ -112,7 +115,7 @@ export function ProductFormModal({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isSubmitting || isEditing) return;
+    if (isSubmitting) return;
 
     if (isEditing) {
       setAttributeError("Confirm or cancel the attribute edit first.");
@@ -123,7 +126,7 @@ export function ProductFormModal({
       setAttributeError("Click Add or clear the new attribute fields first.");
       return;
     }
-    
+
     onSubmit();
   }
 
@@ -284,31 +287,8 @@ export function ProductFormModal({
               )}
             </label>
 
-            <label>
-              Image URL
-
-              <input
-                name="imageUrl"
-                step="1"
-                value={form.imageUrl}
-                onChange={onChange}
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.imageUrl)}
-                aria-describedby={
-                  errors.imageUrl ? "imageUrl-error" : undefined
-                }
-              />
-
-              {errors.imageUrl && (
-                <span
-                  id="imageUrl-error"
-                  className="field-error"
-                  role="alert"
-                >
-                  {errors.imageUrl}
-                </span>
-              )}
-            </label>
+            <ProductImagesEditor images={form.images} onChange={onImagesChange}
+              disabled={isSubmitting} error={errors.images} />
           </div>
 
           <div className="product-attributes">
@@ -337,7 +317,7 @@ export function ProductFormModal({
                           aria-describedby={
                             attributeError || errors.attributes ? "attribute-error" : undefined
                           }
-                          
+
                         />
                         </td>
                         <td><input
@@ -358,7 +338,7 @@ export function ProductFormModal({
                               onClick={() => editAttribute()}
                               aria-label={`Edit ${key}`}
                               disabled={isSubmitting}
-                              
+
                             >
                               ✓
                             </button>

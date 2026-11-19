@@ -3,8 +3,9 @@ export type AddProductsRequest = {
   price: number;
   stock?: number;
   description?: string;
-  imageUrl?: string
-}
+  images?: string[];
+  attributes?: Record<string, string>;
+};
 
 export type UpdateProductsRequest = {
   id: number;
@@ -13,6 +14,6 @@ export type UpdateProductsRequest = {
   price?: number;
   stock?: number;
   description?: string;
-  imageUrl?: string;
+  images?: string[];
   attributes: Record<string,string>
-}
+};

@@ -3,7 +3,7 @@ export type Product = {
   name: string;
   description?: string | null;
   price: number;
-  imageUrl?: string;
+  images: string[];
   attributes: Record<string, string>;
   stock: number;
   status: ProductStatus;
@@ -19,8 +19,8 @@ export type ProductForm = {
   name: string;
   price: string;
   stock: string;
-  description?: string,
-  imageUrl?: string,
+  description: string,
+  images: string[],
   attributes: Record<string,string>
 };
 

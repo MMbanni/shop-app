@@ -21,7 +21,8 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   const addButtonRef = useRef<HTMLButtonElement>(null)
 
   const isOutOfStock = product.stock < 1;
-  const imageUrl = product.imageUrl || "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
+  const images = product.images;
+  const fallbackImageUrl = "https://images.unsplash.com/photo-1651761580601-4a77e280c80f?w=1000&h=800&auto=format&fit=crop";
 
   const addMutation = useMutation({
     mutationFn: () => api.addToCart(product.id, 1),
@@ -57,7 +58,7 @@ export function ProductCard({ product, onAddSuccess }: ProductCardProps) {
   return (
     <article className="product-card">
       <NavLink to={`/products/${product.id}`} >
-        <img src={imageUrl}
+        <img src={images.at(0) ?? fallbackImageUrl}
           alt={product.name}
         />
       </NavLink>

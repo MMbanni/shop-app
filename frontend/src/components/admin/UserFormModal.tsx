@@ -35,7 +35,7 @@ export function UserFormModal({
     >
 
       <aside
-        className="modal"
+        className="modal user-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

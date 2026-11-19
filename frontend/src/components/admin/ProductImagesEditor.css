@@ -1,0 +1,31 @@
+.product-images-field { display: grid; gap: .65rem; min-width: 0; }
+.product-images-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.product-images-heading h2 { margin: 0; }
+.product-images-summary { display: flex; flex-wrap: wrap; gap: .5rem; }
+.product-images-summary .product-image-preview { width: 64px; height: 64px; }
+.product-images-dialog { box-sizing: border-box; width: min(680px, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1.5rem; color: #eef2ff; background: #0f172a; border: 1px solid #475569; border-radius: 1.2rem; box-shadow: 0 24px 80px #0009; }
+.product-images-dialog::backdrop { background: #020617c9; }
+.product-images-dialog form { display: grid; gap: .8rem; }
+.product-images-dialog p { margin: 0; }
+.product-images-dialog input { box-sizing: border-box; min-width: 0; width: 100%; padding: .8rem; background: #1e293b; color: #f8fafc; border: 1px solid #64748b; border-radius: .6rem; font: inherit; }
+.product-images-dialog button:focus-visible, .product-images-dialog input:focus-visible { outline: 3px solid #5eead4; outline-offset: 3px; }
+.product-image-add { display: flex; gap: .6rem; }
+.product-image-add button { flex-shrink: 0; }
+.product-images-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+.product-images-list li { display: flex; gap: 1rem; padding: .8rem; border: 1px solid #334155; border-radius: .8rem; }
+.product-image-preview { width: 96px; height: 96px; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; border: 1px solid #475569; border-radius: .6rem; background: #1e293b; text-align: center; font-size: .75rem; }
+.product-image-preview img { width: 100%; height: 100%; object-fit: contain; }
+.product-image-info { min-width: 0; display: grid; gap: .5rem; flex: 1; }
+.product-image-url {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+.product-image-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.product-images-footer { display: flex; justify-content: flex-end; gap: .75rem; padding-top: 1rem; border-top: 1px solid #334155; }
+.product-images-empty { padding: 1rem; border: 1px dashed #64748b; border-radius: .6rem; }
+.product-image-status { color: #5eead4; font-size: .85rem; }
+@media (max-width: 520px) { .product-images-dialog { padding: 1rem; } .product-image-add { flex-direction: column; } .product-images-list li { flex-direction: column; } }

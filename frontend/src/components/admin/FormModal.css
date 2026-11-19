@@ -121,11 +121,10 @@ td {
 }
 
 .product-details, .product-attributes{
-  margin: 0 0 20px;
-  padding: 20px;
-
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
 }
 
 .modal-form h3{
@@ -351,4 +350,12 @@ td {
   .modal-form textarea {
     transition: none;
   }
+}
+
+.modal {
+  box-sizing: border-box;
+}
+
+.user-modal {
+  width: min(440px, 100%);
 }

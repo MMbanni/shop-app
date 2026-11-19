@@ -1,12 +1,7 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { AdminProductTab, ProductStatus } from "../types";
 import { UpdateProductsRequest } from "../dto";
-
 
 export function useAdminProducts(selectedTab: AdminProductTab){
   const queryClient = useQueryClient();
@@ -15,6 +10,7 @@ export function useAdminProducts(selectedTab: AdminProductTab){
     return Promise.all([
       queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
       queryClient.invalidateQueries({ queryKey: ["products"] }),
+      queryClient.invalidateQueries({ queryKey: ["all-products"] })
     ]);
   }
 

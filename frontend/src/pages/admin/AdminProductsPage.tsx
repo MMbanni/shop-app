@@ -6,6 +6,7 @@ import { useAdminProducts } from "../../hooks/useAdminProductActions";
 import { ProductForm } from "../../types/product";
 import { getApiError, getErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
+import { ProductImagesEditor } from "../../components/admin/ProductImagesEditor";
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
 
@@ -14,7 +15,7 @@ const emptyProductForm: ProductForm = {
   price: "",
   stock: "0",
   description: "",
-  imageUrl:"",
+  images:[],
   attributes:{}
 };
 
@@ -50,7 +51,8 @@ export function AdminProductsPage() {
       price: Number(newProduct.price),
       stock: Number(newProduct.stock),
       description: newProduct.description,
-      imageUrl: newProduct.imageUrl
+      images: newProduct.images,
+      attributes: newProduct.attributes
     },
       {
         onSuccess: () => setNewProduct(emptyProductForm),
@@ -75,7 +77,7 @@ export function AdminProductsPage() {
       price: String(product.price),
       stock: String(product.stock ?? 0),
       description: String(product.description),
-      imageUrl: String(product.imageUrl),
+      images: [...(product.images ?? [])],
       attributes: product.attributes
     });
 
@@ -130,7 +132,7 @@ export function AdminProductsPage() {
       price: Number(editProduct.price),
       stock: Number(editProduct.stock),
       description: editProduct.description,
-      imageUrl: editProduct.imageUrl,
+      images: editProduct.images,
       attributes: editProduct.attributes
     },
       {
@@ -241,7 +243,7 @@ export function AdminProductsPage() {
               <th>Price</th>
               <th>Stock</th>
               <th>Description</th>
-              <th>Image url</th>
+              <th>Images</th>
               <th>Status</th>              
               <th>Actions</th>
             </tr>
@@ -261,7 +263,7 @@ export function AdminProductsPage() {
                   <td>{money(product.price)}</td>
                   <td>{product.stock ?? 0}</td>
                   <td>{product.description ? "✓" : "✗"}</td>
-                  <td>{product.imageUrl ? "✓" : "✗"}</td>
+                  <td>{product.images?.length ?? 0 }</td>
 
 
 
@@ -357,16 +359,7 @@ export function AdminProductsPage() {
 
               </td>
 
-              <td>
-                <input
-                  name="imageUrl"
-                  value={newProduct.imageUrl}
-                  onChange={handleAddProductChange}
-                  placeholder="Image url"
-                />
-                {handleAddProductErrors("imageUrl")}
-
-              </td>
+              <td>-</td>
 
               <td>Inactive</td>
 
@@ -392,6 +385,9 @@ export function AdminProductsPage() {
             name: getUpdateProductError("name"),
             price: getUpdateProductError("price"),
             stock: getUpdateProductError("stock"),
+            description: getUpdateProductError("description"),
+            images: getUpdateProductError("images"),
+            attributes: getUpdateProductError("attributes"),
           }}
           submitError={
             updateProduct.isError
@@ -401,6 +397,7 @@ export function AdminProductsPage() {
           isSubmitting={updateProduct.isPending}
           onChange={handleEditProductChange}
           onAttributeChange={handleAttributeChange}
+          onImagesChange={images => setEditProduct(current => ({ ...current, images }))}
           onSubmit={() => handleSaveEdit(editingProductId)}
           onClose={cancelEdit}
         />
