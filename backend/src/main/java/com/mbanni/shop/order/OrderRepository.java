@@ -16,6 +16,9 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByUser_Id(Long userId);
 
+    List<Order> findByUser_IdOrderByIdDesc(Long userId, Pageable pageable);
+
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findByIdForUpdate(@Param("id") Long id);

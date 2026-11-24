@@ -38,7 +38,7 @@ public class ProductService {
                     "Product already exists in the " + existingProduct.get().getProductStatus() + " list.");
         }
 
-        Product product = new Product(name, request.price(), request.description(), request.imageUrl());
+        Product product = new Product(name, request.price(), request.description(), request.images());
 
         Integer stock = request.stock();
         product.setStock(stock == null ? 0 : stock);
@@ -48,33 +48,43 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Product getProduct(Long id) {
-        return productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
+        Product product = productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
                 .orElseThrow(()-> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        product.getImages().size();
+        return  product;
     }
 
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')")
     public List<Product> getAdminProducts(ProductStatus status) {
+        List<Product> products;
         if (status == null) {
-            return productRepository.findAll();
+            products = productRepository.findAll();
         } else {
-            return productRepository.findByStatus(status);
+            products = productRepository.findByStatus(status);
         }
+
+        return initializeImages(products);
     }
 
     @Transactional(readOnly = true)
     public List<Product> getActive() {
-        return productRepository.findByStatus(ProductStatus.ACTIVE);
+        List<Product> products = productRepository.findByStatus(ProductStatus.ACTIVE);
+
+        for (Product product : products) {
+            product.getImages().size();
+        }
+
+        return products;
     }
 
 
-    public List<Product> filterProducts(
-            FilterProductCommand command
-    ) {
-        return productRepository.findAll(
-                        ProductSpecification.filter(command)
-                );
+    @Transactional(readOnly = true)
+    public List<Product> filterProducts(FilterProductCommand command) {
+        return initializeImages(
+                productRepository.findAll(ProductSpecification.filter(command))
+        );
     }
 
     @Transactional
@@ -116,14 +126,15 @@ public class ProductService {
             product.setDescription(request.description());
         }
 
-        if(request.imageUrl()!= null) {
-            product.setImageUrl(request.imageUrl());
+        if(request.images()!= null) {
+            product.setImages(request.images());
         }
 
         if(request.attributes()!= null) {
             product.setAttributes(request.attributes());
         }
 
+        product.getImages().size();
         return product;
     }
 
@@ -157,6 +168,14 @@ public class ProductService {
         } else if (status == ProductStatus.ARCHIVED) {
             product.archive();
         }
+    }
+
+    private List<Product> initializeImages(List<Product> products) {
+        // Mapping currently happens after the service transaction ends.
+        for (Product product : products) {
+            product.getImages().size();
+        }
+        return products;
     }
 
 }

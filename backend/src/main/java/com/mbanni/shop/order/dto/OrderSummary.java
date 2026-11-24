@@ -1,4 +1,11 @@
 package com.mbanni.shop.order.dto;
 
-public record OrderSummary() {
-}
+import java.math.BigDecimal;
+import java.time.Instant;
+
+public record OrderSummary(
+        Long id,
+        String status,
+        Instant createdAt,
+        BigDecimal total
+) {}

@@ -17,7 +17,7 @@ public class ProductMapper {
                 product.getStock(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getImageUrl(),
+                product.getImages().stream().map(ProductImage::getUrl).toList(),
                 product.getAttributes(),
                 product.getProductStatus()
         );
@@ -29,7 +29,7 @@ public class ProductMapper {
                 product.getStock(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getImageUrl(),
+                product.getImages().stream().map(ProductImage::getUrl).toList(),
                 product.getAttributes(),
                 product.getProductStatus(),
                 product.getVersion()
@@ -58,7 +58,7 @@ public class ProductMapper {
                 request.stock(),
                 request.price(),
                 request.description(),
-                request.imageUrl(),
+                request.images(),
                 request.attributes()
         );
     }
@@ -69,7 +69,7 @@ public class ProductMapper {
                 request.stock(),
                 request.price(),
                 request.description(),
-                request.imageUrl(),
+                request.images(),
                 request.attributes(),
                 request.expectedVersion()
 

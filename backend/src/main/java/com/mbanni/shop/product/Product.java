@@ -8,10 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.mbanni.shop.common.Constants.*;
 
@@ -52,8 +49,13 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.INACTIVE;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("position ASC")
+    private List<ProductImage> images = new ArrayList<>();
 
     @Column(length = 500)
     private String description;
@@ -67,12 +69,12 @@ public class Product {
 
     public Product() {}
 
-    public Product(String name, BigDecimal price, String description, String imageUrl) {
+    public Product(String name, BigDecimal price, String description, List<String> images) {
         setName(name);
         setNormalizedName(normalizeName(name));
         setPrice(price);
         setDescription(description);
-        setImageUrl(imageUrl);
+        setImages(images);
     }
 
     public void deactivate() {
@@ -121,8 +123,7 @@ public class Product {
         return description;
     }
 
-    public String getImageUrl() { return imageUrl; }
-
+    public List<ProductImage> getImages() { return images; }
 
     public Map<String, String> getAttributes() {
         return attributes;
@@ -188,10 +189,34 @@ public class Product {
         this.description = description;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl == null || imageUrl.isBlank()
-                ? null
-                : imageUrl.trim();
+    public void setImages(List<String> urls) {
+        List<String> validated = new ArrayList<>();
+        if (urls != null) {
+            if (urls.size() > 10) {
+                throw BusinessException.forField(ErrorCode.ILLEGAL_OPERATION, "images", "Use at most 10 images");
+            }
+            for (String url : urls) {
+                if (url == null || url.isBlank() || url.length() > 2048) {
+                    throw BusinessException.forField(ErrorCode.ILLEGAL_OPERATION, "images", "Invalid image URL");
+                }
+                try {
+                    java.net.URI uri = new java.net.URI(url);
+                    if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null) {
+                        throw new java.net.URISyntaxException(url, "HTTPS URL required");
+                    }
+                } catch (java.net.URISyntaxException ex) {
+                    throw BusinessException.forField(ErrorCode.ILLEGAL_OPERATION, "images", "Image must be a valid HTTPS URL");
+                }
+                validated.add(url);
+            }
+        }
+
+        this.images.clear();
+        for (int position = 0; position < validated.size(); position++) {
+            ProductImage image = new ProductImage(validated.get(position), position);
+            image.setProduct(this);
+            this.images.add(image);
+        }
     }
 
     public void setAttributes(Map<String, String> attributes) {

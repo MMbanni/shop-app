@@ -1,9 +1,11 @@
 package com.mbanni.shop.product.dto;
 
+import com.mbanni.shop.product.ProductImage;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import static com.mbanni.shop.common.Constants.*;
@@ -27,9 +29,10 @@ public record CreateProductRequestDto(
         @Size(max = 500, message = "Description must be at most 500 characters")
         String description,
 
+        @Size(max = 10, message = "Use at most 10 images")
+        List<@NotBlank(message = "Image URL required")
         @Size(max = 2048, message = "Image URL must be at most 2048 characters")
-        @URL(protocol = "https", message = "Image must be a valid HTTPS URL")
-        String imageUrl,
+        @URL(protocol = "https", message = "Image must be a valid HTTPS URL") String> images,
 
         Map<String, String> attributes
 
