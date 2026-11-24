@@ -5,75 +5,62 @@ import { api } from "../lib/api";
 import { getErrorMessage, getFieldErrors } from "../lib/ApiError";
 import { money } from "../lib/money";
 import "./AccountPage.css";
-import { FloatingMessage } from "../components/messages/FloatingMessage";
 import { ButtonMessage } from "../types/components";
+import { Link } from "react-router-dom";
 
 type FormProps = {
   children: ReactNode;
   button: string;
-  success: string;
+  success?: string;
+  primary?: boolean;
   save: (fields: FormData) => Promise<unknown>;
 };
 
-function AccountForm({ children, button, success, save }: FormProps) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const messageTimer = useRef<number | undefined>(undefined);
+function AccountForm({ children, button, success, primary=false, save }: FormProps) {
 
-  const [message, setMessage] = useState<ButtonMessage | null>(null);
-  const [messageVisible, setMessageVisible] = useState<boolean>(false);
-
-  useEffect(() => {
-    return () => window.clearTimeout(messageTimer.current);
-  }, []);
-
-  function showMessage(message: ButtonMessage) {
-    window.clearTimeout(messageTimer.current);
-
-    setMessage(message);
-    setMessageVisible(true);
-
-    messageTimer.current = window.setTimeout(() => {
-      setMessageVisible(false);
-    }, 3000);
-  }
-
-  const mutation = useMutation({
-    mutationFn: save,
-    onSuccess: () => {
-      if (buttonRef.current) {
-        showMessage({ text: success, anchor: buttonRef.current })
-      }
-    }
-  });
+  const mutation = useMutation({ mutationFn: save });
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!mutation.isPending) {
-      setMessageVisible(false);
       mutation.mutate(new FormData(event.currentTarget));
     }
   }
 
+  const errorMessage = mutation.isError
+    ? Object.values(getFieldErrors(mutation.error)).find(Boolean)
+      ?? getErrorMessage(mutation.error)
+    : null;
+
   return (
     <form
+      className="account-form"
       onSubmit={submit}
-      onChange={() => {
-        mutation.reset();
-        setMessageVisible(false);
-      }}>
-
-
+      onChange={() => mutation.reset()}
+    >
       <fieldset disabled={mutation.isPending}>
         {children}
 
-        <button ref={buttonRef} type="submit" className="button">
+        <button
+          type="submit"
+          className={`button${primary ? "" : " ghost"}`}
+        >
           {mutation.isPending ? "Please wait…" : button}
         </button>
       </fieldset>
 
-      {mutation.isSuccess && <p role="status">{success}</p>}
-      {mutation.isError && <p role="alert">{getFieldErrors(mutation.error).name}</p>}
+      {mutation.isSuccess && success && (
+        <p className="account-feedback account-success" role="status">
+          {success}
+        </p>
+      )}
+
+      {errorMessage && (
+        <p className="account-feedback" role="alert">
+          {errorMessage}
+        </p>
+      )}
     </form>
   );
 }
@@ -86,69 +73,273 @@ export function AccountPage() {
 function Account({ id }: { id: number }) {
 
   const [page, setPage] = useState(0);
-  const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
-  const profile = useQuery({ queryKey: ["account", id], queryFn: api.me });
-  const orders = useQuery({ queryKey: ["customer-orders", id, page], queryFn: () => api.myOrders(page) });
+  const [newEmail, setNewEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [emailNotice, setEmailNotice] = useState("");
+  const [requestHint, setRequestHint] = useState("");
 
-  return <main className="page-shell narrow account-page">
-    <h1>My account</h1>
+  const profile = useQuery({
+    queryKey: ["account", id],
+    queryFn: api.me,
+  });
 
-    <div className="account-columns">
-      <section>
-        <h2>Profile</h2>
-        {profile.isPending && <p>Loading profile…</p>}
-        {profile.isError && <p role="alert">{getErrorMessage(profile.error)}</p>}
-        {profile.data &&
-          <AccountForm
-            button="Save name"
-            success="Name saved."
-            save={async fields => {
-              await api.saveName(String(fields.get("name")).trim());
-              await profile.refetch();
-            }}
-          >
-            <label> Name
-              <input name="name"
-                defaultValue={profile.data.name} autoComplete="name" required minLength={2} maxLength={50} />
-            </label>
-            <p>Current email<br /><strong>{profile.data.email}</strong></p>
-          </AccountForm>}
+  const orders = useQuery({
+    queryKey: ["customer-orders", id, page],
+    queryFn: () => api.myOrders(page),
+  });
+
+  return (
+    <main className="page-shell narrow account-page">
+      <header className="account-heading">
+        <h1>My account</h1>
+        <p>Manage your details and view your orders.</p>
+      </header>
+
+      <div className="account-columns">
+        <section className="account-card">
+          <h2>Profile</h2>
+
+          {profile.isPending && <p role="status">Loading profile…</p>}
+
+          {profile.isError && (
+            <p role="alert">{getErrorMessage(profile.error)}</p>
+          )}
+
+          {profile.data && (
+            <>
+              <div className="account-email">
+                <span>Current email</span>
+                <strong>{profile.data.email}</strong>
+              </div>
+
+              <AccountForm
+                button="Save name"
+                success="Name saved."
+                save={async fields => {
+                  await api.saveName(String(fields.get("name")).trim());
+                  await profile.refetch();
+                }}
+              >
+                <label>
+                  Name
+                  <input
+                    name="name"
+                    defaultValue={profile.data.name}
+                    autoComplete="name"
+                    required
+                    minLength={2}
+                    maxLength={50}
+                  />
+                </label>
+              </AccountForm>
+            </>
+          )}
+        </section>
+
+        <section className="account-card">
+          <h2>Change email</h2>
+
+          {emailNotice && (
+            <p className="account-feedback account-success" role="status">
+              {emailNotice}
+            </p>
+          )}
+
+          {pendingEmail === null ? (
+            <>
+              <p className="account-help">
+                Your current email stays active until you verify the new one.
+              </p>
+
+              {requestHint && (
+                <p className="account-help" role="status">
+                  {requestHint}
+                </p>
+              )}
+
+              <AccountForm
+                key="request-email"
+                button="Send verification code"
+                primary
+                save={async fields => {
+                  const target = String(fields.get("newEmail")).trim();
+                  const password = String(fields.get("password"));
+
+                  await api.requestEmail(target, password);
+
+                  setNewEmail(target);
+                  setPendingEmail(target);
+                  setEmailNotice("");
+                  setRequestHint("");
+                }}
+              >
+                <label>
+                  New email
+                  <input
+                    name="newEmail"
+                    type="email"
+                    autoComplete="off"
+                    value={newEmail}
+                    onChange={event => setNewEmail(event.target.value)}
+                    maxLength={254}
+                    required
+                  />
+                </label>
+
+                <label>
+                  Current password
+                  <input
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+              </AccountForm>
+            </>
+          ) : (
+            <>
+              <div className="account-verification" role="status">
+                <h3>Check your new inbox</h3>
+                <p>
+                  We sent a verification code to{" "}
+                  <strong>{pendingEmail}</strong>.
+                </p>
+                <p>
+                  Codes are valid for 15 minutes. If you request another,
+                  use the latest code.
+                </p>
+              </div>
+
+              <AccountForm
+                key="confirm-email"
+                button="Confirm new email"
+                primary
+                save={async fields => {
+                  await api.confirmEmail(
+                    String(fields.get("code")).trim()
+                  );
+
+                  setPendingEmail(null);
+                  setNewEmail("");
+                  setEmailNotice(
+                    "Email verified. Use your new email next time you sign in."
+                  );
+
+                  await profile.refetch();
+                }}
+              >
+                <label>
+                  Verification code
+                  <input
+                    name="code"
+                    autoComplete="one-time-code"
+                    spellCheck={false}
+                    maxLength={100}
+                    required
+                    autoFocus
+                  />
+                </label>
+
+                <div className="account-email-actions">
+                  <button
+                    type="button"
+                    className="account-text-button"
+                    onClick={() => {
+                      setPendingEmail(null);
+                      setRequestHint(
+                        "Re-enter your current password to send a fresh code."
+                      );
+                    }}
+                  >
+                    Resend code
+                  </button>
+
+                  <button
+                    type="button"
+                    className="account-text-button"
+                    onClick={() => {
+                      setPendingEmail(null);
+                      setRequestHint("Enter the email address you want to use.");
+                    }}
+                  >
+                    Use another email
+                  </button>
+                </div>
+              </AccountForm>
+            </>
+          )}
+        </section>
+      </div>
+
+      <section className="account-card account-orders">
+        <h2>Order history</h2>
+
+        {orders.isPending && <p role="status">Loading orders…</p>}
+
+        {orders.isError && (
+          <p role="alert">{getErrorMessage(orders.error)}</p>
+        )}
+
+        {orders.data?.length === 0 && (
+          <div className="account-empty">
+            <p>
+              {page === 0
+                ? "You have no orders yet."
+                : "No older orders."}
+            </p>
+
+            {page === 0 && (
+              <Link className="account-text-button" to="/products">
+                Browse products
+              </Link>
+            )}
+          </div>
+        )}
+
+        {!!orders.data?.length && (
+          <ul className="account-order-list">
+            {orders.data.map(order => (
+              <li key={order.id}>
+                <div>
+                  <strong>Order #{order.id}</strong>
+                  <time dateTime={order.createdAt}>
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </time>
+                </div>
+
+                <span className="account-order-status">
+                  {order.status}
+                </span>
+
+                <strong>{money(order.total)}</strong>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {(page > 0 || orders.data?.length === 10) && (
+          <nav className="account-pagination" aria-label="Order history pages">
+            <button
+              className="button ghost"
+              disabled={page === 0 || orders.isFetching}
+              onClick={() => setPage(current => current - 1)}
+            >
+              Newer orders
+            </button>
+
+            <span>Page {page + 1}</span>
+
+            <button
+              className="button ghost"
+              disabled={orders.data?.length !== 10 || orders.isFetching}
+              onClick={() => setPage(current => current + 1)}
+            >
+              Older orders
+            </button>
+          </nav>
+        )}
       </section>
-
-      <section><h2>Change email</h2>
-        <AccountForm button="Send verification code" success="Check your new inbox. Your code expires in 15 minutes." save={async fields => {
-          await api.requestEmail(String(fields.get("email")).trim(), password);
-          setPassword("");
-        }}>
-          <label>New email<input name="email" type="email" maxLength={254} required /></label>
-          <label>Current password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
-        </AccountForm>
-      </section>
-      <section><h2>Verify new email</h2>
-        <AccountForm button="Confirm email" success="Email verified. Use your new email next time you sign in." save={async () => {
-          await api.confirmEmail(code.trim());
-          setCode("");
-          await profile.refetch();
-        }}>
-          <label>Code from your new inbox<input required maxLength={100} autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value)} /></label>
-        </AccountForm>
-      </section>
-    </div>
-
-    <section>
-      <h2>Order history</h2>
-      {orders.isPending && <p>Loading orders…</p>}
-      {orders.isError && <p role="alert">{getErrorMessage(orders.error)}</p>}
-      {orders.data?.length === 0 && <p>{page === 0 ? "You have no orders yet." : "No older orders."}</p>}
-
-      <ul>{orders.data?.map(order => <li key={order.id}>
-        <strong>Order #{order.id}</strong>
-        <span>{new Date(order.createdAt).toLocaleDateString()}</span>
-        <span>{order.status}</span><strong>{money(order.total)}</strong>
-      </li>)}</ul>
-      {page > 0 && <button className="button ghost" onClick={() => setPage(page - 1)}>Newer orders</button>}
-      {orders.data?.length === 10 && <button className="button ghost" onClick={() => setPage(page + 1)}>Older orders</button>}
-    </section>
-  </main>;
+    </main>
+  );
 }
