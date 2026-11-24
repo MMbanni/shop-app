@@ -14,12 +14,15 @@ import { AdminPage } from "./pages/admin/AdminPage";
 import { Footer } from "./components/Footer";
 import { ContactPage } from "./pages/ContactPage";
 import { ProductPage } from "./pages/ProductPage";
+import { AccountPage } from "./pages/AccountPage";
+
 
 export function App() {
   return (
     <>
       <Navbar />
       <Routes>
+        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductPage />} />

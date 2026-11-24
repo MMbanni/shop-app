@@ -4,11 +4,7 @@ import { api } from "../lib/api";
 import { useEffect, useRef, useState } from "react";
 import { FloatingMessage } from "../components/messages/FloatingMessage";
 import { ProductFilter } from "../components/ProductFilter";
-
-type CartMessage = {
-  text: string;
-  anchor: HTMLButtonElement;
-};
+import { ButtonMessage } from "../types/components";
 
 export type PriceRange = {
   min: number;
@@ -77,7 +73,7 @@ export function ProductsPage() {
   });
 
 
-  const [cartMessage, setCartMessage] = useState<CartMessage | null>(null);
+  const [cartMessage, setCartMessage] = useState<ButtonMessage | null>(null);
   const [cartMessageVisible, setCartMessageVisible] = useState<boolean>(false);
 
 
@@ -87,10 +83,10 @@ export function ProductsPage() {
     return () => window.clearTimeout(messageTimer.current);
   }, []);
 
-  function showCartMessage(text: string, button: HTMLButtonElement) {
+  function showCartMessage(message: ButtonMessage) {
     window.clearTimeout(messageTimer.current);
 
-    setCartMessage({ text, anchor: button });
+    setCartMessage(message);
     setCartMessageVisible(true);
 
     messageTimer.current = window.setTimeout(() => {
@@ -131,7 +127,7 @@ export function ProductsPage() {
             <ProductCard
               key={product.id}
               product={product}
-              onAddSuccess={(button) => showCartMessage(`${product.name} added to cart`, button)}
+              onAddSuccess={(button) => showCartMessage({text:`${product.name} added to cart`, anchor: button})}
 
             />)}
         </section>

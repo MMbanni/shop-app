@@ -33,6 +33,18 @@ export function getApiError(error: unknown): ApiErrorResponse | null {
   return error instanceof ApiError ? error.response : null
 }
 
+export function getErrorMessage(error: unknown): string {
+  const response = getApiError(error);
+
+  if (response) {
+    return response.detail || response.title || "Request failed";
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "An unexpected error occurred";
+}
+
 /**
  * Runtime type guard for validation errors returned by the API.
  *
@@ -45,7 +57,7 @@ function isValidationFieldError(
 ): value is ValidationFieldError {
   return (
     value !== null &&
-    typeof value === "object" &&    
+    typeof value === "object" &&
     "field" in value &&
     typeof value.field === "string" &&
     "code" in value &&
@@ -59,13 +71,11 @@ function isValidationFieldError(
  * Converts the API's validation-error array into a field-to-message lookup.
  *
  * Example:
- * [{ field: "name", message: "Name required" }]
+ * [{ field: "price", message: "Price must be positive" }]
  * becomes:
  * { price: "Price must be positive" }
  */
-export function getFieldErrors(
-  error: unknown
-): Record<string, string> {
+export function getFieldErrors( error: unknown ): Record<string, string> {
   const errors = getApiError(error)?.errors;
 
   if (!Array.isArray(errors)) {
@@ -80,21 +90,11 @@ export function getFieldErrors(
     }, {});
 }
 
-export function getErrorMessage(error: unknown): string {
-  const response = getApiError(error);
 
-  if (response) {
-    return response.detail || response.title || "Request failed";
-  }
 
-  return error instanceof Error
-    ? error.message
-    : "An unexpected error occurred";
-}
 
-export function getFormErrorMessage(
-  error: unknown
-): string | null {
+
+export function getFormErrorMessage( error: unknown ): string | null {
   const fieldErrors = getFieldErrors(error);
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -104,9 +104,8 @@ export function getFormErrorMessage(
   return getErrorMessage(error);
 }
 
-function isCartItemProblem(
-  value: unknown
-): value is CartItemProblem {
+
+function isCartItemProblem( value: unknown): value is CartItemProblem {
 
   if (value === null || typeof value !== "object") {
     return false;
@@ -122,6 +121,7 @@ function isCartItemProblem(
     (hasCartItemId || hasProductId)
   );
 }
+
 
 export function getCartItemProblems(error: unknown): CartItemProblem[] {
   const response = getApiError(error);

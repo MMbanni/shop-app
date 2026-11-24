@@ -46,7 +46,8 @@ export function Navbar() {
       <div className="nav-actions">
         {isLoggedIn ? (
           <>
-            <span className="hello">Hi, {user?.name}</span>
+          <NavLink to="/account">My account</NavLink>
+
             <button className="button ghost" onClick={handleLogout}>Logout</button>
           </>
         ) : (

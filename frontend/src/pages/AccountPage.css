@@ -1,0 +1,72 @@
+.account-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.account-page section {
+    background: #101827;
+    border: 1px solid #344154;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    overflow-wrap: anywhere;
+}
+
+.account-page h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+}
+
+.account-page fieldset {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.account-page label {
+    display: grid;
+    gap: .4rem;
+}
+
+.account-page input,
+.account-page textarea {
+    width: 100%;
+    border-radius: .5rem;
+    border: 1px solid #627087;
+    padding: .65rem;
+    background: #131e2c;
+    color: white;
+    font: inherit;
+}
+
+.account-page fieldset button {
+    justify-self: start;
+}
+
+.account-page ul {
+    list-style: none;
+    padding: 0;
+}
+
+.account-page li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .75rem;
+    border-top: 1px solid #344154;
+    padding: .85rem 0;
+}
+
+.account-page [role="alert"] {
+    color: #fecaca;
+}
+
+@media (max-width: 680px) {
+    .account-columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

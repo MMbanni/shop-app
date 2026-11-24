@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, AdminProductTab, Cart, AdminProduct,Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
+import type { ApiErrorResponse, AdminProductTab, Cart, AdminProduct, Product, ProductStatus, User, AdminUserTab, UpdateUserStatusRequest, Order } from "../types";
 import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, LoginResponse } from "../dto/";
 
 import { getToken } from "./token";
@@ -58,7 +58,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     if (token &&
       token === getToken() &&
-      (response.status === 401 || 
+      (response.status === 401 ||
         response.status === 403 && accountBlocked
       )
     ) {
@@ -101,10 +101,10 @@ export const api = {
     return request<Product[]>("/products");
   },
 
-  filterProducts(priceQuery:PriceRange, filters: SelectedFilters) {
-    return request<Product[]>("/products",{
+  filterProducts(priceQuery: PriceRange, filters: SelectedFilters) {
+    return request<Product[]>("/products", {
       method: "POST",
-      body: JSON.stringify({priceQuery, filters})
+      body: JSON.stringify({ priceQuery, filters })
     });
   },
 
@@ -121,11 +121,11 @@ export const api = {
   },
 
   refreshOrderStatus(sessionId: string) {
-  return request<Order>(
-    `/orders/by-session/${sessionId}}/refresh`,
-    { method: "POST" }
-  );
-},
+    return request<Order>(
+      `/orders/by-session/${sessionId}}/refresh`,
+      { method: "POST" }
+    );
+  },
 
   addToCart(productId: number, quantity = 1) {
     return request<void>("/cart", {
@@ -212,6 +212,36 @@ export const api = {
       body: JSON.stringify({ status, duration })
     });
   },
+
+  saveName(name: string) {
+    return request<User>("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify({ name })
+    })
+  },
+
+
+  requestEmail(email: string, password: string) {
+    return request<void>(
+      "/users/me/email/request", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    }
+    )
+  },
+
+  confirmEmail(code: string) {
+    return request<void>("/users/me/email/confirm", {
+      method: "POST",
+      body: JSON.stringify({ code })
+    }
+    )
+  },
+
+  myOrders(page: number) {
+    return request<{ id: number; status: string; createdAt: string; total: number }[]>(`/orders/me?page=${page}`)
+  },
+
 
 
 };

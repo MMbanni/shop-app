@@ -24,11 +24,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [startupError, setStartupError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-  const authGeneration = useRef(0);
 
+  // Prevent race condition
+  const authGeneration = useRef(0);
   const invalidateAuthRequests = useCallback(() => {
     authGeneration.current++;
   }, []);
+
 
   useEffect(() => {
     function handleStorage(event: StorageEvent) {
@@ -54,7 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearToken();
     setUser(null);
     setIsLoading(false);
+
+    // remove cached data
     queryClient.clear();
+    
   }, [queryClient, invalidateAuthRequests]);
 
   useEffect(() => {
