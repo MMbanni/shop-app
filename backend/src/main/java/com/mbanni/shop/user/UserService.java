@@ -68,19 +68,10 @@ public class UserService {
             if (name.length()<MIN_NAME_LENGTH) throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
             user.setName(name);
         }
+
+        // TEMPORARY
         if (command.email() != null) {
-            String email = command.email().trim().toLowerCase(Locale.ROOT);
-
-            if (email.isEmpty()) {
-                throw new BusinessException(ErrorCode.ILLEGAL_OPERATION);
-            }
-
-            if (!email.equals(user.getEmail())
-                    && userRepository.existsByEmail(email)) {
-                throw new BusinessException(ErrorCode.EMAIL_ALREADY_USED);
-            }
-
-            user.setEmail(email);
+            throw new BusinessException(ErrorCode.ILLEGAL_OPERATION, "Use verified email change.");
         }
 
         return userMapper.toResponse(user);

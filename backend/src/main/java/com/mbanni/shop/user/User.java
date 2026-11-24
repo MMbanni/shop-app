@@ -44,7 +44,31 @@ public class User {
 
     private Instant suspendedUntil;
 
-    public User() {}
+    @Column(length = 500)
+    private String pendingEmail;
+    private String verificationHash;
+    private Instant verificationExpires;
+
+    String pendingEmail() {
+        return pendingEmail;
+    }
+
+    String verificationHash() {
+        return verificationHash;
+    }
+
+    Instant verificationExpires() {
+        return verificationExpires;
+    }
+
+    void setPendingEmail(String email, String hash, Instant expires) {
+        pendingEmail = email;
+        verificationHash = hash;
+        verificationExpires = expires;
+    }
+
+    public User() {
+    }
 
     public Long getId() {
         return this.id;
@@ -66,24 +90,32 @@ public class User {
         return this.role;
     }
 
-    public Cart getCart() { return this.cart; }
+    public Cart getCart() {
+        return this.cart;
+    }
 
-    public String getIp(){ return this.ip; }
+    public String getIp() {
+        return this.ip;
+    }
 
-    public UserStatus getStatus() { return this.status;}
+    public UserStatus getStatus() {
+        return this.status;
+    }
 
-    public Instant getSuspendedUntil() { return this.suspendedUntil;}
+    public Instant getSuspendedUntil() {
+        return this.suspendedUntil;
+    }
 
     public void setName(String name) {
-        this.name=name;
+        this.name = name;
     }
 
     public void setEmail(String email) {
-        this.email=email;
+        this.email = email;
     }
 
     public void setPassword(String password) {
-        this.password=password;
+        this.password = password;
     }
 
     public void promoteToAdmin() {
@@ -99,35 +131,36 @@ public class User {
     }
 
     public void setStatus(UserStatus status) {
-        this.status=status;
+        this.status = status;
     }
 
     public void suspend(int days, Instant now) {
 
-        if(suspendedUntil!=null && suspendedUntil.isAfter(now)){
-            suspendedUntil= suspendedUntil.plus(days, ChronoUnit.DAYS);
+        if (suspendedUntil != null && suspendedUntil.isAfter(now)) {
+            suspendedUntil = suspendedUntil.plus(days, ChronoUnit.DAYS);
 
         } else {
             suspendedUntil = now.plus(days, ChronoUnit.DAYS);
         }
 
-        status=UserStatus.SUSPENDED;
+        status = UserStatus.SUSPENDED;
         checkSuspensionOrActivate(now);
 
 
     }
-    public void ban () {
-        this.status=UserStatus.BANNED;
+
+    public void ban() {
+        this.status = UserStatus.BANNED;
         this.suspendedUntil = null;
 
     }
 
     public void activate() {
-        this.status=UserStatus.ACTIVE;
+        this.status = UserStatus.ACTIVE;
         this.suspendedUntil = null;
     }
 
-    public void checkSuspensionOrActivate(Instant now){
+    public void checkSuspensionOrActivate(Instant now) {
         if (hasSuspensionExpired(now)) {
             activate();
         }

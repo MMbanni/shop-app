@@ -77,4 +77,18 @@ public class LoginRateLimiter {
                 Duration.ofHours(1)
         );
     }
+
+    public void checkEmailChangeAllowed(long userId, String ip) {
+        consumeToken(
+                "email-change:user:" + userId,
+                3,
+                Duration.ofMinutes(15)
+        );
+
+        consumeToken(
+                "email-change:ip:" + ip,
+                20,
+                Duration.ofMinutes(15)
+        );
+    }
 }

@@ -1,9 +1,8 @@
 package com.mbanni.shop.user;
 
-import com.mbanni.shop.user.dto.UpdateUserRequestDto;
-import com.mbanni.shop.user.dto.UpdateUserStatusRequestDto;
-import com.mbanni.shop.user.dto.UserResponseDto;
+import com.mbanni.shop.user.dto.*;
 import com.mbanni.shop.user.mapper.UserMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,11 +16,13 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final EmailChangeService emailChangeService;
 
 
-    public UserController(UserService userService, UserMapper userMapper) {
+    public UserController(UserService userService, UserMapper userMapper, EmailChangeService emailChangeService) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.emailChangeService = emailChangeService;
     }
 
     // Requires admin role
@@ -52,6 +53,7 @@ public class UserController {
                 userMapper.toCommand(request)
         );
     }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequestDto request) {
 
@@ -72,6 +74,18 @@ public class UserController {
 
     private Long getCurrentUserId(Authentication authentication) {
         return Long.valueOf(authentication.getName());
+    }
+
+    @PostMapping("/me/email/request")
+    public ResponseEntity<Void> requestEmail(Authentication auth, @Valid @RequestBody EmailRequestDto body, HttpServletRequest request) {
+        emailChangeService.request(getCurrentUserId(auth), body.email(), body.password(), request.getRemoteAddr());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/email/confirm")
+    public ResponseEntity<Void> confirmEmail(Authentication auth, @Valid @RequestBody Verification body) {
+        emailChangeService.confirm(getCurrentUserId(auth), body.code());
+        return ResponseEntity.noContent().build();
     }
 
 }
