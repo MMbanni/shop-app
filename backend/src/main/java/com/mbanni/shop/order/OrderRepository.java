@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByUser_Id(Long userId);
 
+    Optional<Order> findByIdAndUser_Id(Long id, Long userId);
+
     List<Order> findByUser_IdOrderByIdDesc(Long userId, Pageable pageable);
 
 
