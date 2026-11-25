@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { Slider } from "./Slider";
 import { Filters, PriceRange } from "../pages/ProductsPage";
-
+import "./ProductFilter.css"
 
 type ProductFilterProps = {
   maxAllowed: number;

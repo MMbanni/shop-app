@@ -7,6 +7,8 @@ import { ProductForm } from "../../types/product";
 import { getApiError, getErrorMessage } from "../../lib/ApiError";
 import { ProductFormModal } from "../../components/admin/ProductFormModal";
 import { ProductImagesEditor } from "../../components/admin/ProductImagesEditor";
+import "./AdminPage.css"
+
 
 const tabs: AdminProductTab[] = ["ACTIVE", "INACTIVE", "ARCHIVED", "ALL"];
 

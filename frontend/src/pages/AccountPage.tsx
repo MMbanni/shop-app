@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { getErrorMessage, getFieldErrors } from "../lib/ApiError";
 import { money } from "../lib/money";
 import "./AccountPage.css";
-import { ButtonMessage } from "../types/components";
 import { Link } from "react-router-dom";
+
 
 type FormProps = {
   children: ReactNode;
@@ -16,7 +16,7 @@ type FormProps = {
   save: (fields: FormData) => Promise<unknown>;
 };
 
-function AccountForm({ children, button, success, primary=false, save }: FormProps) {
+function AccountForm({ children, button, success, primary = false, save }: FormProps) {
 
   const mutation = useMutation({ mutationFn: save });
 
@@ -83,6 +83,7 @@ function Account({ id }: { id: number }) {
     queryFn: api.me,
   });
 
+
   const orders = useQuery({
     queryKey: ["customer-orders", id, page],
     queryFn: () => api.myOrders(page),
@@ -94,6 +95,7 @@ function Account({ id }: { id: number }) {
         <h1>My account</h1>
         <p>Manage your details and view your orders.</p>
       </header>
+
 
       <div className="account-columns">
         <section className="account-card">
@@ -134,6 +136,7 @@ function Account({ id }: { id: number }) {
               </AccountForm>
             </>
           )}
+
         </section>
 
         <section className="account-card">
@@ -284,9 +287,9 @@ function Account({ id }: { id: number }) {
         {orders.data?.length === 0 && (
           <div className="account-empty">
             <p>
-              {page === 0
+              { page === 0
                 ? "You have no orders yet."
-                : "No older orders."}
+                : "No older orders." }
             </p>
 
             {page === 0 && (
@@ -302,7 +305,7 @@ function Account({ id }: { id: number }) {
             {orders.data.map(order => (
               <li key={order.id}>
                 <div>
-                  <strong>Order #{order.id}</strong>
+                  <Link to={`/account/orders/${order.id}`}>Order #{order.id} →</Link>
                   <time dateTime={order.createdAt}>
                     {new Date(order.createdAt).toLocaleDateString()}
                   </time>
@@ -340,6 +343,7 @@ function Account({ id }: { id: number }) {
           </nav>
         )}
       </section>
+
     </main>
   );
 }

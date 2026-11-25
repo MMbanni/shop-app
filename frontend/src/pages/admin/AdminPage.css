@@ -1,0 +1,106 @@
+/* Admin pages: tables stay inside their own scroll container. */
+
+.admin-panel,
+.table-card {
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(15, 23, 42, .72);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .28);
+  border-radius: 2rem;
+}
+
+.admin-panel {
+  padding: 1rem;
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  border: 1px solid #d1d5db;
+  background: #345777;
+  color: inherit;
+  border-radius: 999px;
+  padding: .6rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #111827;
+  color: white;
+  border-color: #111827;
+}
+
+.table-card {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.table-card table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.table-card th,
+.table-card td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.table-card td input {
+  text-align: center;
+}
+
+.table-card tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.table-card .table-actions {
+  justify-content: center;
+}
+
+.admin-add input,
+.admin-edit input {
+  width: 100%;
+  min-width: 70px;
+  padding: .6rem .75rem;
+  border-radius: .5rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: white;
+}
+
+.admin-add input::placeholder {
+  color: rgba(255, 255, 255, .4);
+}
+
+.table-card .admin-add td {
+  border-bottom: none;
+}
+
+.table-card select {
+  max-width: 100%;
+  font: inherit;
+}
+
+.table-card .selected-product-row {
+  background: rgba(94, 234, 212, .08);
+}

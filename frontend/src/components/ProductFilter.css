@@ -1,0 +1,110 @@
+/* Product filters and the existing custom slider */
+
+.product-filter {
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 0;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(53, 57, 70, .308);
+}
+
+.filter-price {
+  padding-bottom: 1.5rem;
+}
+
+.filter-price h3 {
+  margin: 0 0 1.5rem;
+}
+
+.filter-section {
+  border-bottom: 1px solid #627087;
+  padding: .9rem 0;
+}
+
+.filter-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: capitalize;
+  list-style: none;
+  gap: .5rem;
+}
+
+.filter-title::-webkit-details-marker {
+  display: none;
+}
+
+.filter-title::after {
+  content: "+";
+  font-size: 1.35rem;
+}
+
+.filter-section[open] .filter-title::after {
+  content: "−";
+}
+
+.filter-options {
+  display: grid;
+  gap: .65rem;
+  padding-top: .8rem;
+}
+
+.filter-options label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  overflow-wrap: anywhere;
+}
+
+.filter-options input {
+  flex-shrink: 0;
+  accent-color: #5eead4;
+}
+
+.slider-track {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  width: calc(100% - 1rem);
+  height: 10px;
+  margin: 0 .5rem 2.5rem;
+  background: rgba(240, 248, 255, .322);
+  border-radius: 1rem;
+}
+
+.slider-min,
+.slider-max {
+  position: absolute;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-radius: 10rem;
+  background: rgba(240, 248, 255, .952);
+  transform: translate(-50%, -25%);
+  touch-action: none;
+  user-select: none;
+  cursor: ew-resize;
+}
+
+.slider-active {
+  position: absolute;
+  height: 10px;
+  border-radius: 1rem;
+  background: rgba(240, 248, 255, .952);
+  pointer-events: none;
+}
+
+.slider-track > p {
+  margin: 1.35rem 0 0;
+  font-size: .9rem;
+}
+
+@media (max-width: 760px) {
+  .product-filter {
+    flex: none;
+    width: 100%;
+  }
+}

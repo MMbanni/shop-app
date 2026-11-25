@@ -4,6 +4,7 @@ import type { AddProductsRequest, UpdateProductsRequest, CheckoutResponse, Login
 import { getToken } from "./token";
 import { ApiError } from "./ApiError";
 import { SelectedFilters, PriceRange } from "../pages/ProductsPage";
+import { OrderDetails } from "../types/";
 
 const API_URL = (
   import.meta.env.VITE_API_URL?.trim() || "http://localhost:8080"
@@ -241,6 +242,12 @@ export const api = {
   myOrders(page: number) {
     return request<{ id: number; status: string; createdAt: string; total: number }[]>(`/orders/me?page=${page}`)
   },
+
+  orderDetails(id: string) {
+    return request<OrderDetails>(`/orders/me/${encodeURIComponent(id)}`)
+  }
+  ,
+
 
 
 

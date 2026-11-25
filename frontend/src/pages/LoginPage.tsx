@@ -4,6 +4,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import { ApiErrorMessage } from "../components/messages/ApiErrorMessage";
+import "./AuthPages.css"
+
 
 export function LoginPage() {
   const { login } = useAuth();

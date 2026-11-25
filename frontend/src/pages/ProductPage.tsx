@@ -7,6 +7,7 @@ import { useState } from "react";
 import { getErrorMessage } from "../lib/ApiError";
 import { useAuth } from "../context/AuthContext";
 import { Product } from "../types";
+import "./ProductPage.css"
 
 export function ProductPage() {
   const { id } = useParams();

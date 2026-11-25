@@ -1,0 +1,27 @@
+/* One horizontal offset, shared by both animation states. */
+
+.floating-message {
+  position: fixed;
+  z-index: 1100;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity .3s ease, transform .3s ease;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  padding: .6rem .9rem;
+  border-radius: .75rem;
+  background: #0f766e;
+  color: white;
+  overflow-wrap: anywhere;
+}
+
+.floating-message.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.floating-message.hide {
+  opacity: 0;
+  transform: translate(-50%, -8px);
+}

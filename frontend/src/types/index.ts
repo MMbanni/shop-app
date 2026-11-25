@@ -2,5 +2,5 @@ export type {User, Role, UserStatus, UpdateUserStatusRequest} from "./user";
 export type {AdminProductTab, AdminUserTab} from "./components";
 export type {AdminProduct, Product, ProductStatus, ProductForm, ProductFormErrors} from "./product";
 export type {Cart, CartItem} from "./cart";
-export type {Order, OrderStatus} from "./order";
+export type {Order, OrderStatus, OrderItemDto, OrderDetails} from "./order";
 export type {ApiErrorResponse, CartItemProblem, ValidationFieldError} from "./error";

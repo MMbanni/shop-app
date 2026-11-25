@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getApiError, getErrorMessage } from "../lib/ApiError";
-
+import "./AuthPages.css"
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();

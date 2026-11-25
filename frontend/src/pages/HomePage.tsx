@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-
+import "./HomePage.css"
 export function HomePage() {
   return (
     <main className="hero page-shell">

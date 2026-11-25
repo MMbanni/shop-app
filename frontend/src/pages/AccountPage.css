@@ -1,6 +1,4 @@
-.account-page {
-  padding-block: 2.5rem;
-}
+/* Account cards, forms and order history. */
 
 .account-heading {
   margin-bottom: 1.5rem;
@@ -30,7 +28,7 @@
 
 .account-page .account-card {
   min-width: 0;
-  padding: 1.5rem;
+  padding: 1.25rem;
   background: #101827;
   border: 1px solid #344154;
   border-radius: 1rem;
@@ -38,8 +36,12 @@
 }
 
 .account-page h2 {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1rem;
   font-size: 1.25rem;
+}
+
+.account-page p {
+  line-height: 1.6;
 }
 
 .account-page .account-help {
@@ -48,8 +50,8 @@
 
 .account-email {
   display: grid;
-  gap: .35rem;
-  margin-bottom: 1.25rem;
+  gap: .4rem;
+  margin: 0 0 1.25rem;
   padding-bottom: 1.25rem;
   border-bottom: 1px solid #344154;
 }
@@ -59,66 +61,62 @@
   font-size: .9rem;
 }
 
-.account-page .account-form {
+.account-form {
   margin: 0;
 }
 
-.account-page .account-form fieldset {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+.account-page fieldset {
+  display: grid;
   gap: 1rem;
   min-width: 0;
-  margin: 0;
-  padding: 0;
   border: 0;
+  padding: 0;
+  margin: 0;
 }
 
 .account-page label {
   display: grid;
-  gap: .5rem;
+  gap: .4rem;
+  font-weight: 600;
 }
 
-.account-page input {
-  box-sizing: border-box;
-  width: 100%;
+.account-page input,
+.account-page textarea {
   min-width: 0;
-  min-height: 44px;
-  padding: .7rem .8rem;
+  width: 100%;
   border: 1px solid #627087;
-  border-radius: .6rem;
+  border-radius: .5rem;
+  padding: .65rem;
   background: #131e2c;
-  color: #eef2ff;
+  color: white;
   font: inherit;
+  font-weight: 400;
 }
 
-.account-page input:focus-visible {
+.account-page textarea {
+  resize: vertical;
+}
+
+.account-page input:focus-visible,
+.account-page textarea:focus-visible {
   outline: 2px solid #5cd5d0;
   outline-offset: 2px;
 }
 
-.account-page .account-form fieldset > .button {
-  align-self: flex-start;
-  margin: 0;
+.account-page fieldset button {
+  justify-self: start;
 }
 
-.account-page .button.ghost {
+.account-page .account-form .button.ghost {
   background: transparent;
   border: 1px solid #627087;
-  color: #eef2ff;
-  box-shadow: none;
 }
 
-.account-page .button.ghost:hover:not(:disabled) {
+.account-page .account-form .button.ghost:hover:not(:disabled) {
   background: #1b293b;
 }
 
-.account-page button:disabled {
-  cursor: not-allowed;
-  opacity: .6;
-}
-
-.account-page .account-feedback {
+.account-feedback {
   margin: 1rem 0 0;
   line-height: 1.6;
 }
@@ -146,12 +144,6 @@
 
 .account-verification p {
   margin: .5rem 0 0;
-  line-height: 1.6;
-}
-
-.account-verification p:last-child {
-  color: #bdcfd6;
-  font-size: .9rem;
 }
 
 .account-email-actions {
@@ -161,8 +153,6 @@
 }
 
 .account-page .account-text-button {
-  display: inline-block;
-  width: fit-content;
   padding: 0;
   border: 0;
   background: transparent;
@@ -174,39 +164,32 @@
   cursor: pointer;
 }
 
-.account-page .account-text-button:hover {
-  color: #c4f7f5;
-}
-
-.account-page button:focus-visible,
-.account-page a:focus-visible {
-  outline: 2px solid #5cd5d0;
-  outline-offset: 4px;
-}
-
-.account-empty p {
-  margin: 0 0 .75rem;
-  color: #b4c0d2;
-}
-
 .account-page .account-order-list {
-  margin: 0;
-  padding: 0;
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .account-page .account-order-list li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 0;
+  gap: 1.25rem;
   border-top: 1px solid #344154;
+  padding: .85rem 0;
 }
 
 .account-order-list li > div {
   display: grid;
-  gap: .35rem;
+  gap: .4rem;
+}
+
+.account-order-list a {
+  font-weight: 600;
+}
+
+.account-order-list a:hover {
+  text-decoration: underline;
 }
 
 .account-order-list time {
@@ -219,6 +202,7 @@
   border: 1px solid #45546a;
   border-radius: 999px;
   font-size: .85rem;
+  white-space: nowrap;
 }
 
 .account-pagination {
@@ -230,13 +214,19 @@
   margin-top: 1.25rem;
 }
 
+.account-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.account-empty p {
+  margin: 0 0 .75rem;
+  color: #b4c0d2;
+}
+
 @media (max-width: 680px) {
   .account-columns {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .account-page .account-card {
-    padding: 1.25rem;
   }
 
   .account-page .account-order-list li {

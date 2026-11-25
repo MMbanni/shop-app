@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { FloatingMessage } from "../components/messages/FloatingMessage";
 import { ProductFilter } from "../components/ProductFilter";
 import { ButtonMessage } from "../types/components";
+import "./ProductsPage.css"
 
 export type PriceRange = {
   min: number;

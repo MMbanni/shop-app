@@ -3,6 +3,7 @@ import { useCart } from "../hooks/useCart";
 import { CartItemProblem } from "../types";
 import { getCartItemProblems, getErrorMessage } from "../lib/ApiError";
 import { Confirm } from "../components/messages/Confirm";
+import "./CartPage.css"
 
 function problemPriority(problem: CartItemProblem): number {
   switch (problem.code) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import"./ContactPage.css"
 export function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");

@@ -1,100 +1,84 @@
 /* Dark overlay covering the entire page */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 1000;
-
   display: grid;
   place-items: center;
-
   padding: 1rem;
-
   background: rgba(2, 6, 23, 0.76);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-
   animation: modal-backdrop-enter 180ms ease-out;
 }
 
 /* Floating modal card */
+
 .modal {
   width: min(800px, 100%);
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
-
   padding: 1.5rem;
-
   color: #eef2ff;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       145deg,
       rgba(30, 41, 59, 0.98),
       rgba(15, 23, 42, 0.98)
     );
-
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.5rem;
-
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.6),
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.03);
-
   animation: modal-enter 180ms ease-out;
+  box-sizing: border-box;
 }
 
 /* Header containing the title and close button */
+
 .modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-
   padding-bottom: 1.25rem;
   margin-bottom: 1.5rem;
-
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-header h2 {
   margin: 0;
-
   font-size: 1.65rem;
   line-height: 1.2;
   letter-spacing: -0.03em;
 }
 
 /* Optional text below the modal title */
+
 .modal-description {
   margin: 0.4rem 0 0;
-
   color: #94a3b8;
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
 /* X button */
+
 .modal-close {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-
   width: 2.5rem;
   height: 2.5rem;
   padding: 0;
-
   color: #cbd5e1;
   background: rgba(255, 255, 255, 0.06);
-
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-
   font-size: 1.5rem;
   line-height: 1;
-
   cursor: pointer;
-
-  transition:
-    color 150ms ease,
+  transition: color 150ms ease,
     background 150ms ease,
     border-color 150ms ease,
     transform 150ms ease;
@@ -111,55 +95,54 @@
   transform: scale(0.96);
 }
 
-td {
+.modal td {
   text-align: center;
 }
+
 /* Form layout */
-.modal-form, .product-details {
+
+.modal-form,
+.product-details {
   display: grid;
   gap: 1.25rem;
 }
 
-.product-details, .product-attributes{
+.product-details,
+.product-attributes {
   min-width: 0;
   margin: 0;
   padding: 0 0 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.modal-form h3{
-  margin:0%;   
+.modal-form h3 {
+  margin: 0%;
 }
 
 /* Each label contains its text, input and error */
+
 .modal-form label {
   display: grid;
   gap: 0.5rem;
-
   color: #cbd5e1;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
 /* Input styling */
+
 .modal-form input,
 .modal-form select,
 .modal-form textarea {
   width: 100%;
   min-height: 2.8rem;
-
   padding: 0.8rem 0.95rem;
-
   color: #f8fafc;
   background: rgba(255, 255, 255, 0.055);
-
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.75rem;
-
   outline: none;
-
-  transition:
-    border-color 150ms ease,
+  transition: border-color 150ms ease,
     background 150ms ease,
     box-shadow 150ms ease;
 }
@@ -176,9 +159,7 @@ td {
 .modal-form textarea:focus {
   background: rgba(255, 255, 255, 0.08);
   border-color: #5eead4;
-
-  box-shadow:
-    0 0 0 3px rgba(94, 234, 212, 0.14),
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.14),
     0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
@@ -193,10 +174,9 @@ td {
   max-height: 300px;
   resize: vertical;
   box-sizing: border-box;
-
 }
 
-.attribute-table{
+.attribute-table {
   border: 1px solid rgba(255, 255, 255, 0.09);
   background: rgba(15, 23, 42, 0.72);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
@@ -204,11 +184,12 @@ td {
   margin-top: 20px;
 }
 
-.product-attributes input{
-  text-align:left
+.product-attributes input {
+  text-align: left;
 }
 
 /* Disabled inputs */
+
 .modal-form input:disabled,
 .modal-form select:disabled,
 .modal-form textarea:disabled {
@@ -217,6 +198,7 @@ td {
 }
 
 /* Invalid input styling */
+
 .modal-form input[aria-invalid="true"],
 .modal-form select[aria-invalid="true"],
 .modal-form textarea[aria-invalid="true"] {
@@ -229,41 +211,29 @@ td {
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14);
 }
 
-/* Validation message */
-.field-error {
-  margin: 0;
-
-  color: #fca5a5;
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
 /* General server error shown above the fields */
+
 .modal-error {
   padding: 0.85rem 1rem;
-
   color: #fecaca;
   background: rgba(239, 68, 68, 0.12);
-
   border: 1px solid rgba(248, 113, 113, 0.24);
   border-radius: 0.75rem;
-
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
 /* Bottom action buttons */
+
 .modal-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-
   padding-top: 1.25rem;
   margin-top: 0.25rem;
-
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
 }
 
 .modal-actions .button {
@@ -271,6 +241,7 @@ td {
 }
 
 /* Keyboard accessibility */
+
 .modal-close:focus-visible,
 .modal-form input:focus-visible,
 .modal-form select:focus-visible,
@@ -281,6 +252,7 @@ td {
 }
 
 /* Backdrop appearing */
+
 @keyframes modal-backdrop-enter {
   from {
     opacity: 0;
@@ -292,6 +264,7 @@ td {
 }
 
 /* Card appearing */
+
 @keyframes modal-enter {
   from {
     opacity: 0;
@@ -305,6 +278,7 @@ td {
 }
 
 /* Mobile layout */
+
 @media (max-width: 520px) {
   .modal-backdrop {
     align-items: end;
@@ -314,13 +288,10 @@ td {
   .modal {
     width: 100%;
     max-height: 92vh;
-
     padding: 1.25rem;
-
     border-right: none;
     border-bottom: none;
     border-left: none;
-
     border-radius: 1.5rem 1.5rem 0 0;
   }
 
@@ -338,6 +309,7 @@ td {
 }
 
 /* Respect users who disable animations */
+
 @media (prefers-reduced-motion: reduce) {
   .modal-backdrop,
   .modal {
@@ -352,10 +324,35 @@ td {
   }
 }
 
-.modal {
-  box-sizing: border-box;
-}
-
 .user-modal {
   width: min(440px, 100%);
+}
+
+.modal table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modal th,
+.modal td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.modal th {
+  text-align: center;
+}
+
+.modal .table-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .modal .product-attributes {
+    overflow-x: auto;
+  }
+
+  .modal .attribute-table {
+    min-width: 400px;
+  }
 }

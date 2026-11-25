@@ -15,6 +15,7 @@ import { Footer } from "./components/Footer";
 import { ContactPage } from "./pages/ContactPage";
 import { ProductPage } from "./pages/ProductPage";
 import { AccountPage } from "./pages/AccountPage";
+import { OrderDetailsPage } from "./pages/OrderDetailsPage";
 
 
 export function App() {
@@ -23,14 +24,16 @@ export function App() {
       <Navbar />
       <Routes>
         <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path="/account/orders/:id" element={<ProtectedRoute><OrderDetailsPage /></ProtectedRoute>} />
+
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductPage />} />
-        <Route path="/contact" element={<ContactPage/>} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route 
-          path="/checkout/success" 
+        <Route
+          path="/checkout/success"
           element={<ProtectedRoute><CheckoutSuccessPage /></ProtectedRoute>} />
         <Route path="/checkout/cancel" element={<Navigate to="/cart" replace />} />
         <Route
@@ -68,11 +71,11 @@ export function App() {
         <Route
           path="*"
           element={
-            <Navigate to="/" replace/>
+            <Navigate to="/" replace />
           }
         />
       </Routes>
-      <Footer/>
+      <Footer />
     </>
   );
 }

@@ -1,0 +1,82 @@
+/* Order details only: admin/modal tables cannot change this layout. */
+
+.order-details {
+  min-width: 0;
+}
+
+.order-details h1 {
+  margin-block: 1rem;
+}
+
+.order-details .order-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.order-details .status-badge {
+  display: inline-block;
+  background: #263d4d;
+  color: #dffdfa;
+  border: 1px solid #4e777c;
+  border-radius: 999px;
+  padding: .3rem .65rem;
+  font-size: .85rem;
+}
+
+.order-details .table-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #354052;
+  border-radius: 1rem;
+  margin-block: 1.25rem;
+}
+
+.order-details table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.order-details th,
+.order-details td {
+  padding: 1rem;
+  vertical-align: top;
+  border-bottom: 1px solid #354052;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.order-details thead th {
+  background: #192232;
+}
+
+.order-details th:not(:first-child),
+.order-details td:not(:first-child) {
+  text-align: right;
+}
+
+.order-details tfoot th,
+.order-details tfoot td {
+  border-bottom: 0;
+}
+
+.order-details tfoot th {
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .order-details table {
+    min-width: 460px;
+  }
+
+  .order-details .order-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .75rem;
+  }
+}

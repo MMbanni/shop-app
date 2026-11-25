@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAdminUsers } from "../../hooks/useAdminUserActions";
 import { UserFormModal } from "../../components/admin/UserFormModal";
 import { getErrorMessage } from "../../lib/ApiError";
+import "./AdminPage.css"
 
 
 const tabs: AdminUserTab[] = ["ALL", "ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"];
